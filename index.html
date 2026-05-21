@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <title>Pipe Mojo | Keep Them Pipes Fixed</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bangers&family=Special+Elite&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black:  #060606;
+      --ink:    #0e0b08;
+      --deep:   #12100e;
+      --cyan:   #00e5ff;
+      --toxic:  #39ff14;
+      --red:    #e8281e;
+      --gold:   #f5c842;
+      --bourbon:#c17f24;
+      --purple: #5b1aaa;
+      --cream:  #f0e8d0;
+      --safe:   env(safe-area-inset-bottom, 0px);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+    body {
+      background: var(--black);
+      color: #fff;
+      font-family: 'Oswald', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* grain overlay */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9000; opacity: 0.5;
+    }
+
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #000; }
+    ::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 2px; }
+
+    /* ══════════════════════════════════════
+       LOGO IMAGE
+    ══════════════════════════════════════ */
+    .pm-logo-img {
+      display: inline-block;
+      height: 48px; width: auto;
+      flex-shrink: 0;
+      object-fit: contain;
+      mix-blend-mode: lighten;
+    }
+    .pm-logo-img.sm { height: 36px; }
+    .pm-logo-img.lg { height: 72px; }
+    .pm-logo-img.xl { height: 110px; }
+
+    /* ══════════════════════════════════════
+       NEON PIPE ACCENT BAR
+    ══════════════════════════════════════ */
+    .pipe-bar {
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--cyan) 20%, var(--purple) 50%, var(--cyan) 80%, transparent);
+      background-size: 200% 100%;
+      animation: pipe-flow 3s linear infinite;
+    }
+    @keyframes pipe-flow {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ══════════════════════════════════════
+       NAVIGATION
+    ══════════════════════════════════════ */
+    nav {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(6,6,6,0.97);
+      border-bottom: 2px solid rgba(0,229,255,0.35);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 0 1.25rem;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding-left: max(1.25rem, env(safe-area-inset-left));
+      padding-right: max(1.25rem, env(safe-area-inset-right));
+    }
+
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .nav-brand-text { line-height: 1; }
+    .nav-brand-name {
+      font-family: 'Bangers', cursive;
+      font-size: 1.75rem; letter-spacing: 3px;
+      color: var(--cyan);
+      text-shadow: 0 0 16px rgba(0,229,255,0.5);
+    }
+    .nav-brand-tag {
+      font-family: 'Special Elite', cursive;
+      font-size: 0.55rem; letter-spacing: 2.5px;
+      color: var(--gold); opacity: 0.8;
+      display: block; margin-top: -3px;
+      text-transform: uppercase;
+    }
+
+    .nav-links {
+      display: flex; gap: 1.5rem; list-style: none;
+    }
+    .nav-links a {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.05rem; letter-spacing: 2px;
+      color: rgba(255,255,255,0.5);
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--cyan); }
+
+    .nav-read-btn {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 0.95rem; letter-spacing: 2px;
+      padding: 7px 18px;
+      background: var(--cyan); color: #000;
+      border-radius: 4px;
+      transition: background .2s, box-shadow .2s;
+      white-space: nowrap;
+    }
+    .nav-read-btn:hover {
+      background: #fff;
+      box-shadow: 0 0 20px rgba(0,229,255,0.5);
+    }
+
+    /* mobile nav */
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .nav-brand-name { font-size: 1.5rem; }
+    }
+
+    /* ══════════════════════════════════════
+       HERO
+    ══════════════════════════════════════ */
+    .hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex; align-items: center;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 90% 70% at 20% 60%, rgba(91,26,170,0.3) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 80% at 80% 40%, rgba(0,229,255,0.08) 0%, transparent 55%),
+        linear-gradient(170deg, #100808 0%, #060408 60%, #04080e 100%);
+    }
+
+    /* decorative fleur-de-lis watermark */
+    .hero::before {
+      content: '⚜';
+      position: absolute; right: -2%; bottom: -5%;
+      font-size: clamp(16rem, 40vw, 38rem);
+      color: rgba(255,255,255,0.018);
+      pointer-events: none; line-height: 1;
+      z-index: 0;
+    }
+
+    .hero-char-img {
+      position: absolute;
+      right: 0; bottom: 0;
+      height: 88%;
+      max-width: 50%;
+      object-fit: contain;
+      object-position: bottom right;
+      opacity: 0.55;
+      mask-image: linear-gradient(to left, rgba(0,0,0,0.8) 30%, transparent 90%);
+      -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,0.8) 30%, transparent 90%);
+      z-index: 1;
+    }
+
+    .hero-glow {
+      position: absolute; right: 10%; top: 50%;
+      transform: translateY(-50%);
+      width: min(500px, 70vw); height: min(500px, 70vw);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,255,0.05) 0%, transparent 70%);
+      animation: pulse 5s ease-in-out infinite;
+      z-index: 0;
+    }
+    @keyframes pulse { 0%,100%{transform:translateY(-50%) scale(1);opacity:.5} 50%{transform:translateY(-50%) scale(1.1);opacity:1} }
+
+    .hero-content {
+      position: relative; z-index: 2;
+      padding: 5rem 1.5rem 4rem;
+      max-width: min(640px, 95vw);
+      padding-left: max(1.5rem, env(safe-area-inset-left));
+    }
+
+    .hero-eyebrow {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Special Elite', cursive;
+      font-size: 0.75rem; letter-spacing: 5px;
+      color: var(--gold); text-transform: uppercase;
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fade-up .6s .1s forwards;
+    }
+    .eyebrow-line {
+      height: 1px; width: 32px;
+      background: var(--gold); opacity: 0.5;
+    }
+
+    .hero-title {
+      font-family: 'Bangers', cursive;
+      font-size: clamp(3.2rem, 10vw, 6.5rem);
+      line-height: 0.88; letter-spacing: 3px;
+      opacity: 0; animation: fade-up .7s .25s forwards;
+    }
+    .hero-title .t1 { color: #fff; display: block; }
+    .hero-title .t2 {
+      color: var(--cyan);
+      text-shadow: 0 0 28px var(--cyan), 0 0 60px rgba(0,229,255,0.35);
+      display: block;
+    }
+
+    .hero-catchphrase {
+      font-family: 'Special Elite', cursive;
+      font-size: clamp(1rem, 3.5vw, 1.25rem);
+      color: var(--gold);
+      letter-spacing: 1px;
+      margin: 1.25rem 0;
+      opacity: 0; animation: fade-up .7s .4s forwards;
+      border-left: 3px solid var(--red);
+      padding-left: 1rem;
+      line-height: 1.5;
+    }
+
+    .hero-sub {
+      font-family: 'Special Elite', cursive;
+      font-size: 0.9rem; line-height: 1.7;
+      color: rgba(255,255,255,0.5);
+      max-width: 420px;
+      margin-bottom: 2rem;
+      opacity: 0; animation: fade-up .7s .55s forwards;
+    }
+    .hero-sub em { color: var(--toxic); font-style: normal; }
+
+    .hero-ctas {
+      display: flex; flex-wrap: wrap; gap: .75rem;
+      opacity: 0; animation: fade-up .7s .7s forwards;
+    }
+
+    @keyframes fade-up {
+      from { opacity:0; transform:translateY(20px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.2rem; letter-spacing: 3px;
+      padding: .9rem 2.2rem;
+      background: var(--cyan); color: #000;
+      border-radius: 4px; border: none;
+      box-shadow: 4px 4px 0 rgba(0,229,255,.25), 0 0 20px rgba(0,229,255,.3);
+      transition: all .2s; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary:active { transform: scale(.97); }
+    @media (hover:hover) {
+      .btn-primary:hover { background:#fff; box-shadow: 6px 6px 0 var(--cyan), 0 0 40px rgba(0,229,255,.5); transform: translate(-2px,-2px); }
+    }
+
+    .btn-ghost {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.1rem; letter-spacing: 2px;
+      padding: .85rem 1.8rem;
+      background: transparent; color: #fff;
+      border: 2px solid rgba(255,255,255,.2);
+      border-radius: 4px;
+      transition: all .2s; cursor: pointer;
+      display: flex; align-items: center; gap: 7px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-ghost:active { opacity: .8; }
+    @media (hover:hover) {
+      .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+    }
+    .btn-ghost svg { width:18px; height:18px; fill:currentColor; flex-shrink:0; }
+
+    /* ══════════════════════════════════════
+       SECTION SHARED STYLES
+    ══════════════════════════════════════ */
+    .section-inner {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+      padding-left: max(1.25rem, env(safe-area-inset-left));
+      padding-right: max(1.25rem, env(safe-area-inset-right));
+    }
+
+    .section-eyebrow {
+      font-family: 'Special Elite', cursive;
+      font-size: 0.7rem; letter-spacing: 7px;
+      color: var(--cyan); text-transform: uppercase; opacity: .7;
+      margin-bottom: .5rem;
+    }
+    .section-heading {
+      font-family: 'Bangers', cursive;
+      font-size: clamp(2.2rem, 6vw, 3.5rem);
+      letter-spacing: 3px; line-height: 1;
+    }
+
+    /* ── NOLA FLEUR DIVIDER ── */
+    .fleur-divider {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0 1.25rem;
+      opacity: .18; pointer-events: none;
+    }
+    .fleur-divider::before,
+    .fleur-divider::after {
+      content: ''; flex: 1;
+      height: 1px; background: var(--gold);
+    }
+    .fleur-divider span {
+      font-size: 1.4rem; color: var(--gold);
+    }
+
+    /* ══════════════════════════════════════
+       ISSUES SECTION
+    ══════════════════════════════════════ */
+    .issues-section {
+      padding: 5rem 0;
+      background:
+        radial-gradient(ellipse 100% 50% at 50% 0%, rgba(0,229,255,0.035) 0%, transparent 60%),
+        var(--deep);
+    }
+    .issues-header { text-align:center; margin-bottom:3rem; }
+
+    .issues-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 360px));
+      gap: 2rem;
+      justify-content: center;
+      margin-top: 2.5rem;
+    }
+
+    .issue-card {
+      background: #0d0b09;
+      border: 2px solid rgba(255,255,255,.07);
+      border-radius: 8px;
+      overflow: hidden;
+      display: block;
+      transition: transform .3s, border-color .3s, box-shadow .3s;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+    }
+    .issue-card:active { transform: scale(.98); }
+    @media (hover:hover) {
+      .issue-card:hover {
+        transform: translateY(-8px) rotate(-.8deg);
+        border-color: var(--cyan);
+        box-shadow: 0 20px 60px rgba(0,229,255,.18);
+      }
+    }
+
+    .issue-badge {
+      position: absolute; top:14px; left:14px; z-index:2;
+      font-family: 'Bebas Neue', cursive; font-size:.8rem; letter-spacing:2px;
+      padding: 3px 10px; border-radius:3px;
+      background: var(--red); color:#fff;
+    }
+    .issue-badge.new-badge { background: var(--cyan); color:#000; }
+
+    .issue-cover-block {
+      width:100%; aspect-ratio:3/4;
+      background: linear-gradient(135deg, #1a0a2e, #0a1a2e);
+      display: flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:1rem;
+      position: relative; overflow:hidden;
+    }
+    .issue-cover-block img {
+      width:100%; height:100%; object-fit:cover;
+      position:absolute; inset:0;
+    }
+    .issue-cover-block .cover-placeholder-text {
+      font-family:'Bangers',cursive;
+      font-size:5rem; line-height:1;
+      z-index:1; position:relative;
+    }
+    .issue-cover-block .cover-sub {
+      font-family:'Special Elite',cursive;
+      font-size:.8rem; letter-spacing:3px; text-transform:uppercase;
+      color:rgba(255,255,255,.4);
+      z-index:1; position:relative; text-align:center; padding:0 1rem;
+    }
+
+    .issue-info { padding: 1.4rem 1.4rem 1.6rem; }
+    .issue-number {
+      font-family:'Special Elite',cursive; font-size:.7rem;
+      color:var(--cyan); letter-spacing:4px; text-transform:uppercase; margin-bottom:.3rem;
+    }
+    .issue-name {
+      font-family:'Bangers',cursive; font-size:1.5rem; letter-spacing:2px; margin-bottom:.4rem;
+    }
+    .issue-desc {
+      font-family:'Special Elite',cursive; font-size:.8rem;
+      color:rgba(255,255,255,.45); line-height:1.55;
+    }
+    .issue-cta {
+      display:inline-block; margin-top:1rem;
+      font-family:'Bebas Neue',cursive; font-size:.95rem; letter-spacing:2px;
+      color:var(--cyan); border-bottom:1px solid rgba(0,229,255,.3);
+      transition: color .2s, border-color .2s;
+    }
+    @media (hover:hover) { .issue-card:hover .issue-cta { color:#fff; border-color:#fff; } }
+
+    /* ══════════════════════════════════════
+       CHARACTERS SECTION
+    ══════════════════════════════════════ */
+    .characters-section {
+      padding: 5rem 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 15% 50%, rgba(91,26,170,.14) 0%, transparent 60%),
+        var(--black);
+    }
+    .characters-header { text-align:center; margin-bottom:3rem; }
+
+    .chars-grid {
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top:2rem;
+    }
+    @media (max-width:580px) {
+      .chars-grid { grid-template-columns:1fr; }
+    }
+
+    .char-card {
+      position:relative; border-radius:8px; overflow:hidden;
+      background:#000;
+    }
+    .char-card.mojo { background: radial-gradient(ellipse at 50% 80%, rgba(0,229,255,0.08) 0%, #000 60%); }
+    .char-card.ganja { background: radial-gradient(ellipse at 50% 80%, rgba(57,255,20,0.07) 0%, #000 60%); }
+    .char-card img {
+      width:100%; height:clamp(320px,55vw,500px);
+      object-fit:contain;
+      object-position: bottom center;
+      display:block; transition:transform .4s;
+      padding: 1.5rem 1.5rem 0;
+      mix-blend-mode: lighten;
+    }
+    @media (hover:hover) { .char-card:hover img { transform:scale(1.04); } }
+
+    .char-card .char-bg-placeholder {
+      width:100%; height:clamp(320px,55vw,500px);
+      display:flex; align-items:center; justify-content:center;
+      font-size:5rem;
+    }
+    .char-card.mojo .char-bg-placeholder { background: linear-gradient(135deg,#0d1a2e,#1a0d2e); }
+    .char-card.ganja .char-bg-placeholder { background: linear-gradient(135deg,#0d2e0d,#1a2e12); }
+
+    .char-overlay {
+      position:absolute; bottom:0; left:0; right:0;
+      padding:1.5rem;
+      background:linear-gradient(to top, rgba(0,0,0,.96) 0%, transparent 100%);
+    }
+    .char-name {
+      font-family:'Bangers',cursive;
+      font-size:clamp(2rem,6vw,2.8rem); letter-spacing:4px; line-height:1;
+    }
+    .char-card.mojo .char-name { color:var(--cyan); text-shadow:0 0 16px var(--cyan); }
+    .char-card.ganja .char-name { color:var(--toxic); text-shadow:0 0 16px var(--toxic); }
+    .char-role {
+      font-family:'Special Elite',cursive; font-size:.75rem;
+      letter-spacing:3px; text-transform:uppercase; opacity:.6; margin-top:3px;
+    }
+    .char-tags {
+      display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.75rem;
+    }
+    .char-tag {
+      font-family:'Special Elite',cursive; font-size:.65rem; letter-spacing:1px; text-transform:uppercase;
+      background:rgba(255,255,255,.07); padding:3px 8px; border-radius:3px;
+      color:rgba(255,255,255,.5);
+    }
+
+    /* character quote strip */
+    .char-quote-strip {
+      background: var(--deep);
+      border-top: 1px solid rgba(0,229,255,.1);
+      padding: 2.5rem 1.25rem;
+    }
+    .quote-inner {
+      max-width:700px; margin:0 auto; text-align:center;
+    }
+    .big-quote {
+      font-family:'Bangers',cursive;
+      font-size:clamp(1.8rem,5vw,3rem); letter-spacing:3px;
+      color:var(--gold);
+      text-shadow: 0 0 30px rgba(245,200,66,.3);
+      line-height:1.2;
+    }
+    .quote-attr {
+      font-family:'Special Elite',cursive; font-size:.75rem;
+      letter-spacing:4px; color:rgba(255,255,255,.3);
+      text-transform:uppercase; margin-top:.75rem;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+    }
+
+    /* ══════════════════════════════════════
+       SHORTS SECTION
+    ══════════════════════════════════════ */
+    .shorts-section {
+      padding: 5rem 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 85% 50%, rgba(0,229,255,.04) 0%, transparent 60%),
+        var(--deep);
+    }
+    .shorts-header {
+      display:flex; align-items:flex-end; justify-content:space-between;
+      flex-wrap:wrap; gap:1rem;
+      margin-bottom:2.5rem;
+    }
+    .social-pills { display:flex; gap:.6rem; flex-wrap:wrap; }
+    .social-pill {
+      font-family:'Bebas Neue',cursive; font-size:.85rem; letter-spacing:2px;
+      padding:7px 16px; border-radius:40px; border:1.5px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.04); color:#fff;
+      display:flex; align-items:center; gap:6px;
+      transition:all .2s; -webkit-tap-highlight-color:transparent;
+    }
+    .social-pill svg { width:14px; height:14px; fill:currentColor; }
+    .social-pill.tk:active, .social-pill.tk:hover { border-color:var(--cyan); color:var(--cyan); }
+    .social-pill.yt:active, .social-pill.yt:hover { border-color:var(--red); color:var(--red); }
+
+    .shorts-placeholder {
+      text-align:center; padding:4rem 1rem;
+      border:2px dashed rgba(255,255,255,.07); border-radius:12px;
+    }
+    .shorts-placeholder .big-handle {
+      font-family:'Bangers',cursive; font-size:clamp(2rem,8vw,3.5rem);
+      letter-spacing:4px; color:var(--cyan);
+      text-shadow:0 0 20px var(--cyan);
+    }
+    .shorts-placeholder p {
+      font-family:'Special Elite',cursive; font-size:.9rem;
+      color:rgba(255,255,255,.35); margin-top:.75rem; line-height:1.8;
+    }
+
+    /* ══════════════════════════════════════
+       MERCH SECTION
+    ══════════════════════════════════════ */
+    .merch-section {
+      padding: 5rem 0;
+      text-align:center;
+      background:
+        linear-gradient(135deg, rgba(232,40,30,.07) 0%, rgba(91,26,170,.12) 50%, rgba(0,229,255,.05) 100%),
+        var(--black);
+    }
+    .merch-inner { max-width:640px; margin:0 auto; padding:0 1.25rem; }
+    .merch-stamp {
+      display:inline-block; font-family:'Bebas Neue',cursive; font-size:.8rem;
+      letter-spacing:5px; color:var(--gold); border:2px solid rgba(245,200,66,.4);
+      padding:3px 14px; border-radius:3px; margin-bottom:1.25rem;
+    }
+    .merch-title {
+      font-family:'Bangers',cursive;
+      font-size:clamp(2.8rem,9vw,5rem); letter-spacing:4px; line-height:.95;
+      margin-bottom:1.25rem;
+    }
+    .merch-title span { color:var(--red); }
+    .merch-desc {
+      font-family:'Special Elite',cursive; font-size:.9rem;
+      color:rgba(255,255,255,.45); line-height:1.8; margin-bottom:2rem;
+    }
+
+    .email-form {
+      display:flex; max-width:380px; margin:0 auto; border-radius:5px; overflow:hidden;
+    }
+    .email-input {
+      flex:1; padding:.9rem 1rem;
+      background:rgba(255,255,255,.06); border:2px solid rgba(255,255,255,.12);
+      border-right:none; border-radius:5px 0 0 5px;
+      color:#fff; font-family:'Special Elite',cursive; font-size:.9rem;
+      outline:none; -webkit-appearance:none;
+      transition:border-color .2s;
+    }
+    .email-input:focus { border-color:var(--cyan); }
+    .email-input::placeholder { color:rgba(255,255,255,.3); }
+    .email-submit {
+      padding:.9rem 1.2rem;
+      background:var(--cyan); color:#000; border:none;
+      font-family:'Bebas Neue',cursive; font-size:.95rem; letter-spacing:2px;
+      border-radius:0 5px 5px 0; cursor:pointer;
+      transition:background .2s;
+    }
+    .email-submit:active { background:#fff; }
+    #merch-confirm {
+      display:none; margin-top:.9rem;
+      font-family:'Special Elite',cursive; font-size:.85rem;
+      color:var(--toxic);
+    }
+
+    /* ══════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════ */
+    footer {
+      background:#030303;
+      border-top:1px solid rgba(255,255,255,.05);
+      padding:3.5rem 1.25rem 2rem;
+      padding-bottom: max(2rem, calc(1rem + var(--safe)));
+      padding-left: max(1.25rem, env(safe-area-inset-left));
+      padding-right: max(1.25rem, env(safe-area-inset-right));
+    }
+    .footer-grid {
+      display:grid; grid-template-columns:2fr 1fr 1fr;
+      gap:2.5rem; max-width:1060px; margin:0 auto 2.5rem;
+    }
+    @media (max-width:640px) {
+      .footer-grid { grid-template-columns:1fr; gap:2rem; }
+    }
+
+    .footer-brand-name {
+      font-family:'Bangers',cursive; font-size:1.8rem; letter-spacing:3px;
+      color:var(--cyan); text-shadow:0 0 16px rgba(0,229,255,.35);
+      display:flex; align-items:center; gap:8px;
+    }
+    .footer-brand p {
+      font-family:'Special Elite',cursive; font-size:.78rem;
+      color:rgba(255,255,255,.3); margin-top:.6rem; line-height:1.7; max-width:260px;
+    }
+    .footer-col h4 {
+      font-family:'Bebas Neue',cursive; font-size:.9rem; letter-spacing:3px;
+      color:rgba(255,255,255,.3); margin-bottom:.9rem;
+    }
+    .footer-col ul { list-style:none; }
+    .footer-col li { margin-bottom:.5rem; }
+    .footer-col a {
+      font-family:'Special Elite',cursive; font-size:.8rem;
+      color:rgba(255,255,255,.45); transition:color .2s;
+    }
+    .footer-col a:hover { color:var(--cyan); }
+
+    .footer-bottom {
+      border-top:1px solid rgba(255,255,255,.05);
+      padding-top:1.5rem; max-width:1060px; margin:0 auto;
+      display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:.75rem;
+    }
+    .footer-bottom p {
+      font-family:'Special Elite',cursive; font-size:.72rem; color:rgba(255,255,255,.18);
+    }
+    /* Easter egg */
+    .easter-egg {
+      font-family:'Special Elite',cursive; font-size:.65rem;
+      color:rgba(255,255,255,.1); letter-spacing:2px;
+      transition:color .4s;
+    }
+    .easter-egg:hover { color:rgba(245,200,66,.5); }
+    .easter-egg a { color:inherit; }
+
+    /* ══════════════════════════════════════
+       HERO BANNER
+    ══════════════════════════════════════ */
+    .hero-banner {
+      position: relative;
+      width: 100%;
+      background:
+        radial-gradient(ellipse 80% 100% at 50% 50%, rgba(91,26,170,0.22) 0%, transparent 70%),
+        linear-gradient(180deg, #0a0008 0%, #0d0010 50%, #080008 100%);
+      border-bottom: 2px solid rgba(0,229,255,0.2);
+      overflow: hidden;
+      padding: 2rem 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .hero-banner-bg {
+      position: absolute; inset: 0;
+      background-image: radial-gradient(circle, rgba(0,229,255,0.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+    }
+
+    .hero-banner-inner {
+      position: relative; z-index: 2;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    /* scrolling ticker */
+    .banner-ticker {
+      width: 100%; overflow: hidden;
+      display: flex; white-space: nowrap;
+    }
+    .banner-ticker span {
+      display: inline-block;
+      font-family: 'Bebas Neue', cursive;
+      font-size: clamp(0.75rem, 2vw, 0.95rem);
+      letter-spacing: 4px;
+      color: rgba(245,200,66,0.45);
+      animation: ticker-left 28s linear infinite;
+      padding-right: 0;
+    }
+    .banner-ticker-rev span {
+      animation: ticker-right 28s linear infinite;
+      color: rgba(0,229,255,0.3);
+    }
+    @keyframes ticker-left {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    @keyframes ticker-right {
+      0%   { transform: translateX(-50%); }
+      100% { transform: translateX(0); }
+    }
+
+    /* center logo */
+    .banner-logo-wrap {
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0.5rem 0;
+    }
+    .banner-logo-img {
+      height: clamp(100px, 22vw, 180px);
+      width: auto;
+      position: relative; z-index: 2;
+      filter: drop-shadow(0 0 20px rgba(0,229,255,0.35)) drop-shadow(0 0 50px rgba(91,26,170,0.4));
+      animation: logo-float 6s ease-in-out infinite;
+      mix-blend-mode: lighten;
+    }
+    @keyframes logo-float {
+      0%, 100% { transform: translateY(0px); filter: drop-shadow(0 0 20px rgba(0,229,255,0.35)) drop-shadow(0 0 50px rgba(91,26,170,0.4)); }
+      50% { transform: translateY(-6px); filter: drop-shadow(0 0 32px rgba(0,229,255,0.6)) drop-shadow(0 0 70px rgba(91,26,170,0.55)); }
+    }
+    .banner-glow {
+      position: absolute;
+      width: 260px; height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,255,0.08) 0%, transparent 70%);
+      animation: pulse 5s ease-in-out infinite;
+      z-index: 1;
+    }
+
+    /* ══════════════════════════════════════
+       SCROLL REVEAL
+    ══════════════════════════════════════ */
+    .reveal {
+      opacity:0; transform:translateY(28px);
+      transition:opacity .65s ease, transform .65s ease;
+    }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+
+  </style>
+</head>
+<body>
+
+<!-- ══ PIPE BAR ══ -->
+<div class="pipe-bar"></div>
+
+<!-- ══ NAV ══ -->
+<nav>
+  <a href="index.html" class="nav-brand">
+    <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo Logo" class="pm-logo-img">
+    <div class="nav-brand-text">
+      <span class="nav-brand-name">PIPE MOJO</span>
+      <span class="nav-brand-tag">Keep Them Pipes Fixed</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="comics.html">COMICS</a></li>
+    <li><a href="#shorts">SHORTS</a></li>
+    <li><a href="#characters">CREW</a></li>
+    <li><a href="#merch">MERCH</a></li>
+  </ul>
+  <a href="comics.html" class="nav-read-btn">READ FREE</a>
+</nav>
+
+<!-- ══ HERO BANNER ══ -->
+<div class="hero-banner">
+  <div class="hero-banner-bg"></div>
+  <div class="hero-banner-inner">
+    <!-- scrolling text track left -->
+    <div class="banner-ticker" aria-hidden="true">
+      <span>KEEP THEM PIPES FIXED &nbsp;⚜&nbsp; PIPE MOJO &amp; GANJA &nbsp;⚜&nbsp; WHEN VOODOO MET PLUMBING &nbsp;⚜&nbsp; KEEP THEM PIPES FIXED &nbsp;⚜&nbsp; PIPE MOJO &amp; GANJA &nbsp;⚜&nbsp; WHEN VOODOO MET PLUMBING &nbsp;⚜&nbsp;</span>
+      <span aria-hidden="true">KEEP THEM PIPES FIXED &nbsp;⚜&nbsp; PIPE MOJO &amp; GANJA &nbsp;⚜&nbsp; WHEN VOODOO MET PLUMBING &nbsp;⚜&nbsp; KEEP THEM PIPES FIXED &nbsp;⚜&nbsp; PIPE MOJO &amp; GANJA &nbsp;⚜&nbsp; WHEN VOODOO MET PLUMBING &nbsp;⚜&nbsp;</span>
+    </div>
+    <!-- centered logo -->
+    <div class="banner-logo-wrap">
+      <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo" class="banner-logo-img">
+      <div class="banner-glow"></div>
+    </div>
+    <!-- scrolling text track right (reverse) -->
+    <div class="banner-ticker banner-ticker-rev" aria-hidden="true">
+      <span>ISSUE #1 OUT NOW &nbsp;⚜&nbsp; @PIPEMOJO &nbsp;⚜&nbsp; THAT PLUMBING CURSE GON' GET YA &nbsp;⚜&nbsp; ISSUE #1 OUT NOW &nbsp;⚜&nbsp; @PIPEMOJO &nbsp;⚜&nbsp; THAT PLUMBING CURSE GON' GET YA &nbsp;⚜&nbsp;</span>
+      <span aria-hidden="true">ISSUE #1 OUT NOW &nbsp;⚜&nbsp; @PIPEMOJO &nbsp;⚜&nbsp; THAT PLUMBING CURSE GON' GET YA &nbsp;⚜&nbsp; ISSUE #1 OUT NOW &nbsp;⚜&nbsp; @PIPEMOJO &nbsp;⚜&nbsp; THAT PLUMBING CURSE GON' GET YA &nbsp;⚜&nbsp;</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <!-- drop your hero character image in images/hero-mojo.jpg -->
+  <img class="hero-char-img" src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/hero-mojo.jpg" alt="Pipe Mojo" onerror="this.style.display='none'">
+  <div class="hero-glow"></div>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">
+      <span class="eyebrow-line"></span>
+      Issue #1 Out Now
+      <span class="eyebrow-line"></span>
+    </p>
+
+    <h1 class="hero-title">
+      <span class="t1">WHEN VOODOO</span>
+      <span class="t2">MET PLUMBING</span>
+    </h1>
+
+    <p class="hero-catchphrase">
+      "Keep them pipes fixed —<br>
+      or that plumbing curse gon' get ya."
+    </p>
+
+    <p class="hero-sub">
+      Pipe Mojo is a <em>voodoo doll plumber</em> with magic pins and zero tolerance for bad pipe work. Ganja, his roach sidekick, mostly watches. <em>Two issues live. More dropping weekly.</em>
+    </p>
+
+    <div class="hero-ctas">
+      <a href="comics.html" class="btn-primary">READ FREE ↗</a>
+      <a href="https://www.tiktok.com/@pipemojo" target="_blank" rel="noopener" class="btn-ghost">
+        <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.28 6.28 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.07a8.16 8.16 0 004.77 1.52V7.14a4.86 4.86 0 01-1-.45z"/></svg>
+        @PIPEMOJO
+      </a>
+      <a href="https://youtube.com/@pipemojo/shorts" target="_blank" rel="noopener" class="btn-ghost">
+        <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        SHORTS
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FLEUR DIVIDER ══ -->
+<div class="fleur-divider"><span>⚜</span></div>
+<div class="pipe-bar"></div>
+
+<!-- ══ ISSUES ══ -->
+<section class="issues-section" id="comics">
+  <div class="section-inner">
+    <div class="issues-header reveal">
+      <p class="section-eyebrow">The Universe</p>
+      <h2 class="section-heading">READ THE ISSUES</h2>
+    </div>
+
+    <div class="issues-grid">
+
+      <!-- Issue #0 -->
+      <a href="comics.html?issue=0" class="issue-card reveal">
+        <span class="issue-badge">ORIGIN</span>
+        <div class="issue-cover-block">
+          <!-- <img src="images/comics/issue0-cover.jpg" alt="Issue 0 Cover"> -->
+          <span class="cover-placeholder-text" style="color:var(--cyan);text-shadow:0 0 30px var(--cyan)">#0</span>
+          <span class="cover-sub">When Voodoo<br>Met Plumbing</span>
+        </div>
+        <div class="issue-info">
+          <p class="issue-number">Issue Zero · Origin Story</p>
+          <h3 class="issue-name">WHEN VOODOO MET PLUMBING</h3>
+          <p class="issue-desc">A haunted house job. Voodoo pins in a box. A cockroach named Ganja who almost goes down the drain. How it all started.</p>
+          <span class="issue-cta">READ NOW →</span>
+        </div>
+      </a>
+
+      <!-- Issue #1 -->
+      <a href="comics.html?issue=1" class="issue-card reveal" style="transition-delay:.12s">
+        <span class="issue-badge new-badge">NEW</span>
+        <div class="issue-cover-block" style="background:linear-gradient(135deg,#0a180a,#0a0a20)">
+          <!-- <img src="images/comics/issue1-cover.jpg" alt="Issue 1 Cover"> -->
+          <span class="cover-placeholder-text" style="color:var(--toxic);text-shadow:0 0 30px var(--toxic)">#1</span>
+          <span class="cover-sub">The System</span>
+        </div>
+        <div class="issue-info">
+          <p class="issue-number">Issue One · The Sewer Arc</p>
+          <h3 class="issue-name">THE SYSTEM</h3>
+          <p class="issue-desc">Down here nobody calls it plumbing. Fatbergs. Root intrusions. Something thumping in the deep that ain't supposed to be alive.</p>
+          <span class="issue-cta">READ NOW →</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══ FLEUR ══ -->
+<div class="fleur-divider"><span>⚜</span></div>
+
+<!-- ══ CHARACTERS ══ -->
+<section class="characters-section" id="characters">
+  <div class="section-inner">
+    <div class="characters-header reveal">
+      <p class="section-eyebrow">The Crew</p>
+      <h2 class="section-heading">MEET THE TEAM</h2>
+    </div>
+    <div class="chars-grid">
+
+      <div class="char-card mojo reveal">
+        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/mojo.png" alt="Pipe Mojo">
+        <div class="char-overlay">
+          <h3 class="char-name">PIPE MOJO</h3>
+          <p class="char-role">Voodoo Plumber · X Eyes · No chill</p>
+          <div class="char-tags">
+            <span class="char-tag">Red Wrench</span>
+            <span class="char-tag">Magic Pins</span>
+            <span class="char-tag">Top Hat</span>
+            <span class="char-tag">Burlap</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="char-card ganja reveal" style="transition-delay:.1s">
+        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/ganja.png" alt="Ganja">
+        <div class="char-overlay">
+          <h3 class="char-name">GANJA</h3>
+          <p class="char-role">Roach Sidekick · Knee-high · Big feelings</p>
+          <div class="char-tags">
+            <span class="char-tag">Orange Shell</span>
+            <span class="char-tag">Antennae</span>
+            <span class="char-tag">No words</span>
+            <span class="char-tag">All vibes</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Quote strip -->
+  <div class="char-quote-strip" style="margin-top:3rem;">
+    <div class="quote-inner reveal">
+      <p class="big-quote">"KEEP THEM PIPES FIXED."</p>
+      <p class="quote-attr">
+        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="" style="height:16px;width:auto;opacity:.5;display:inline-block;">
+        Pipe Mojo · @pipemojo
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FLEUR ══ -->
+<div class="fleur-divider"><span>⚜</span></div>
+<div class="pipe-bar"></div>
+
+<!-- ══ SHORTS ══ -->
+<section class="shorts-section" id="shorts">
+  <div class="section-inner">
+    <div class="shorts-header reveal">
+      <div>
+        <p class="section-eyebrow">TikTok &amp; YouTube</p>
+        <h2 class="section-heading">LATEST SHORTS</h2>
+      </div>
+      <div class="social-pills">
+        <a href="https://www.tiktok.com/@pipemojo" target="_blank" rel="noopener" class="social-pill tk">
+          <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.28 6.28 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.07a8.16 8.16 0 004.77 1.52V7.14a4.86 4.86 0 01-1-.45z"/></svg>
+          @PIPEMOJO
+        </a>
+        <a href="https://youtube.com/@pipemojo/shorts" target="_blank" rel="noopener" class="social-pill yt">
+          <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          YOUTUBE
+        </a>
+      </div>
+    </div>
+
+    <!--
+      PASTE YOUR EMBEDS HERE when ready. Replace the placeholder block below.
+      YouTube Short example:
+        <div style="aspect-ratio:9/16;max-width:320px;border-radius:12px;overflow:hidden">
+          <iframe width="100%" height="100%" src="https://www.youtube.com/embed/VIDEO_ID"
+            frameborder="0" allowfullscreen></iframe>
+        </div>
+      TikTok: use the blockquote embed from TikTok share menu.
+    -->
+    <div class="shorts-placeholder reveal">
+      <p class="big-handle">@PIPEMOJO</p>
+      <p>Weekly drops on TikTok &amp; YouTube Shorts.<br>Every pipe fixed. Every curse lifted.<br>Follow to catch every episode.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ FLEUR ══ -->
+<div class="fleur-divider"><span>⚜</span></div>
+
+<!-- ══ MERCH ══ -->
+<section class="merch-section" id="merch">
+  <div class="merch-inner">
+    <!-- logo large -->
+    <div style="display:flex;justify-content:center;margin-bottom:1.5rem;" class="reveal">
+      <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo" class="pm-logo-img xl">
+    </div>
+
+    <span class="merch-stamp reveal">Coming Soon</span>
+    <h2 class="merch-title reveal">THE <span>MERCH</span><br>IS COMING</h2>
+    <p class="merch-desc reveal">Pipe Mojo tees, stickers &amp; prints. The full voodoo workshop, wearable. Drop your email — you'll be first to know when the shop opens.</p>
+    <div class="email-form reveal">
+      <input type="email" id="merch-email" class="email-input" placeholder="your@email.com" inputmode="email" autocomplete="email">
+      <button class="email-submit" onclick="handleSignup()">NOTIFY ME</button>
+    </div>
+    <p id="merch-confirm">✓ You're on the list. Keep them pipes fixed.</p>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<div class="pipe-bar"></div>
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="footer-brand-name">
+        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo" class="pm-logo-img sm">
+        PIPE MOJO
+      </div>
+      <p>A voodoo doll plumber and his roach sidekick navigate the underground. Dark humor. Real plumbing. Supernatural solutions. Keep them pipes fixed.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Universe</h4>
+      <ul>
+        <li><a href="comics.html?issue=0">Issue #0 — Origin</a></li>
+        <li><a href="comics.html?issue=1">Issue #1 — The System</a></li>
+        <li><a href="#characters">Meet the Crew</a></li>
+        <li><a href="#merch">Merch Waitlist</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Follow</h4>
+      <ul>
+        <li><a href="https://www.tiktok.com/@pipemojo" target="_blank" rel="noopener">TikTok @pipemojo</a></li>
+        <li><a href="https://youtube.com/@pipemojo" target="_blank" rel="noopener">YouTube @pipemojo</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 Pipe Mojo. All rights reserved.</p>
+    <p class="easter-egg">Built on <a href="https://scopereadytools.com" target="_blank" rel="noopener">ScopeReady Tools</a> · Deployed on Cloudflare Pages</p>
+  </div>
+</footer>
+
+<script>
+  // Merch signup
+  function handleSignup() {
+    const el = document.getElementById('merch-email');
+    if (!el.value || !el.value.includes('@')) { el.focus(); return; }
+    document.getElementById('merch-confirm').style.display = 'block';
+    el.value = '';
+    // TODO: POST to Cloudflare Worker → KV / ConvertKit / Mailchimp
+  }
+  document.getElementById('merch-email').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSignup();
+  });
+
+  // Scroll reveal
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
