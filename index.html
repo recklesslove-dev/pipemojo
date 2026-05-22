@@ -552,6 +552,36 @@
       color:rgba(255,255,255,.35); margin-top:.75rem; line-height:1.8;
     }
 
+    .shorts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+
+    .short-card {
+      border-radius: 12px;
+      overflow: hidden;
+      background: #0d0b09;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .short-platform {
+      display: flex; align-items: center; gap: 6px;
+      padding: .6rem 1rem;
+      font-family: 'Bebas Neue', cursive;
+      font-size: .85rem; letter-spacing: 2px;
+    }
+    .short-platform svg { width: 14px; height: 14px; fill: currentColor; }
+    .short-platform-tk { background: rgba(0,229,255,.08); color: var(--cyan); }
+    .short-platform-yt { background: rgba(232,40,30,.08); color: var(--red); }
+
+    .short-embed {
+      aspect-ratio: 9/16;
+      background: #000;
+    }
+    .short-embed iframe { display: block; }
+
     /* ══════════════════════════════════════
        MERCH SECTION
     ══════════════════════════════════════ */
@@ -864,9 +894,7 @@
       <a href="comics.html?issue=0" class="issue-card reveal">
         <span class="issue-badge">ORIGIN</span>
         <div class="issue-cover-block">
-          <!-- <img src="images/comics/issue0-cover.jpg" alt="Issue 0 Cover"> -->
-          <span class="cover-placeholder-text" style="color:var(--cyan);text-shadow:0 0 30px var(--cyan)">#0</span>
-          <span class="cover-sub">When Voodoo<br>Met Plumbing</span>
+          <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/IMG_1433.jpeg" alt="Issue 0 Cover">
         </div>
         <div class="issue-info">
           <p class="issue-number">Issue Zero · Origin Story</p>
@@ -879,10 +907,8 @@
       <!-- Issue #1 -->
       <a href="comics.html?issue=1" class="issue-card reveal" style="transition-delay:.12s">
         <span class="issue-badge new-badge">NEW</span>
-        <div class="issue-cover-block" style="background:linear-gradient(135deg,#0a180a,#0a0a20)">
-          <!-- <img src="images/comics/issue1-cover.jpg" alt="Issue 1 Cover"> -->
-          <span class="cover-placeholder-text" style="color:var(--toxic);text-shadow:0 0 30px var(--toxic)">#1</span>
-          <span class="cover-sub">The System</span>
+        <div class="issue-cover-block">
+          <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/IMG_1439.jpeg" alt="Issue 1 Cover">
         </div>
         <div class="issue-info">
           <p class="issue-number">Issue One · The Sewer Arc</p>
@@ -984,9 +1010,60 @@
         </div>
       TikTok: use the blockquote embed from TikTok share menu.
     -->
-    <div class="shorts-placeholder reveal">
-      <p class="big-handle">@PIPEMOJO</p>
-      <p>Weekly drops on TikTok &amp; YouTube Shorts.<br>Every pipe fixed. Every curse lifted.<br>Follow to catch every episode.</p>
+    <div class="shorts-grid reveal">
+
+      <!-- TikTok 1 -->
+      <div class="short-card">
+        <div class="short-platform short-platform-tk">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.28 6.28 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.07a8.16 8.16 0 004.77 1.52V7.14a4.86 4.86 0 01-1-.45z"/></svg>
+          TIKTOK
+        </div>
+        <div class="short-embed">
+          <iframe src="https://www.tiktok.com/embed/v2/7633925017071357198" 
+            allowfullscreen scrolling="no" 
+            style="width:100%;height:100%;border:none;"></iframe>
+        </div>
+      </div>
+
+      <!-- TikTok 2 -->
+      <div class="short-card">
+        <div class="short-platform short-platform-tk">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.28 6.28 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.07a8.16 8.16 0 004.77 1.52V7.14a4.86 4.86 0 01-1-.45z"/></svg>
+          TIKTOK
+        </div>
+        <div class="short-embed">
+          <iframe src="https://www.tiktok.com/embed/v2/7625489252142419213" 
+            allowfullscreen scrolling="no"
+            style="width:100%;height:100%;border:none;"></iframe>
+        </div>
+      </div>
+
+      <!-- YouTube Short 1 -->
+      <div class="short-card">
+        <div class="short-platform short-platform-yt">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          YOUTUBE
+        </div>
+        <div class="short-embed">
+          <iframe src="https://www.youtube.com/embed/lAPYiV-1OMA" 
+            allowfullscreen
+            style="width:100%;height:100%;border:none;"></iframe>
+        </div>
+      </div>
+
+      <!-- YouTube Short 2 -->
+      <div class="short-card">
+        <div class="short-platform short-platform-yt">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          YOUTUBE
+        </div>
+        <div class="short-embed">
+          <iframe src="https://www.youtube.com/embed/LrLYLH5OA30" 
+            allowfullscreen
+            style="width:100%;height:100%;border:none;"></iframe>
+        </div>
+      </div>
+
     </div>
 
   </div>
