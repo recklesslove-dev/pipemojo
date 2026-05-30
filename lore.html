@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0a0805">
 <title>The Lore — Pipe Mojo</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Special+Elite&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Special+Elite&family=Bebas+Neue&family=Bangers&display=swap" rel="stylesheet">
 <style>
   :root {
     --black: #0a0805;
@@ -325,9 +325,50 @@
     text-decoration: none; transition: color 0.2s;
   }
   .back-home:hover { color: var(--gold); }
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 300;
+    background: rgba(6,6,6,0.97);
+    border-bottom: 2px solid rgba(201,168,76,0.25);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 0 1.25rem;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+  }
+  .nav-brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0; text-decoration: none; }
+  .nav-brand img { height: 32px; width: 32px; object-fit: contain; mix-blend-mode: lighten; filter: drop-shadow(0 0 5px rgba(201,168,76,0.4)); }
+  .nav-brand-name { font-family: "Bangers", cursive; font-size: 1.5rem; letter-spacing: 3px; color: #00e5ff; text-shadow: 0 0 14px rgba(0,229,255,0.45); line-height: 1; }
+  .nav-brand-tag { font-family: "Special Elite", cursive; font-size: 0.5rem; letter-spacing: 2px; color: var(--gold); opacity: 0.75; display: block; margin-top: -2px; text-transform: uppercase; }
+  .nav-links { display: flex; gap: 0.5rem; list-style: none; align-items: center; }
+  .nav-links a { font-family: "Bebas Neue", cursive; font-size: 0.95rem; letter-spacing: 2px; color: rgba(255,255,255,0.45); transition: color .2s; white-space: nowrap; padding: 4px 2px; }
+  .nav-links a:hover { color: #00e5ff; }
+  .nav-links a.nav-lore { color: var(--gold); text-shadow: 0 0 8px rgba(201,168,76,0.3); }
+  .nav-read-btn { font-family: "Bebas Neue", cursive; font-size: 0.85rem; letter-spacing: 2px; padding: 6px 14px; background: #e8281e; color: #fff; border-radius: 4px; transition: background .2s; white-space: nowrap; flex-shrink: 0; }
+  .nav-read-btn:hover { background: #c0392b; }
+  @media (max-width: 480px) { .nav-links a:not(.nav-lore) { display: none; } }
 </style>
 </head>
 <body>
+
+<nav>
+  <a href="index.html" class="nav-brand">
+    <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo">
+    <div>
+      <span class="nav-brand-name">PIPE MOJO</span>
+      <span class="nav-brand-tag">Keep Them Pipes Clean</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="comics.html">COMICS</a></li>
+    <li><a href="lore.html" class="nav-lore">LORE</a></li>
+    <li><a href="index.html#shorts">SHORTS</a></li>
+    <li><a href="index.html#characters">CREW</a></li>
+    <li><a href="index.html#merch">MERCH</a></li>
+  </ul>
+  <a href="comics.html" class="nav-read-btn">READ FREE</a>
+</nav>
 
 <div class="particles" id="particles"></div>
 
