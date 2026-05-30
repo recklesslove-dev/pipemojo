@@ -136,7 +136,7 @@
     position: relative;
     z-index: 2;
     width: min(340px, 90vw);
-    height: min(580px, 85vw * 1.7);
+    height: min(580px, calc(90vw * 1.7));
     perspective: 1200px;
     cursor: pointer;
     margin: 0 auto;
@@ -176,6 +176,7 @@
     width: 100%;
     height: 100%;
     backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
     border-radius: 20px;
     overflow: hidden;
   }
@@ -455,7 +456,7 @@
 
   .lore-text {
     font-family: 'Crimson Text', serif;
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     line-height: 1.65;
     color: var(--cream-dark);
   }
