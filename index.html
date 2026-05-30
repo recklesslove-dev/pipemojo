@@ -3,700 +3,589 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Pipe Mojo">
-  <meta name="theme-color" content="#080808">
+  <link rel="icon" type="image/png" href="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png">
+  <link rel="apple-touch-icon" href="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png">
   <title>Pipe Mojo | Keep Them Pipes Clean</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bangers&family=Special+Elite&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --black:  #060606;
+      --ink:    #0e0b08;
+      --deep:   #12100e;
+      --cyan:   #00e5ff;
+      --toxic:  #39ff14;
+      --red:    #e8281e;
+      --gold:   #f5c842;
+      --bourbon:#c17f24;
+      --purple: #5b1aaa;
+      --cream:  #f0e8d0;
+      --safe:   env(safe-area-inset-bottom, 0px);
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
     body {
-      background: #080808;
-      color: #f0e6c8;
-      font-family: 'Georgia', serif;
+      background: var(--black);
+      color: #fff;
+      font-family: 'Oswald', sans-serif;
       overflow-x: hidden;
     }
-    a { color: inherit; text-decoration: none; }
-    img { max-width: 100%; display: block; }
 
-    /* ── TICKER ── */
-    .ticker-bar {
-      background: #8b1a1a;
-      overflow: hidden;
-      white-space: nowrap;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9000; opacity: 0.5;
     }
-    .ticker-bar.gold {
-      background: rgba(201,168,76,0.08);
-      border-top: 1px solid rgba(201,168,76,0.15);
-      border-bottom: 1px solid rgba(201,168,76,0.15);
-    }
-    .ticker-inner {
+
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #000; }
+    ::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 2px; }
+
+    .pm-logo-img {
       display: inline-block;
-      animation: ticker 30s linear infinite;
-      font-size: 0.72rem;
-      letter-spacing: 0.22em;
-      font-family: 'Courier New', monospace;
-      font-weight: bold;
-      color: #fff;
+      height: 48px; width: auto;
+      flex-shrink: 0;
+      object-fit: contain;
+      mix-blend-mode: lighten;
     }
-    .ticker-bar.gold .ticker-inner { color: #c9a84c; animation-duration: 22s; }
-    @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .pm-logo-img.sm { height: 36px; }
+    .pm-logo-img.lg { height: 72px; }
+    .pm-logo-img.xl { height: 110px; }
+
+    .pipe-bar {
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--cyan) 20%, var(--purple) 50%, var(--cyan) 80%, transparent);
+      background-size: 200% 100%;
+      animation: pipe-flow 3s linear infinite;
+    }
+    @keyframes pipe-flow {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
 
     /* ── NAV ── */
     nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(8,8,8,0.97);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(201,168,76,0.2);
-      padding: 0 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(6,6,6,0.97);
+      border-bottom: 2px solid rgba(0,229,255,0.35);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 0 1.25rem;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding-left: max(1.25rem, env(safe-area-inset-left));
+      padding-right: max(1.25rem, env(safe-area-inset-right));
       gap: 8px;
-      min-height: 56px;
     }
+
     .nav-brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      display: flex; align-items: center; gap: 10px;
       flex-shrink: 0;
-      text-decoration: none;
     }
-    .nav-brand img {
-      height: 34px;
-      width: 34px;
-      object-fit: contain;
-      filter: drop-shadow(0 0 5px rgba(201,168,76,0.4));
+    .nav-brand-text { line-height: 1; }
+    .nav-brand-name {
+      font-family: 'Bangers', cursive;
+      font-size: 1.75rem; letter-spacing: 3px;
+      color: var(--cyan);
+      text-shadow: 0 0 16px rgba(0,229,255,0.5);
     }
-    .nav-brand-text {
-      font-family: 'Courier New', monospace;
-      font-weight: bold;
-      font-size: 0.8rem;
-      letter-spacing: 0.12em;
-      color: #c9a84c;
-      line-height: 1.2;
-    }
-    .nav-brand-sub {
-      font-size: 0.52rem;
-      letter-spacing: 0.18em;
-      color: #666;
-      display: block;
-      font-weight: normal;
-    }
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      list-style: none;
-      flex-wrap: nowrap;
-    }
-    .nav-links li a {
-      font-family: 'Courier New', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.12em;
-      color: #888;
-      padding: 8px 7px;
-      border-radius: 3px;
-      transition: color 0.2s;
+    .nav-brand-tag {
+      font-family: 'Special Elite', cursive;
+      font-size: 0.55rem; letter-spacing: 2.5px;
+      color: var(--gold); opacity: 0.8;
+      display: block; margin-top: -3px;
       text-transform: uppercase;
+    }
+
+    .nav-links {
+      display: flex; gap: 1rem; list-style: none;
+      align-items: center;
+    }
+    .nav-links a {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.05rem; letter-spacing: 2px;
+      color: rgba(255,255,255,0.5);
+      transition: color .2s;
       white-space: nowrap;
+    }
+    .nav-links a:hover { color: var(--cyan); }
+    .nav-links a.nav-lore {
+      color: var(--gold);
+      text-shadow: 0 0 10px rgba(245,200,66,0.3);
+    }
+    .nav-links a.nav-lore:hover { color: #fff; }
+
+    .nav-read-btn {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 0.95rem; letter-spacing: 2px;
+      padding: 7px 18px;
+      background: var(--cyan); color: #000;
+      border-radius: 4px;
+      transition: background .2s, box-shadow .2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .nav-read-btn:hover {
+      background: #fff;
+      box-shadow: 0 0 20px rgba(0,229,255,0.5);
+    }
+
+    @media (max-width: 640px) {
+      .nav-links { gap: 0.5rem; }
+      .nav-links a { font-size: 0.85rem; letter-spacing: 1px; }
+      .nav-brand-name { font-size: 1.4rem; }
+      .nav-read-btn { padding: 6px 12px; font-size: 0.82rem; }
+    }
+    @media (max-width: 480px) {
+      .nav-links a:not(.nav-lore):not([href="#shorts"]):not([href="comics.html"]) {
+        display: none;
+      }
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex; align-items: center;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 90% 70% at 20% 60%, rgba(91,26,170,0.3) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 80% at 80% 40%, rgba(0,229,255,0.08) 0%, transparent 55%),
+        linear-gradient(170deg, #100808 0%, #060408 60%, #04080e 100%);
+    }
+
+    .hero::before {
+      content: '⚜';
+      position: absolute; right: -2%; bottom: -5%;
+      font-size: clamp(16rem, 40vw, 38rem);
+      color: rgba(255,255,255,0.018);
+      pointer-events: none; line-height: 1;
+      z-index: 0;
+    }
+
+    .hero-char-img {
+      position: absolute;
+      right: 0; bottom: 0;
+      height: 88%;
+      max-width: 50%;
+      object-fit: contain;
+      object-position: bottom right;
+      opacity: 0.55;
+      mask-image: linear-gradient(to left, rgba(0,0,0,0.8) 30%, transparent 90%);
+      -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,0.8) 30%, transparent 90%);
+      z-index: 1;
+    }
+
+    .hero-glow {
+      position: absolute; right: 10%; top: 50%;
+      transform: translateY(-50%);
+      width: min(500px, 70vw); height: min(500px, 70vw);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,255,0.05) 0%, transparent 70%);
+      animation: pulse 5s ease-in-out infinite;
+      z-index: 0;
+    }
+    @keyframes pulse { 0%,100%{transform:translateY(-50%) scale(1);opacity:.5} 50%{transform:translateY(-50%) scale(1.1);opacity:1} }
+
+    .hero-content {
+      position: relative; z-index: 2;
+      padding: 5rem 1.5rem 4rem;
+      max-width: min(640px, 95vw);
+      padding-left: max(1.5rem, env(safe-area-inset-left));
+    }
+
+    .hero-eyebrow {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Special Elite', cursive;
+      font-size: 0.75rem; letter-spacing: 5px;
+      color: var(--gold); text-transform: uppercase;
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fade-up .6s .1s forwards;
+    }
+    .eyebrow-line { height: 1px; width: 32px; background: var(--gold); opacity: 0.5; }
+
+    .hero-title {
+      font-family: 'Bangers', cursive;
+      font-size: clamp(3.2rem, 10vw, 6.5rem);
+      line-height: 0.88; letter-spacing: 3px;
+      opacity: 0; animation: fade-up .7s .25s forwards;
+    }
+    .hero-title .t1 { color: #fff; display: block; }
+    .hero-title .t2 {
+      color: var(--cyan);
+      text-shadow: 0 0 28px var(--cyan), 0 0 60px rgba(0,229,255,0.35);
       display: block;
     }
-    .nav-links li a:hover { color: #c9a84c; }
-    .nav-links li a.nav-lore { color: #c9a84c; }
-    .nav-links li a.nav-cta {
-      background: #8b1a1a;
-      color: #fff !important;
-      padding: 7px 10px;
-      border-radius: 3px;
-      font-weight: bold;
-      font-size: 0.58rem;
+
+    .hero-catchphrase {
+      font-family: 'Special Elite', cursive;
+      font-size: clamp(1rem, 3.5vw, 1.25rem);
+      color: var(--gold);
+      letter-spacing: 1px;
+      margin: 1.25rem 0;
+      opacity: 0; animation: fade-up .7s .4s forwards;
+      border-left: 3px solid var(--red);
+      padding-left: 1rem;
+      line-height: 1.5;
     }
-    .nav-links li a.nav-cta:hover { background: #a93226; }
+
+    .hero-sub {
+      font-family: 'Special Elite', cursive;
+      font-size: 0.9rem; line-height: 1.7;
+      color: rgba(255,255,255,0.5);
+      max-width: 420px;
+      margin-bottom: 2rem;
+      opacity: 0; animation: fade-up .7s .55s forwards;
+    }
+    .hero-sub em { color: var(--toxic); font-style: normal; }
+
+    .hero-ctas {
+      display: flex; flex-wrap: wrap; gap: .75rem;
+      opacity: 0; animation: fade-up .7s .7s forwards;
+    }
+
+    @keyframes fade-up {
+      from { opacity:0; transform:translateY(20px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .btn-primary {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.2rem; letter-spacing: 3px;
+      padding: .9rem 2.2rem;
+      background: var(--cyan); color: #000;
+      border-radius: 4px; border: none;
+      box-shadow: 4px 4px 0 rgba(0,229,255,.25), 0 0 20px rgba(0,229,255,.3);
+      transition: all .2s; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary:active { transform: scale(.97); }
+    @media (hover:hover) {
+      .btn-primary:hover { background:#fff; box-shadow: 6px 6px 0 var(--cyan), 0 0 40px rgba(0,229,255,.5); transform: translate(-2px,-2px); }
+    }
+
+    .btn-ghost {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.1rem; letter-spacing: 2px;
+      padding: .85rem 1.8rem;
+      background: transparent; color: #fff;
+      border: 2px solid rgba(255,255,255,.2);
+      border-radius: 4px;
+      transition: all .2s; cursor: pointer;
+      display: flex; align-items: center; gap: 7px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-ghost:active { opacity: .8; }
+    @media (hover:hover) {
+      .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+    }
+    .btn-ghost svg { width:18px; height:18px; fill:currentColor; flex-shrink:0; }
+
+    /* ── SECTIONS ── */
+    .section-inner {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+      padding-left: max(1.25rem, env(safe-area-inset-left));
+      padding-right: max(1.25rem, env(safe-area-inset-right));
+    }
+
+    .section-eyebrow {
+      font-family: 'Special Elite', cursive;
+      font-size: 0.7rem; letter-spacing: 7px;
+      color: var(--cyan); text-transform: uppercase; opacity: .7;
+      margin-bottom: .5rem;
+    }
+    .section-heading {
+      font-family: 'Bangers', cursive;
+      font-size: clamp(2.2rem, 6vw, 3.5rem);
+      letter-spacing: 3px; line-height: 1;
+    }
+
+    .fleur-divider {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0 1.25rem;
+      opacity: .18; pointer-events: none;
+    }
+    .fleur-divider::before, .fleur-divider::after {
+      content: ''; flex: 1;
+      height: 1px; background: var(--gold);
+    }
+    .fleur-divider span { font-size: 1.4rem; color: var(--gold); }
 
     /* ── HERO BANNER ── */
     .hero-banner {
-      background: #080808;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 20px 40px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      min-height: 80vh;
-    }
-    .hero-banner::before {
-      content: '';
-      position: absolute;
-      inset: 0;
+      position: relative; width: 100%;
       background:
-        radial-gradient(ellipse at 50% 40%, rgba(77,184,255,0.07) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 80%, rgba(139,26,26,0.05) 0%, transparent 50%);
+        radial-gradient(ellipse 80% 100% at 50% 50%, rgba(91,26,170,0.22) 0%, transparent 70%),
+        linear-gradient(180deg, #0a0008 0%, #0d0010 50%, #080008 100%);
+      border-bottom: 2px solid rgba(0,229,255,0.2);
+      overflow: hidden;
+      padding: 2rem 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hero-banner-bg {
+      position: absolute; inset: 0;
+      background-image: radial-gradient(circle, rgba(0,229,255,0.06) 1px, transparent 1px);
+      background-size: 28px 28px;
       pointer-events: none;
     }
-    .hero-badge {
-      font-family: 'Courier New', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.3em;
-      color: #c9a84c;
-      padding: 5px 14px;
-      border: 1px solid rgba(201,168,76,0.3);
-      border-radius: 2px;
-      margin-bottom: 24px;
-      position: relative;
-      z-index: 1;
+    .hero-banner-inner {
+      position: relative; z-index: 2; width: 100%;
+      display: flex; flex-direction: column; align-items: center; gap: 1.25rem;
     }
-    .hero-img {
-      width: min(300px, 75vw);
-      margin: 0 auto 32px;
-      position: relative;
-      z-index: 1;
-      filter: drop-shadow(0 0 40px rgba(77,184,255,0.25));
-      animation: hero-float 5s ease-in-out infinite;
+    .banner-ticker { width: 100%; overflow: hidden; display: flex; white-space: nowrap; }
+    .banner-ticker span {
+      display: inline-block;
+      font-family: 'Bebas Neue', cursive;
+      font-size: clamp(0.75rem, 2vw, 0.95rem);
+      letter-spacing: 4px;
+      color: rgba(245,200,66,0.45);
+      animation: ticker-left 28s linear infinite;
     }
-    @keyframes hero-float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
+    .banner-ticker-rev span { animation: ticker-right 28s linear infinite; color: rgba(0,229,255,0.3); }
+    @keyframes ticker-left { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    @keyframes ticker-right { 0%{transform:translateX(-50%)} 100%{transform:translateX(0)} }
+    .banner-logo-wrap {
+      position: relative; display: flex; align-items: center; justify-content: center; padding: 0.5rem 0;
     }
-    .hero-h1 {
-      font-family: 'Courier New', monospace;
-      font-size: clamp(1.6rem, 7vw, 3.2rem);
-      font-weight: bold;
-      letter-spacing: 0.06em;
-      line-height: 1.1;
-      margin-bottom: 16px;
-      color: #f0e6c8;
-      position: relative;
-      z-index: 1;
+    .banner-logo-img {
+      height: clamp(100px, 22vw, 180px); width: auto;
+      position: relative; z-index: 2;
+      filter: drop-shadow(0 0 20px rgba(0,229,255,0.35)) drop-shadow(0 0 50px rgba(91,26,170,0.4));
+      animation: logo-float 6s ease-in-out infinite;
+      mix-blend-mode: lighten;
     }
-    .hero-quote {
-      font-style: italic;
-      font-size: clamp(0.85rem, 2.5vw, 1.05rem);
-      color: #888;
-      max-width: 460px;
-      margin: 0 auto 20px;
-      line-height: 1.7;
-      position: relative;
-      z-index: 1;
+    @keyframes logo-float {
+      0%,100%{transform:translateY(0px);filter:drop-shadow(0 0 20px rgba(0,229,255,0.35)) drop-shadow(0 0 50px rgba(91,26,170,0.4))}
+      50%{transform:translateY(-6px);filter:drop-shadow(0 0 32px rgba(0,229,255,0.6)) drop-shadow(0 0 70px rgba(91,26,170,0.55))}
     }
-    .hero-desc {
-      font-size: clamp(0.8rem, 2vw, 0.92rem);
-      color: rgba(240,230,200,0.65);
-      max-width: 440px;
-      margin: 0 auto 32px;
-      line-height: 1.75;
-      position: relative;
-      z-index: 1;
-    }
-    .hero-desc em { color: #c9a84c; font-style: italic; }
-    .hero-btns {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-      position: relative;
-      z-index: 1;
-    }
-    .btn-red {
-      background: #8b1a1a;
-      color: #fff;
-      padding: 12px 26px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.72rem;
-      letter-spacing: 0.15em;
-      font-weight: bold;
-      border-radius: 3px;
-      transition: background 0.2s, transform 0.2s;
-      text-transform: uppercase;
-    }
-    .btn-red:hover { background: #a93226; transform: translateY(-2px); }
-    .btn-outline {
-      border: 1px solid rgba(201,168,76,0.35);
-      color: #c9a84c;
-      padding: 12px 20px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.72rem;
-      letter-spacing: 0.12em;
-      border-radius: 3px;
-      transition: all 0.2s;
-      text-transform: uppercase;
-    }
-    .btn-outline:hover { background: rgba(201,168,76,0.08); border-color: #c9a84c; transform: translateY(-2px); }
-    .btn-ghost {
-      color: #666;
-      padding: 12px 14px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.72rem;
-      letter-spacing: 0.1em;
-      border-radius: 3px;
-      transition: color 0.2s;
-      text-transform: uppercase;
-    }
-    .btn-ghost:hover { color: #f0e6c8; }
-
-    /* ── DIVIDER ── */
-    .divider {
-      text-align: center;
-      color: rgba(201,168,76,0.35);
-      font-size: 1.4rem;
-      padding: 20px 0;
+    .banner-glow {
+      position: absolute; width: 260px; height: 260px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,255,0.08) 0%, transparent 70%);
+      animation: pulse 5s ease-in-out infinite; z-index: 1;
     }
 
-    /* ── SECTIONS ── */
-    .section {
-      padding: 70px 20px;
-      max-width: 860px;
-      margin: 0 auto;
+    /* ── ISSUES ── */
+    .issues-section {
+      padding: 5rem 0;
+      background:
+        radial-gradient(ellipse 100% 50% at 50% 0%, rgba(0,229,255,0.035) 0%, transparent 60%),
+        var(--deep);
     }
-    .section-label {
-      font-family: 'Courier New', monospace;
-      font-size: 0.58rem;
-      letter-spacing: 0.38em;
-      color: #c9a84c;
-      text-transform: uppercase;
-      text-align: center;
-      margin-bottom: 8px;
-      opacity: 0.75;
-    }
-    .section-h2 {
-      font-family: 'Courier New', monospace;
-      font-size: clamp(1.15rem, 4vw, 1.7rem);
-      letter-spacing: 0.1em;
-      text-align: center;
-      margin-bottom: 36px;
-      color: #f0e6c8;
-    }
-
-    /* ── ISSUE CARDS ── */
+    .issues-header { text-align:center; margin-bottom:3rem; }
     .issues-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 22px;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 360px));
+      gap: 2rem; justify-content: center; margin-top: 2.5rem;
     }
     .issue-card {
-      background: #0f0f0f;
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 6px;
-      overflow: hidden;
-      transition: transform 0.3s, box-shadow 0.3s;
-      display: block;
-    }
-    .issue-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 18px rgba(77,184,255,0.08);
-    }
-    .issue-cover {
+      background: #0d0b09;
+      border: 2px solid rgba(255,255,255,.07);
+      border-radius: 8px; overflow: hidden; display: block;
+      transition: transform .3s, border-color .3s, box-shadow .3s;
+      -webkit-tap-highlight-color: transparent;
       position: relative;
-      aspect-ratio: 3/4;
-      background: #111;
-      overflow: hidden;
     }
-    .issue-cover img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.4s;
+    .issue-card:active { transform: scale(.98); }
+    @media (hover:hover) {
+      .issue-card:hover { transform: translateY(-8px) rotate(-.8deg); border-color: var(--cyan); box-shadow: 0 20px 60px rgba(0,229,255,.18); }
     }
-    .issue-card:hover .issue-cover img { transform: scale(1.04); }
     .issue-badge {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.52rem;
-      letter-spacing: 0.18em;
-      padding: 3px 8px;
-      border-radius: 2px;
-      font-weight: bold;
-      text-transform: uppercase;
+      position: absolute; top:14px; left:14px; z-index:2;
+      font-family: 'Bebas Neue', cursive; font-size:.8rem; letter-spacing:2px;
+      padding: 3px 10px; border-radius:3px;
+      background: var(--red); color:#fff;
     }
-    .badge-origin { background: rgba(201,168,76,0.85); color: #000; }
-    .badge-new { background: #8b1a1a; color: #fff; }
-    .issue-info { padding: 16px; }
-    .issue-num {
-      font-family: 'Courier New', monospace;
-      font-size: 0.58rem;
-      letter-spacing: 0.2em;
-      color: #666;
-      margin-bottom: 5px;
+    .issue-badge.new-badge { background: var(--cyan); color:#000; }
+    .issue-cover-block {
+      width:100%; aspect-ratio:3/4;
+      background: linear-gradient(135deg, #1a0a2e, #0a1a2e);
+      position: relative; overflow:hidden;
     }
-    .issue-title {
-      font-family: 'Courier New', monospace;
-      font-size: 0.9rem;
-      letter-spacing: 0.08em;
-      color: #f0e6c8;
-      margin-bottom: 8px;
-    }
-    .issue-desc {
-      font-size: 0.76rem;
-      color: #666;
-      line-height: 1.6;
-      margin-bottom: 12px;
-    }
-    .issue-cta {
-      font-family: 'Courier New', monospace;
-      font-size: 0.62rem;
-      letter-spacing: 0.14em;
-      color: #8b1a1a;
-      text-transform: uppercase;
-    }
-    .issue-card:hover .issue-cta { color: #c0392b; }
+    .issue-cover-block img { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; }
+    .issue-info { padding: 1.4rem 1.4rem 1.6rem; }
+    .issue-number { font-family:'Special Elite',cursive; font-size:.7rem; color:var(--cyan); letter-spacing:4px; text-transform:uppercase; margin-bottom:.3rem; }
+    .issue-name { font-family:'Bangers',cursive; font-size:1.5rem; letter-spacing:2px; margin-bottom:.4rem; }
+    .issue-desc { font-family:'Special Elite',cursive; font-size:.8rem; color:rgba(255,255,255,.45); line-height:1.55; }
+    .issue-cta { display:inline-block; margin-top:1rem; font-family:'Bebas Neue',cursive; font-size:.95rem; letter-spacing:2px; color:var(--cyan); border-bottom:1px solid rgba(0,229,255,.3); transition: color .2s, border-color .2s; }
+    @media (hover:hover) { .issue-card:hover .issue-cta { color:#fff; border-color:#fff; } }
 
     /* ── LORE TEASER ── */
     .lore-teaser {
-      margin-top: 28px;
-      background: linear-gradient(135deg, rgba(201,168,76,0.05), rgba(77,184,255,0.03));
-      border: 1px solid rgba(201,168,76,0.18);
-      border-radius: 6px;
-      padding: 36px 28px;
+      margin-top: 3rem;
+      background: linear-gradient(135deg, rgba(245,200,66,0.04), rgba(0,229,255,0.03));
+      border: 1px solid rgba(245,200,66,0.18);
+      border-radius: 8px;
+      padding: 3rem 2rem;
       text-align: center;
       position: relative;
       overflow: hidden;
     }
     .lore-teaser::before {
       content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 50% 0%, rgba(77,184,255,0.06) 0%, transparent 65%);
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(0,229,255,0.05) 0%, transparent 65%);
       pointer-events: none;
     }
-    .lore-eyebrow {
-      font-family: 'Courier New', monospace;
-      font-size: 0.58rem;
-      letter-spacing: 0.32em;
-      color: #4db8ff;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-      opacity: 0.8;
+    .lore-teaser-eyebrow {
+      font-family: 'Special Elite', cursive;
+      font-size: 0.68rem; letter-spacing: 5px;
+      color: var(--cyan); text-transform: uppercase;
+      opacity: 0.7; margin-bottom: 0.75rem;
     }
     .lore-teaser h3 {
-      font-family: 'Courier New', monospace;
-      font-size: clamp(1rem, 3.5vw, 1.35rem);
-      letter-spacing: 0.1em;
-      color: #e8c96a;
-      margin-bottom: 12px;
+      font-family: 'Bangers', cursive;
+      font-size: clamp(2rem, 6vw, 3rem);
+      letter-spacing: 3px; color: var(--gold);
+      text-shadow: 0 0 20px rgba(245,200,66,0.25);
+      margin-bottom: 1rem;
     }
     .lore-teaser p {
-      font-style: italic;
-      color: rgba(240,230,200,0.65);
-      font-size: 0.88rem;
-      line-height: 1.75;
-      max-width: 400px;
-      margin: 0 auto 22px;
+      font-family: 'Special Elite', cursive;
+      font-size: 0.88rem; line-height: 1.75;
+      color: rgba(255,255,255,0.45);
+      max-width: 420px; margin: 0 auto 1.75rem;
     }
-    .lore-teaser p em { color: #c9a84c; font-style: normal; }
+    .lore-teaser p em { color: var(--gold); font-style: normal; }
     .btn-lore {
       display: inline-block;
-      background: rgba(201,168,76,0.08);
-      border: 1px solid rgba(201,168,76,0.35);
-      color: #e8c96a;
-      padding: 11px 26px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.68rem;
-      letter-spacing: 0.18em;
-      border-radius: 3px;
-      transition: all 0.3s;
-      text-transform: uppercase;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1rem; letter-spacing: 3px;
+      padding: 0.8rem 2rem;
+      background: rgba(245,200,66,0.08);
+      border: 2px solid rgba(245,200,66,0.35);
+      color: var(--gold); border-radius: 4px;
+      transition: all 0.25s;
     }
     .btn-lore:hover {
-      background: rgba(201,168,76,0.16);
-      border-color: #c9a84c;
-      box-shadow: 0 0 18px rgba(201,168,76,0.12);
+      background: rgba(245,200,66,0.16);
+      border-color: var(--gold);
+      box-shadow: 0 0 20px rgba(245,200,66,0.15);
       transform: translateY(-2px);
     }
 
-    /* ── CREW ── */
-    .crew-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 28px;
+    /* ── CHARACTERS ── */
+    .characters-section {
+      padding: 5rem 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 15% 50%, rgba(91,26,170,.14) 0%, transparent 60%),
+        var(--black);
     }
-    .crew-card {
-      background: #0f0f0f;
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 8px;
-      padding: 30px 22px;
-      text-align: center;
-      transition: transform 0.3s;
+    .characters-header { text-align:center; margin-bottom:3rem; }
+    .chars-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top:2rem; }
+    @media (max-width:580px) { .chars-grid { grid-template-columns:1fr; } }
+    .char-card { position:relative; border-radius:8px; overflow:hidden; background:#000; }
+    .char-card.mojo { background: radial-gradient(ellipse at 50% 80%, rgba(0,229,255,0.08) 0%, #000 60%); }
+    .char-card.ganja { background: radial-gradient(ellipse at 50% 80%, rgba(57,255,20,0.07) 0%, #000 60%); }
+    .char-card img {
+      width:100%; height:clamp(320px,55vw,500px);
+      object-fit:contain; object-position: bottom center;
+      display:block; transition:transform .4s;
+      padding: 1.5rem 1.5rem 0; mix-blend-mode: lighten;
     }
-    .crew-card:hover { transform: translateY(-4px); }
-    .crew-img {
-      width: 130px;
-      height: 130px;
-      object-fit: contain;
-      margin: 0 auto 18px;
-      filter: drop-shadow(0 0 18px rgba(77,184,255,0.28));
+    @media (hover:hover) { .char-card:hover img { transform:scale(1.04); } }
+    .char-overlay {
+      position:absolute; bottom:0; left:0; right:0; padding:1.5rem;
+      background:linear-gradient(to top, rgba(0,0,0,.96) 0%, transparent 100%);
     }
-    .crew-name {
-      font-family: 'Courier New', monospace;
-      font-size: 0.95rem;
-      letter-spacing: 0.14em;
-      margin-bottom: 5px;
-      color: #f0e6c8;
-    }
-    .crew-role {
-      font-size: 0.73rem;
-      color: #666;
-      margin-bottom: 14px;
-      font-style: italic;
-    }
-    .crew-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      justify-content: center;
-    }
-    .crew-tag {
-      font-family: 'Courier New', monospace;
-      font-size: 0.52rem;
-      letter-spacing: 0.12em;
-      padding: 3px 8px;
-      border: 1px solid rgba(201,168,76,0.22);
-      border-radius: 2px;
-      color: #c9a84c;
-    }
-    .crew-quote {
-      text-align: center;
-      font-style: italic;
-      font-size: 1.05rem;
-      color: #c9a84c;
-      margin-top: 28px;
-      opacity: 0.65;
-    }
+    .char-name { font-family:'Bangers',cursive; font-size:clamp(2rem,6vw,2.8rem); letter-spacing:4px; line-height:1; }
+    .char-card.mojo .char-name { color:var(--cyan); text-shadow:0 0 16px var(--cyan); }
+    .char-card.ganja .char-name { color:var(--toxic); text-shadow:0 0 16px var(--toxic); }
+    .char-role { font-family:'Special Elite',cursive; font-size:.75rem; letter-spacing:3px; text-transform:uppercase; opacity:.6; margin-top:3px; }
+    .char-tags { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.75rem; }
+    .char-tag { font-family:'Special Elite',cursive; font-size:.65rem; letter-spacing:1px; text-transform:uppercase; background:rgba(255,255,255,.07); padding:3px 8px; border-radius:3px; color:rgba(255,255,255,.5); }
+    .char-quote-strip { background: var(--deep); border-top: 1px solid rgba(0,229,255,.1); padding: 2.5rem 1.25rem; }
+    .quote-inner { max-width:700px; margin:0 auto; text-align:center; }
+    .big-quote { font-family:'Bangers',cursive; font-size:clamp(1.8rem,5vw,3rem); letter-spacing:3px; color:var(--gold); text-shadow: 0 0 30px rgba(245,200,66,.3); line-height:1.2; }
+    .quote-attr { font-family:'Special Elite',cursive; font-size:.75rem; letter-spacing:4px; color:rgba(255,255,255,.3); text-transform:uppercase; margin-top:.75rem; display:flex; align-items:center; justify-content:center; gap:8px; }
 
     /* ── SHORTS ── */
-    .shorts-links {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-bottom: 26px;
-      flex-wrap: wrap;
+    .shorts-section {
+      padding: 5rem 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 85% 50%, rgba(0,229,255,.04) 0%, transparent 60%),
+        var(--deep);
     }
-    .shorts-link-btn {
-      font-family: 'Courier New', monospace;
-      font-size: 0.62rem;
-      letter-spacing: 0.18em;
-      padding: 8px 18px;
-      border: 1px solid rgba(255,255,255,0.14);
-      border-radius: 3px;
-      color: #888;
-      text-transform: uppercase;
-      transition: all 0.2s;
+    .shorts-header { display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:2.5rem; }
+    .social-pills { display:flex; gap:.6rem; flex-wrap:wrap; }
+    .social-pill {
+      font-family:'Bebas Neue',cursive; font-size:.85rem; letter-spacing:2px;
+      padding:7px 16px; border-radius:40px; border:1.5px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.04); color:#fff;
+      display:flex; align-items:center; gap:6px;
+      transition:all .2s; -webkit-tap-highlight-color:transparent;
     }
-    .shorts-link-btn:hover, .shorts-link-btn.active {
-      border-color: #8b1a1a;
-      color: #fff;
-      background: rgba(139,26,26,0.12);
-    }
-    .shorts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 18px;
-    }
-    .short-label {
-      font-family: 'Courier New', monospace;
-      font-size: 0.52rem;
-      letter-spacing: 0.22em;
-      color: #555;
-      margin-bottom: 7px;
-      text-transform: uppercase;
-    }
-    .short-wrap {
-      border-radius: 6px;
-      overflow: hidden;
-      background: #111;
-      border: 1px solid rgba(255,255,255,0.06);
-    }
-    .short-wrap iframe {
-      width: 100%;
-      aspect-ratio: 9/16;
-      border: none;
-      display: block;
-    }
-    .short-wrap.yt iframe { aspect-ratio: 16/9; }
+    .social-pill svg { width:14px; height:14px; fill:currentColor; }
+    .social-pill.tk:hover { border-color:var(--cyan); color:var(--cyan); }
+    .social-pill.yt:hover { border-color:var(--red); color:var(--red); }
+    .shorts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1.25rem; margin-top: 1rem; }
+    .short-card { border-radius: 12px; overflow: hidden; background: #0d0b09; border: 1px solid rgba(255,255,255,.08); }
+    .short-platform { display: flex; align-items: center; gap: 6px; padding: .6rem 1rem; font-family: 'Bebas Neue', cursive; font-size: .85rem; letter-spacing: 2px; }
+    .short-platform svg { width: 14px; height: 14px; fill: currentColor; }
+    .short-platform-tk { background: rgba(0,229,255,.08); color: var(--cyan); }
+    .short-platform-yt { background: rgba(232,40,30,.08); color: var(--red); }
+    .short-embed { aspect-ratio: 9/16; background: #000; }
+    .short-embed iframe { display: block; width:100%; height:100%; border:none; }
 
     /* ── MERCH ── */
-    .merch-box {
-      background: #0f0f0f;
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 8px;
-      padding: 48px 28px;
-      text-align: center;
-      max-width: 480px;
-      margin: 0 auto;
-    }
-    .merch-box img {
-      width: 72px;
-      margin: 0 auto 18px;
-      opacity: 0.75;
-      filter: drop-shadow(0 0 8px rgba(201,168,76,0.28));
-    }
-    .merch-soon {
-      font-family: 'Courier New', monospace;
-      font-size: 0.58rem;
-      letter-spacing: 0.3em;
-      color: #c9a84c;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-    .merch-h2 {
-      font-family: 'Courier New', monospace;
-      font-size: clamp(1.1rem, 4vw, 1.4rem);
-      letter-spacing: 0.08em;
-      margin-bottom: 12px;
-      color: #f0e6c8;
-    }
-    .merch-p {
-      font-size: 0.82rem;
-      color: #666;
-      line-height: 1.75;
-      margin-bottom: 24px;
-    }
-    .merch-form { display: flex; gap: 8px; max-width: 320px; margin: 0 auto; }
-    .merch-input {
-      flex: 1;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.12);
-      color: #f0e6c8;
-      padding: 10px 12px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.72rem;
-      border-radius: 3px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .merch-input:focus { border-color: #c9a84c; }
-    .merch-input::placeholder { color: #555; }
-    .merch-btn {
-      background: #8b1a1a;
-      color: #fff;
-      border: none;
-      padding: 10px 16px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.62rem;
-      letter-spacing: 0.1em;
-      border-radius: 3px;
-      cursor: pointer;
-      font-weight: bold;
-      text-transform: uppercase;
-      transition: background 0.2s;
-      white-space: nowrap;
-    }
-    .merch-btn:hover { background: #a93226; }
-    .merch-success {
-      display: none;
-      font-family: 'Courier New', monospace;
-      font-size: 0.68rem;
-      color: #c9a84c;
-      letter-spacing: 0.1em;
-      margin-top: 12px;
-    }
+    .merch-section { padding: 5rem 0; text-align:center; background: linear-gradient(135deg, rgba(232,40,30,.07) 0%, rgba(91,26,170,.12) 50%, rgba(0,229,255,.05) 100%), var(--black); }
+    .merch-inner { max-width:640px; margin:0 auto; padding:0 1.25rem; }
+    .merch-stamp { display:inline-block; font-family:'Bebas Neue',cursive; font-size:.8rem; letter-spacing:5px; color:var(--gold); border:2px solid rgba(245,200,66,.4); padding:3px 14px; border-radius:3px; margin-bottom:1.25rem; }
+    .merch-title { font-family:'Bangers',cursive; font-size:clamp(2.8rem,9vw,5rem); letter-spacing:4px; line-height:.95; margin-bottom:1.25rem; }
+    .merch-title span { color:var(--red); }
+    .merch-desc { font-family:'Special Elite',cursive; font-size:.9rem; color:rgba(255,255,255,.45); line-height:1.8; margin-bottom:2rem; }
+    .email-form { display:flex; max-width:380px; margin:0 auto; border-radius:5px; overflow:hidden; }
+    .email-input { flex:1; padding:.9rem 1rem; background:rgba(255,255,255,.06); border:2px solid rgba(255,255,255,.12); border-right:none; border-radius:5px 0 0 5px; color:#fff; font-family:'Special Elite',cursive; font-size:.9rem; outline:none; -webkit-appearance:none; transition:border-color .2s; }
+    .email-input:focus { border-color:var(--cyan); }
+    .email-input::placeholder { color:rgba(255,255,255,.3); }
+    .email-submit { padding:.9rem 1.2rem; background:var(--cyan); color:#000; border:none; font-family:'Bebas Neue',cursive; font-size:.95rem; letter-spacing:2px; border-radius:0 5px 5px 0; cursor:pointer; transition:background .2s; }
+    .email-submit:active { background:#fff; }
+    #merch-confirm { display:none; margin-top:.9rem; font-family:'Special Elite',cursive; font-size:.85rem; color:var(--toxic); }
 
     /* ── FOOTER ── */
-    footer {
-      background: #0a0a0a;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      padding: 48px 20px 28px;
-    }
-    .footer-grid {
-      max-width: 860px;
-      margin: 0 auto 36px;
-      display: grid;
-      grid-template-columns: 1.5fr 1fr 1fr;
-      gap: 28px;
-    }
-    .footer-brand-logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .footer-brand-logo img { height: 30px; opacity: 0.75; }
-    .footer-brand-logo span {
-      font-family: 'Courier New', monospace;
-      font-size: 0.75rem;
-      letter-spacing: 0.14em;
-      color: #c9a84c;
-      font-weight: bold;
-    }
-    .footer-desc {
-      font-size: 0.75rem;
-      color: #555;
-      line-height: 1.75;
-    }
-    .footer-col h4 {
-      font-family: 'Courier New', monospace;
-      font-size: 0.56rem;
-      letter-spacing: 0.26em;
-      color: #c9a84c;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-    .footer-col ul { list-style: none; }
-    .footer-col ul li { margin-bottom: 8px; }
-    .footer-col ul li a {
-      font-size: 0.75rem;
-      color: #555;
-      transition: color 0.2s;
-    }
-    .footer-col ul li a:hover { color: #f0e6c8; }
-    .footer-bottom {
-      max-width: 860px;
-      margin: 0 auto;
-      padding-top: 20px;
-      border-top: 1px solid rgba(255,255,255,0.05);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .footer-copy {
-      font-family: 'Courier New', monospace;
-      font-size: 0.58rem;
-      letter-spacing: 0.1em;
-      color: rgba(85,85,85,0.6);
-    }
-    .footer-copy a { color: rgba(201,168,76,0.45); }
-    .footer-copy a:hover { color: #c9a84c; }
+    footer { background:#030303; border-top:1px solid rgba(255,255,255,.05); padding:3.5rem 1.25rem 2rem; padding-bottom: max(2rem, calc(1rem + var(--safe))); }
+    .footer-grid { display:grid; grid-template-columns:2fr 1fr 1fr; gap:2.5rem; max-width:1060px; margin:0 auto 2.5rem; }
+    @media (max-width:640px) { .footer-grid { grid-template-columns:1fr; gap:2rem; } }
+    .footer-brand-name { font-family:'Bangers',cursive; font-size:1.8rem; letter-spacing:3px; color:var(--cyan); text-shadow:0 0 16px rgba(0,229,255,.35); display:flex; align-items:center; gap:8px; }
+    .footer-brand p { font-family:'Special Elite',cursive; font-size:.78rem; color:rgba(255,255,255,.3); margin-top:.6rem; line-height:1.7; max-width:260px; }
+    .footer-col h4 { font-family:'Bebas Neue',cursive; font-size:.9rem; letter-spacing:3px; color:rgba(255,255,255,.3); margin-bottom:.9rem; }
+    .footer-col ul { list-style:none; }
+    .footer-col li { margin-bottom:.5rem; }
+    .footer-col a { font-family:'Special Elite',cursive; font-size:.8rem; color:rgba(255,255,255,.45); transition:color .2s; }
+    .footer-col a:hover { color:var(--cyan); }
+    .footer-bottom { border-top:1px solid rgba(255,255,255,.05); padding-top:1.5rem; max-width:1060px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.75rem; }
+    .footer-bottom p { font-family:'Special Elite',cursive; font-size:.72rem; color:rgba(255,255,255,.18); }
+    .easter-egg { font-family:'Special Elite',cursive; font-size:.65rem; color:rgba(255,255,255,.1); letter-spacing:2px; transition:color .4s; }
+    .easter-egg:hover { color:rgba(245,200,66,.5); }
+    .easter-egg a { color:inherit; }
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 560px) {
-      .footer-grid { grid-template-columns: 1fr 1fr; }
-      .footer-grid > div:first-child { grid-column: 1 / -1; }
-      .merch-form { flex-direction: column; }
-      nav { min-height: 52px; }
-    }
-    @media (max-width: 400px) {
-      .nav-links li a { font-size: 0.54rem; padding: 8px 5px; }
-      .nav-brand-text { font-size: 0.72rem; }
-    }
+    .reveal { opacity:0; transform:translateY(28px); transition:opacity .65s ease, transform .65s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
   </style>
 </head>
 <body>
 
-<!-- TICKER TOP -->
-<div class="ticker-bar">
-  <div class="ticker-inner">
-    &nbsp;&nbsp;KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜ KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜ KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜&nbsp;&nbsp;KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜ KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜ KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜
-  </div>
-</div>
+<div class="pipe-bar"></div>
 
 <!-- NAV -->
 <nav>
   <a href="index.html" class="nav-brand">
-    <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo">
+    <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo Logo" class="pm-logo-img">
     <div class="nav-brand-text">
-      PIPE MOJO
-      <span class="nav-brand-sub">Keep Them Pipes Clean</span>
+      <span class="nav-brand-name">PIPE MOJO</span>
+      <span class="nav-brand-tag">Keep Them Pipes Clean</span>
     </div>
   </a>
   <ul class="nav-links">
@@ -705,178 +594,253 @@
     <li><a href="#shorts">SHORTS</a></li>
     <li><a href="#characters">CREW</a></li>
     <li><a href="#merch">MERCH</a></li>
-    <li><a href="comics.html" class="nav-cta">READ FREE</a></li>
   </ul>
+  <a href="comics.html" class="nav-read-btn">READ FREE</a>
 </nav>
 
-<!-- TICKER 2 -->
-<div class="ticker-bar gold">
-  <div class="ticker-inner">
-    &nbsp;&nbsp;ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜ ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜ ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜&nbsp;&nbsp;ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜ ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜ ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜
+<!-- HERO BANNER -->
+<div class="hero-banner">
+  <div class="hero-banner-bg"></div>
+  <div class="hero-banner-inner">
+    <div class="banner-ticker" aria-hidden="true">
+      <span>KEEP THEM PIPES CLEAN &nbsp;⚜&nbsp; PIPE MOJO &amp; GANJA &nbsp;⚜&nbsp; WHEN VOODOO MET PLUMBING &nbsp;⚜&nbsp; KEEP THEM PIPES CLEAN &nbsp;⚜&nbsp; PIPE MOJO &amp; GANJA &nbsp;⚜&nbsp; WHEN VOODOO MET PLUMBING &nbsp;⚜&nbsp;</span>
+      <span aria-hidden="true">KEEP THEM PIPES CLEAN &nbsp;⚜&nbsp; PIPE MOJO &amp; GANJA &nbsp;⚜&nbsp; WHEN VOODOO MET PLUMBING &nbsp;⚜&nbsp; KEEP THEM PIPES CLEAN &nbsp;⚜&nbsp; PIPE MOJO &amp; GANJA &nbsp;⚜&nbsp; WHEN VOODOO MET PLUMBING &nbsp;⚜&nbsp;</span>
+    </div>
+    <div class="banner-logo-wrap">
+      <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo" class="banner-logo-img">
+      <div class="banner-glow"></div>
+    </div>
+    <div class="banner-ticker banner-ticker-rev" aria-hidden="true">
+      <span>ISSUE #1 OUT NOW &nbsp;⚜&nbsp; @PIPEMOJO &nbsp;⚜&nbsp; THAT PLUMBING CURSE GON' GET YA &nbsp;⚜&nbsp; ISSUE #1 OUT NOW &nbsp;⚜&nbsp; @PIPEMOJO &nbsp;⚜&nbsp; THAT PLUMBING CURSE GON' GET YA &nbsp;⚜&nbsp;</span>
+      <span aria-hidden="true">ISSUE #1 OUT NOW &nbsp;⚜&nbsp; @PIPEMOJO &nbsp;⚜&nbsp; THAT PLUMBING CURSE GON' GET YA &nbsp;⚜&nbsp; ISSUE #1 OUT NOW &nbsp;⚜&nbsp; @PIPEMOJO &nbsp;⚜&nbsp; THAT PLUMBING CURSE GON' GET YA &nbsp;⚜&nbsp;</span>
+    </div>
   </div>
 </div>
 
 <!-- HERO -->
-<div class="hero-banner">
-  <div class="hero-badge">Issue #1 Out Now</div>
-  <img
-    src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/hero-mojo.jpg"
-    alt="Pipe Mojo"
-    class="hero-img"
-    onerror="this.src='https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/mojo.png'"
-  >
-  <h1 class="hero-h1">WHEN VOODOO<br>MET PLUMBING</h1>
-  <p class="hero-quote">"Keep them pipes clean —<br>or that plumbing curse gon' get ya."</p>
-  <p class="hero-desc">
-    Pipe Mojo is a <em>voodoo doll plumber</em> with magic pins and zero tolerance for bad pipe work.
-    Ganja, his roach sidekick, mostly watches. <em>Two issues live. More dropping weekly.</em>
-  </p>
-  <div class="hero-btns">
-    <a href="comics.html" class="btn-red">READ FREE ↗</a>
-    <a href="https://www.tiktok.com/@pipemojo" target="_blank" class="btn-outline">@PIPEMOJO</a>
-    <a href="https://youtube.com/@pipemojo/shorts" target="_blank" class="btn-ghost">SHORTS</a>
+<section class="hero">
+  <img class="hero-char-img" src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/hero-mojo.jpg" alt="Pipe Mojo" onerror="this.style.display='none'">
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">
+      <span class="eyebrow-line"></span>
+      Issue #1 Out Now
+      <span class="eyebrow-line"></span>
+    </p>
+    <h1 class="hero-title">
+      <span class="t1">WHEN VOODOO</span>
+      <span class="t2">MET PLUMBING</span>
+    </h1>
+    <p class="hero-catchphrase">
+      "Keep them pipes clean —<br>
+      or that plumbing curse gon' get ya."
+    </p>
+    <p class="hero-sub">
+      Pipe Mojo is a <em>voodoo doll plumber</em> with magic pins and zero tolerance for bad pipe work. Ganja, his roach sidekick, mostly watches. <em>Two issues live. More dropping weekly.</em>
+    </p>
+    <div class="hero-ctas">
+      <a href="comics.html" class="btn-primary">READ FREE ↗</a>
+      <a href="https://www.tiktok.com/@pipemojo" target="_blank" rel="noopener" class="btn-ghost">
+        <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.28 6.28 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.07a8.16 8.16 0 004.77 1.52V7.14a4.86 4.86 0 01-1-.45z"/></svg>
+        @PIPEMOJO
+      </a>
+      <a href="https://youtube.com/@pipemojo/shorts" target="_blank" rel="noopener" class="btn-ghost">
+        <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        SHORTS
+      </a>
+    </div>
   </div>
-</div>
+</section>
 
-<div class="divider">⚜</div>
+<div class="fleur-divider"><span>⚜</span></div>
+<div class="pipe-bar"></div>
 
 <!-- ISSUES -->
-<section class="section" id="comics">
-  <p class="section-label">The Universe</p>
-  <h2 class="section-h2">READ THE ISSUES</h2>
-  <div class="issues-grid">
-    <a href="comics.html?issue=0" class="issue-card">
-      <div class="issue-cover">
-        <span class="issue-badge badge-origin">ORIGIN</span>
-        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/IMG_1433.jpeg" alt="Issue 0 Cover">
-      </div>
-      <div class="issue-info">
-        <p class="issue-num">Issue Zero · Origin Story</p>
-        <h3 class="issue-title">WHEN VOODOO MET PLUMBING</h3>
-        <p class="issue-desc">A haunted house job. Voodoo pins in a box. A cockroach named Ganja who almost goes down the drain. How it all started.</p>
-        <span class="issue-cta">READ NOW →</span>
-      </div>
-    </a>
-    <a href="comics.html?issue=1" class="issue-card">
-      <div class="issue-cover">
-        <span class="issue-badge badge-new">NEW</span>
-        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/IMG_1439.jpeg" alt="Issue 1 Cover">
-      </div>
-      <div class="issue-info">
-        <p class="issue-num">Issue One · The Sewer Arc</p>
-        <h3 class="issue-title">THE SYSTEM</h3>
-        <p class="issue-desc">Down here nobody calls it plumbing. Fatbergs. Root intrusions. Something thumping in the deep that ain't supposed to be alive.</p>
-        <span class="issue-cta">READ NOW →</span>
-      </div>
-    </a>
-  </div>
+<section class="issues-section" id="comics">
+  <div class="section-inner">
+    <div class="issues-header reveal">
+      <p class="section-eyebrow">The Universe</p>
+      <h2 class="section-heading">READ THE ISSUES</h2>
+    </div>
+    <div class="issues-grid">
+      <a href="comics.html?issue=0" class="issue-card reveal">
+        <span class="issue-badge">ORIGIN</span>
+        <div class="issue-cover-block">
+          <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/IMG_1433.jpeg" alt="Issue 0 Cover">
+        </div>
+        <div class="issue-info">
+          <p class="issue-number">Issue Zero · Origin Story</p>
+          <h3 class="issue-name">WHEN VOODOO MET PLUMBING</h3>
+          <p class="issue-desc">A haunted house job. Voodoo pins in a box. A cockroach named Ganja who almost goes down the drain. How it all started.</p>
+          <span class="issue-cta">READ NOW →</span>
+        </div>
+      </a>
+      <a href="comics.html?issue=1" class="issue-card reveal" style="transition-delay:.12s">
+        <span class="issue-badge new-badge">NEW</span>
+        <div class="issue-cover-block">
+          <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/IMG_1439.jpeg" alt="Issue 1 Cover">
+        </div>
+        <div class="issue-info">
+          <p class="issue-number">Issue One · The Sewer Arc</p>
+          <h3 class="issue-name">THE SYSTEM</h3>
+          <p class="issue-desc">Down here nobody calls it plumbing. Fatbergs. Root intrusions. Something thumping in the deep that ain't supposed to be alive.</p>
+          <span class="issue-cta">READ NOW →</span>
+        </div>
+      </a>
+    </div>
 
-  <!-- LORE TEASER -->
-  <div class="lore-teaser">
-    <p class="lore-eyebrow">New Orleans · 1847</p>
-    <h3>THE LORE</h3>
-    <p>Nobody remembers who stitched him together. <em>He wasn't made for anything grand.</em> Just meant to sit on a shelf and watch over a family that eventually moved on without him. Then came the storm.</p>
-    <a href="lore.html" class="btn-lore">READ THE ORIGIN ✦</a>
+    <!-- LORE TEASER -->
+    <div class="lore-teaser reveal">
+      <p class="lore-teaser-eyebrow">New Orleans · 1847</p>
+      <h3>THE LORE</h3>
+      <p>Nobody remembers who stitched him together. <em>He wasn't made for anything grand.</em> Just meant to sit on a shelf and watch over a family that eventually moved on without him. Then came the storm.</p>
+      <a href="lore.html" class="btn-lore">READ THE ORIGIN ✦</a>
+    </div>
   </div>
 </section>
 
-<div class="divider">⚜</div>
+<div class="fleur-divider"><span>⚜</span></div>
 
-<!-- CREW -->
-<section class="section" id="characters">
-  <p class="section-label">The Crew</p>
-  <h2 class="section-h2">MEET THE TEAM</h2>
-  <div class="crew-grid">
-    <div class="crew-card">
-      <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/mojo.png" alt="Pipe Mojo" class="crew-img">
-      <p class="crew-name">PIPE MOJO</p>
-      <p class="crew-role">Voodoo Plumber · X Eyes · No chill</p>
-      <div class="crew-tags">
-        <span class="crew-tag">Red Wrench</span>
-        <span class="crew-tag">Magic Pins</span>
-        <span class="crew-tag">Top Hat</span>
-        <span class="crew-tag">Burlap</span>
-      </div>
+<!-- CHARACTERS -->
+<section class="characters-section" id="characters">
+  <div class="section-inner">
+    <div class="characters-header reveal">
+      <p class="section-eyebrow">The Crew</p>
+      <h2 class="section-heading">MEET THE TEAM</h2>
     </div>
-    <div class="crew-card">
-      <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/ganja.png" alt="Ganja" class="crew-img">
-      <p class="crew-name">GANJA</p>
-      <p class="crew-role">Roach Sidekick · Knee-high · Big feelings</p>
-      <div class="crew-tags">
-        <span class="crew-tag">Orange Shell</span>
-        <span class="crew-tag">Antennae</span>
-        <span class="crew-tag">No words</span>
-        <span class="crew-tag">All vibes</span>
+    <div class="chars-grid">
+      <div class="char-card mojo reveal">
+        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/mojo.png" alt="Pipe Mojo">
+        <div class="char-overlay">
+          <h3 class="char-name">PIPE MOJO</h3>
+          <p class="char-role">Voodoo Plumber · X Eyes · No chill</p>
+          <div class="char-tags">
+            <span class="char-tag">Red Wrench</span>
+            <span class="char-tag">Magic Pins</span>
+            <span class="char-tag">Top Hat</span>
+            <span class="char-tag">Burlap</span>
+          </div>
+        </div>
+      </div>
+      <div class="char-card ganja reveal" style="transition-delay:.1s">
+        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/ganja.png" alt="Ganja">
+        <div class="char-overlay">
+          <h3 class="char-name">GANJA</h3>
+          <p class="char-role">Roach Sidekick · Knee-high · Big feelings</p>
+          <div class="char-tags">
+            <span class="char-tag">Orange Shell</span>
+            <span class="char-tag">Antennae</span>
+            <span class="char-tag">No words</span>
+            <span class="char-tag">All vibes</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-  <p class="crew-quote">"KEEP THEM PIPES CLEAN."</p>
+  <div class="char-quote-strip" style="margin-top:3rem;">
+    <div class="quote-inner reveal">
+      <p class="big-quote">"KEEP THEM PIPES CLEAN."</p>
+      <p class="quote-attr">
+        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="" style="height:16px;width:auto;opacity:.5;display:inline-block;">
+        Pipe Mojo · @pipemojo
+      </p>
+    </div>
+  </div>
 </section>
 
-<div class="divider">⚜</div>
+<div class="fleur-divider"><span>⚜</span></div>
+<div class="pipe-bar"></div>
 
 <!-- SHORTS -->
-<section class="section" id="shorts">
-  <p class="section-label">TikTok & YouTube</p>
-  <h2 class="section-h2">LATEST SHORTS</h2>
-  <div class="shorts-links">
-    <a href="https://www.tiktok.com/@pipemojo" target="_blank" class="shorts-link-btn active">@PIPEMOJO</a>
-    <a href="https://youtube.com/@pipemojo/shorts" target="_blank" class="shorts-link-btn">YOUTUBE</a>
-  </div>
-  <div class="shorts-grid">
-    <div>
-      <p class="short-label">TikTok</p>
-      <div class="short-wrap">
-        <iframe src="https://www.tiktok.com/embed/v2/7633925017071357198" allowfullscreen></iframe>
+<section class="shorts-section" id="shorts">
+  <div class="section-inner">
+    <div class="shorts-header reveal">
+      <div>
+        <p class="section-eyebrow">TikTok &amp; YouTube</p>
+        <h2 class="section-heading">LATEST SHORTS</h2>
+      </div>
+      <div class="social-pills">
+        <a href="https://www.tiktok.com/@pipemojo" target="_blank" rel="noopener" class="social-pill tk">
+          <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.28 6.28 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.07a8.16 8.16 0 004.77 1.52V7.14a4.86 4.86 0 01-1-.45z"/></svg>
+          @PIPEMOJO
+        </a>
+        <a href="https://youtube.com/@pipemojo/shorts" target="_blank" rel="noopener" class="social-pill yt">
+          <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          YOUTUBE
+        </a>
       </div>
     </div>
-    <div>
-      <p class="short-label">TikTok</p>
-      <div class="short-wrap">
-        <iframe src="https://www.tiktok.com/embed/v2/7625489252142419213" allowfullscreen></iframe>
+    <div class="shorts-grid reveal">
+      <div class="short-card">
+        <div class="short-platform short-platform-tk">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.28 6.28 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.07a8.16 8.16 0 004.77 1.52V7.14a4.86 4.86 0 01-1-.45z"/></svg>
+          TIKTOK
+        </div>
+        <div class="short-embed">
+          <iframe src="https://www.tiktok.com/embed/v2/7633925017071357198" allowfullscreen scrolling="no" style="width:100%;height:100%;border:none;"></iframe>
+        </div>
       </div>
-    </div>
-    <div>
-      <p class="short-label">YouTube</p>
-      <div class="short-wrap yt">
-        <iframe src="https://www.youtube.com/embed/lAPYiV-1OMA" allowfullscreen></iframe>
+      <div class="short-card">
+        <div class="short-platform short-platform-tk">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.28 6.28 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.07a8.16 8.16 0 004.77 1.52V7.14a4.86 4.86 0 01-1-.45z"/></svg>
+          TIKTOK
+        </div>
+        <div class="short-embed">
+          <iframe src="https://www.tiktok.com/embed/v2/7625489252142419213" allowfullscreen scrolling="no" style="width:100%;height:100%;border:none;"></iframe>
+        </div>
       </div>
-    </div>
-    <div>
-      <p class="short-label">YouTube</p>
-      <div class="short-wrap yt">
-        <iframe src="https://www.youtube.com/embed/LrLYLH5OA30" allowfullscreen></iframe>
+      <div class="short-card">
+        <div class="short-platform short-platform-yt">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          YOUTUBE
+        </div>
+        <div class="short-embed">
+          <iframe src="https://www.youtube.com/embed/lAPYiV-1OMA" allowfullscreen style="width:100%;height:100%;border:none;"></iframe>
+        </div>
+      </div>
+      <div class="short-card">
+        <div class="short-platform short-platform-yt">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          YOUTUBE
+        </div>
+        <div class="short-embed">
+          <iframe src="https://www.youtube.com/embed/LrLYLH5OA30" allowfullscreen style="width:100%;height:100%;border:none;"></iframe>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<div class="divider">⚜</div>
+<div class="fleur-divider"><span>⚜</span></div>
 
 <!-- MERCH -->
-<section class="section" id="merch" style="padding-top:0;">
-  <div class="merch-box">
-    <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo">
-    <p class="merch-soon">Coming Soon</p>
-    <h2 class="merch-h2">THE MERCH<br>IS COMING</h2>
-    <p class="merch-p">Pipe Mojo tees, stickers & prints. The full voodoo workshop, wearable. Drop your email — you'll be first to know when the shop opens.</p>
-    <div class="merch-form">
-      <input type="email" class="merch-input" placeholder="your@email.com" id="merch-email">
-      <button class="merch-btn" onclick="submitMerch()">NOTIFY ME</button>
+<section class="merch-section" id="merch">
+  <div class="merch-inner">
+    <div style="display:flex;justify-content:center;margin-bottom:1.5rem;" class="reveal">
+      <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo" class="pm-logo-img xl">
     </div>
-    <p class="merch-success" id="merch-success">✓ You're on the list. Keep them pipes clean.</p>
+    <span class="merch-stamp reveal">Coming Soon</span>
+    <h2 class="merch-title reveal">THE <span>MERCH</span><br>IS COMING</h2>
+    <p class="merch-desc reveal">Pipe Mojo tees, stickers &amp; prints. The full voodoo workshop, wearable. Drop your email — you'll be first to know when the shop opens.</p>
+    <div class="email-form reveal">
+      <input type="email" id="merch-email" class="email-input" placeholder="your@email.com" inputmode="email" autocomplete="email">
+      <button class="email-submit" onclick="handleSignup()">NOTIFY ME</button>
+    </div>
+    <p id="merch-confirm">✓ You're on the list. Keep them pipes clean.</p>
   </div>
 </section>
+
+<div class="pipe-bar"></div>
 
 <!-- FOOTER -->
 <footer>
   <div class="footer-grid">
-    <div>
-      <div class="footer-brand-logo">
-        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo">
-        <span>PIPE MOJO</span>
+    <div class="footer-brand">
+      <div class="footer-brand-name">
+        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo" class="pm-logo-img sm">
+        PIPE MOJO
       </div>
-      <p class="footer-desc">A voodoo doll plumber and his roach sidekick navigate the underground. Dark humor. Real plumbing. Supernatural solutions. Keep them pipes clean.</p>
+      <p>A voodoo doll plumber and his roach sidekick navigate the underground. Dark humor. Real plumbing. Supernatural solutions. Keep them pipes clean.</p>
     </div>
     <div class="footer-col">
       <h4>Universe</h4>
@@ -891,28 +855,31 @@
     <div class="footer-col">
       <h4>Follow</h4>
       <ul>
-        <li><a href="https://www.tiktok.com/@pipemojo" target="_blank">TikTok @pipemojo</a></li>
-        <li><a href="https://youtube.com/@pipemojo" target="_blank">YouTube @pipemojo</a></li>
+        <li><a href="https://www.tiktok.com/@pipemojo" target="_blank" rel="noopener">TikTok @pipemojo</a></li>
+        <li><a href="https://youtube.com/@pipemojo" target="_blank" rel="noopener">YouTube @pipemojo</a></li>
       </ul>
     </div>
   </div>
   <div class="footer-bottom">
-    <p class="footer-copy">© 2025 Pipe Mojo. All rights reserved.</p>
-    <p class="footer-copy">Built on <a href="https://scopereadytools.com" target="_blank">ScopeReady Tools</a> · Deployed on Cloudflare Pages</p>
+    <p>© 2025 Pipe Mojo. All rights reserved.</p>
+    <p class="easter-egg">Built on <a href="https://scopereadytools.com" target="_blank" rel="noopener">ScopeReady Tools</a> · Deployed on Cloudflare Pages</p>
   </div>
 </footer>
 
 <script>
-  function submitMerch() {
-    const e = document.getElementById('merch-email');
-    if (e.value && e.value.includes('@')) {
-      document.querySelector('.merch-form').style.display = 'none';
-      document.getElementById('merch-success').style.display = 'block';
-    }
+  function handleSignup() {
+    const el = document.getElementById('merch-email');
+    if (!el.value || !el.value.includes('@')) { el.focus(); return; }
+    document.getElementById('merch-confirm').style.display = 'block';
+    el.value = '';
   }
-  document.getElementById('merch-email').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') submitMerch();
+  document.getElementById('merch-email').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSignup();
   });
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 </script>
 
 </body>
