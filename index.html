@@ -9,570 +9,579 @@
   <meta name="theme-color" content="#080808">
   <title>Pipe Mojo | Keep Them Pipes Clean</title>
   <style>
-    /* ===================== RESET & BASE ===================== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --black: #080808;
-      --dark: #0f0f0f;
-      --gold: #c9a84c;
-      --gold-light: #e8c96a;
-      --red: #c0392b;
-      --blue: #4db8ff;
-      --white: #f0e6c8;
-      --gray: #888;
-    }
     html { scroll-behavior: smooth; }
     body {
-      background: var(--black);
-      color: var(--white);
+      background: #080808;
+      color: #f0e6c8;
       font-family: 'Georgia', serif;
       overflow-x: hidden;
     }
     a { color: inherit; text-decoration: none; }
     img { max-width: 100%; display: block; }
 
-    /* ===================== TICKER ===================== */
-    .ticker-wrap {
-      background: var(--red);
+    /* ── TICKER ── */
+    .ticker-bar {
+      background: #8b1a1a;
       overflow: hidden;
       white-space: nowrap;
       padding: 8px 0;
       border-bottom: 1px solid rgba(255,255,255,0.1);
     }
-    .ticker {
+    .ticker-bar.gold {
+      background: rgba(201,168,76,0.08);
+      border-top: 1px solid rgba(201,168,76,0.15);
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+    }
+    .ticker-inner {
       display: inline-block;
       animation: ticker 30s linear infinite;
-      font-size: 0.75rem;
-      letter-spacing: 0.2em;
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
       font-family: 'Courier New', monospace;
       font-weight: bold;
+      color: #fff;
     }
+    .ticker-bar.gold .ticker-inner { color: #c9a84c; animation-duration: 22s; }
     @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-    /* ===================== NAV ===================== */
+    /* ── NAV ── */
     nav {
       position: sticky;
       top: 0;
       z-index: 100;
       background: rgba(8,8,8,0.97);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(201,168,76,0.2);
-      padding: 0 24px;
+      padding: 0 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 60px;
+      gap: 8px;
+      min-height: 56px;
     }
-    .nav-logo {
+    .nav-brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      flex-shrink: 0;
+      text-decoration: none;
     }
-    .nav-logo img {
-      height: 36px;
-      width: 36px;
+    .nav-brand img {
+      height: 34px;
+      width: 34px;
       object-fit: contain;
-      filter: drop-shadow(0 0 6px rgba(201,168,76,0.4));
+      filter: drop-shadow(0 0 5px rgba(201,168,76,0.4));
     }
-    .nav-logo-text {
+    .nav-brand-text {
       font-family: 'Courier New', monospace;
       font-weight: bold;
-      font-size: 0.85rem;
-      letter-spacing: 0.15em;
-      color: var(--gold);
-      line-height: 1.1;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      color: #c9a84c;
+      line-height: 1.2;
     }
-    .nav-logo-sub {
-      font-size: 0.55rem;
-      letter-spacing: 0.2em;
-      color: var(--gray);
+    .nav-brand-sub {
+      font-size: 0.52rem;
+      letter-spacing: 0.18em;
+      color: #666;
       display: block;
+      font-weight: normal;
     }
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 2px;
       list-style: none;
+      flex-wrap: nowrap;
     }
-    .nav-links a {
+    .nav-links li a {
       font-family: 'Courier New', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.15em;
-      color: var(--gray);
-      padding: 6px 8px;
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      color: #888;
+      padding: 8px 7px;
       border-radius: 3px;
-      transition: color 0.2s, background 0.2s;
+      transition: color 0.2s;
       text-transform: uppercase;
-    }
-    .nav-links a:hover { color: var(--gold); background: rgba(201,168,76,0.08); }
-    .nav-links a.lore-link { color: var(--gold); }
-    .nav-links a.lore-link:hover { background: rgba(201,168,76,0.12); }
-    .nav-cta {
-      background: var(--red);
-      color: #fff !important;
-      padding: 7px 14px !important;
-      border-radius: 3px !important;
-      font-weight: bold !important;
-      font-size: 0.65rem !important;
-      letter-spacing: 0.15em !important;
-    }
-    .nav-cta:hover { background: #a93226 !important; color: #fff !important; }
-
-    /* ===================== TICKER 2 ===================== */
-    .ticker-wrap-2 {
-      background: rgba(201,168,76,0.08);
-      border-top: 1px solid rgba(201,168,76,0.15);
-      border-bottom: 1px solid rgba(201,168,76,0.15);
-      overflow: hidden;
       white-space: nowrap;
-      padding: 7px 0;
+      display: block;
     }
-    .ticker-2 {
-      display: inline-block;
-      animation: ticker 20s linear infinite;
-      font-size: 0.65rem;
-      letter-spacing: 0.25em;
-      font-family: 'Courier New', monospace;
-      color: var(--gold);
+    .nav-links li a:hover { color: #c9a84c; }
+    .nav-links li a.nav-lore { color: #c9a84c; }
+    .nav-links li a.nav-cta {
+      background: #8b1a1a;
+      color: #fff !important;
+      padding: 7px 10px;
+      border-radius: 3px;
+      font-weight: bold;
+      font-size: 0.58rem;
     }
+    .nav-links li a.nav-cta:hover { background: #a93226; }
 
-    /* ===================== HERO ===================== */
-    .hero {
-      min-height: 90vh;
+    /* ── HERO BANNER ── */
+    .hero-banner {
+      background: #080808;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      padding: 48px 20px 40px;
       text-align: center;
-      padding: 60px 24px;
       position: relative;
       overflow: hidden;
+      min-height: 80vh;
     }
-    .hero::before {
+    .hero-banner::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(ellipse at 50% 40%, rgba(77,184,255,0.06) 0%, transparent 60%),
-                  radial-gradient(ellipse at 80% 80%, rgba(192,57,43,0.05) 0%, transparent 50%);
+      background:
+        radial-gradient(ellipse at 50% 40%, rgba(77,184,255,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, rgba(139,26,26,0.05) 0%, transparent 50%);
       pointer-events: none;
     }
     .hero-badge {
       font-family: 'Courier New', monospace;
       font-size: 0.6rem;
       letter-spacing: 0.3em;
-      color: var(--gold);
-      text-transform: uppercase;
-      margin-bottom: 20px;
+      color: #c9a84c;
       padding: 5px 14px;
       border: 1px solid rgba(201,168,76,0.3);
       border-radius: 2px;
-      display: inline-block;
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 1;
     }
     .hero-img {
-      width: min(280px, 70vw);
+      width: min(300px, 75vw);
       margin: 0 auto 32px;
-      filter: drop-shadow(0 0 40px rgba(77,184,255,0.3)) drop-shadow(0 0 80px rgba(77,184,255,0.1));
+      position: relative;
+      z-index: 1;
+      filter: drop-shadow(0 0 40px rgba(77,184,255,0.25));
       animation: hero-float 5s ease-in-out infinite;
     }
     @keyframes hero-float {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-12px); }
+      50% { transform: translateY(-10px); }
     }
-    .hero h1 {
+    .hero-h1 {
       font-family: 'Courier New', monospace;
-      font-size: clamp(1.6rem, 6vw, 3rem);
+      font-size: clamp(1.6rem, 7vw, 3.2rem);
       font-weight: bold;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
       line-height: 1.1;
       margin-bottom: 16px;
-      color: var(--white);
-      text-shadow: 0 0 40px rgba(77,184,255,0.2);
+      color: #f0e6c8;
+      position: relative;
+      z-index: 1;
     }
     .hero-quote {
       font-style: italic;
-      font-size: clamp(0.85rem, 2.5vw, 1.1rem);
-      color: var(--gray);
-      max-width: 500px;
-      margin: 0 auto 28px;
-      line-height: 1.6;
+      font-size: clamp(0.85rem, 2.5vw, 1.05rem);
+      color: #888;
+      max-width: 460px;
+      margin: 0 auto 20px;
+      line-height: 1.7;
+      position: relative;
+      z-index: 1;
     }
     .hero-desc {
-      font-size: clamp(0.8rem, 2vw, 0.95rem);
-      color: rgba(240,230,200,0.7);
-      max-width: 480px;
-      margin: 0 auto 36px;
-      line-height: 1.7;
+      font-size: clamp(0.8rem, 2vw, 0.92rem);
+      color: rgba(240,230,200,0.65);
+      max-width: 440px;
+      margin: 0 auto 32px;
+      line-height: 1.75;
+      position: relative;
+      z-index: 1;
     }
-    .hero-desc em { color: var(--gold); font-style: italic; }
+    .hero-desc em { color: #c9a84c; font-style: italic; }
     .hero-btns {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       justify-content: center;
       flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
     }
-    .btn-primary {
-      background: var(--red);
+    .btn-red {
+      background: #8b1a1a;
       color: #fff;
-      padding: 12px 28px;
+      padding: 12px 26px;
       font-family: 'Courier New', monospace;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       letter-spacing: 0.15em;
       font-weight: bold;
       border-radius: 3px;
       transition: background 0.2s, transform 0.2s;
       text-transform: uppercase;
     }
-    .btn-primary:hover { background: #a93226; transform: translateY(-2px); }
-    .btn-secondary {
-      border: 1px solid rgba(201,168,76,0.4);
-      color: var(--gold);
-      padding: 12px 22px;
+    .btn-red:hover { background: #a93226; transform: translateY(-2px); }
+    .btn-outline {
+      border: 1px solid rgba(201,168,76,0.35);
+      color: #c9a84c;
+      padding: 12px 20px;
       font-family: 'Courier New', monospace;
-      font-size: 0.75rem;
-      letter-spacing: 0.15em;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
       border-radius: 3px;
       transition: all 0.2s;
       text-transform: uppercase;
     }
-    .btn-secondary:hover { background: rgba(201,168,76,0.08); border-color: var(--gold); transform: translateY(-2px); }
+    .btn-outline:hover { background: rgba(201,168,76,0.08); border-color: #c9a84c; transform: translateY(-2px); }
     .btn-ghost {
-      color: var(--gray);
-      padding: 12px 16px;
+      color: #666;
+      padding: 12px 14px;
       font-family: 'Courier New', monospace;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       letter-spacing: 0.1em;
       border-radius: 3px;
       transition: color 0.2s;
       text-transform: uppercase;
     }
-    .btn-ghost:hover { color: var(--white); }
+    .btn-ghost:hover { color: #f0e6c8; }
 
-    /* ===================== SECTION BASE ===================== */
-    section { padding: 80px 24px; max-width: 900px; margin: 0 auto; }
+    /* ── DIVIDER ── */
+    .divider {
+      text-align: center;
+      color: rgba(201,168,76,0.35);
+      font-size: 1.4rem;
+      padding: 20px 0;
+    }
+
+    /* ── SECTIONS ── */
+    .section {
+      padding: 70px 20px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
     .section-label {
       font-family: 'Courier New', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.35em;
-      color: var(--gold);
+      font-size: 0.58rem;
+      letter-spacing: 0.38em;
+      color: #c9a84c;
       text-transform: uppercase;
       text-align: center;
       margin-bottom: 8px;
-      opacity: 0.8;
+      opacity: 0.75;
     }
-    .section-divider {
-      text-align: center;
-      color: rgba(201,168,76,0.4);
-      font-size: 1.2rem;
-      margin: 60px 0;
-    }
-    h2 {
+    .section-h2 {
       font-family: 'Courier New', monospace;
-      font-size: clamp(1.2rem, 4vw, 1.8rem);
+      font-size: clamp(1.15rem, 4vw, 1.7rem);
       letter-spacing: 0.1em;
       text-align: center;
-      margin-bottom: 40px;
-      color: var(--white);
+      margin-bottom: 36px;
+      color: #f0e6c8;
     }
 
-    /* ===================== LORE TEASER ===================== */
+    /* ── ISSUE CARDS ── */
+    .issues-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 22px;
+    }
+    .issue-card {
+      background: #0f0f0f;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 6px;
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+      display: block;
+    }
+    .issue-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 18px rgba(77,184,255,0.08);
+    }
+    .issue-cover {
+      position: relative;
+      aspect-ratio: 3/4;
+      background: #111;
+      overflow: hidden;
+    }
+    .issue-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s;
+    }
+    .issue-card:hover .issue-cover img { transform: scale(1.04); }
+    .issue-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.52rem;
+      letter-spacing: 0.18em;
+      padding: 3px 8px;
+      border-radius: 2px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .badge-origin { background: rgba(201,168,76,0.85); color: #000; }
+    .badge-new { background: #8b1a1a; color: #fff; }
+    .issue-info { padding: 16px; }
+    .issue-num {
+      font-family: 'Courier New', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    .issue-title {
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      color: #f0e6c8;
+      margin-bottom: 8px;
+    }
+    .issue-desc {
+      font-size: 0.76rem;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .issue-cta {
+      font-family: 'Courier New', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      color: #8b1a1a;
+      text-transform: uppercase;
+    }
+    .issue-card:hover .issue-cta { color: #c0392b; }
+
+    /* ── LORE TEASER ── */
     .lore-teaser {
-      background: linear-gradient(135deg, rgba(201,168,76,0.05) 0%, rgba(77,184,255,0.03) 100%);
-      border: 1px solid rgba(201,168,76,0.2);
-      border-radius: 8px;
-      padding: 40px 32px;
+      margin-top: 28px;
+      background: linear-gradient(135deg, rgba(201,168,76,0.05), rgba(77,184,255,0.03));
+      border: 1px solid rgba(201,168,76,0.18);
+      border-radius: 6px;
+      padding: 36px 28px;
       text-align: center;
       position: relative;
       overflow: hidden;
-      margin-top: 20px;
     }
     .lore-teaser::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(ellipse at 50% 0%, rgba(77,184,255,0.08) 0%, transparent 60%);
+      background: radial-gradient(ellipse at 50% 0%, rgba(77,184,255,0.06) 0%, transparent 65%);
       pointer-events: none;
     }
-    .lore-teaser-eyebrow {
+    .lore-eyebrow {
       font-family: 'Courier New', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.35em;
-      color: var(--blue);
+      font-size: 0.58rem;
+      letter-spacing: 0.32em;
+      color: #4db8ff;
       text-transform: uppercase;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       opacity: 0.8;
     }
     .lore-teaser h3 {
       font-family: 'Courier New', monospace;
-      font-size: clamp(1rem, 3vw, 1.4rem);
+      font-size: clamp(1rem, 3.5vw, 1.35rem);
       letter-spacing: 0.1em;
-      color: var(--gold-light);
-      margin-bottom: 14px;
+      color: #e8c96a;
+      margin-bottom: 12px;
     }
     .lore-teaser p {
       font-style: italic;
-      color: rgba(240,230,200,0.7);
-      font-size: 0.9rem;
-      line-height: 1.7;
-      max-width: 440px;
-      margin: 0 auto 24px;
+      color: rgba(240,230,200,0.65);
+      font-size: 0.88rem;
+      line-height: 1.75;
+      max-width: 400px;
+      margin: 0 auto 22px;
     }
-    .lore-teaser p em { color: var(--gold); font-style: normal; }
+    .lore-teaser p em { color: #c9a84c; font-style: normal; }
     .btn-lore {
       display: inline-block;
-      background: rgba(201,168,76,0.1);
-      border: 1px solid rgba(201,168,76,0.4);
-      color: var(--gold-light);
-      padding: 12px 28px;
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.35);
+      color: #e8c96a;
+      padding: 11px 26px;
       font-family: 'Courier New', monospace;
-      font-size: 0.7rem;
-      letter-spacing: 0.2em;
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
       border-radius: 3px;
       transition: all 0.3s;
       text-transform: uppercase;
     }
     .btn-lore:hover {
-      background: rgba(201,168,76,0.2);
-      border-color: var(--gold);
-      box-shadow: 0 0 20px rgba(201,168,76,0.15);
+      background: rgba(201,168,76,0.16);
+      border-color: #c9a84c;
+      box-shadow: 0 0 18px rgba(201,168,76,0.12);
       transform: translateY(-2px);
     }
 
-    /* ===================== COMICS ===================== */
-    .comics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 24px;
-      margin-top: 10px;
-    }
-    .comic-card {
-      background: var(--dark);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 6px;
-      overflow: hidden;
-      transition: transform 0.3s, box-shadow 0.3s;
-      cursor: pointer;
-    }
-    .comic-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 20px rgba(77,184,255,0.1);
-    }
-    .comic-card-badge {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      background: var(--red);
-      color: #fff;
-      font-family: 'Courier New', monospace;
-      font-size: 0.55rem;
-      letter-spacing: 0.2em;
-      padding: 3px 8px;
-      border-radius: 2px;
-      font-weight: bold;
-    }
-    .comic-card-badge.origin { background: rgba(201,168,76,0.8); color: #000; }
-    .comic-cover-wrap { position: relative; aspect-ratio: 3/4; overflow: hidden; background: #111; }
-    .comic-cover-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
-    .comic-card:hover .comic-cover-wrap img { transform: scale(1.04); }
-    .comic-info { padding: 18px; }
-    .comic-issue {
-      font-family: 'Courier New', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.2em;
-      color: var(--gray);
-      margin-bottom: 6px;
-    }
-    .comic-info h3 {
-      font-family: 'Courier New', monospace;
-      font-size: 0.95rem;
-      letter-spacing: 0.08em;
-      color: var(--white);
-      margin-bottom: 8px;
-    }
-    .comic-info p {
-      font-size: 0.78rem;
-      color: var(--gray);
-      line-height: 1.6;
-      margin-bottom: 14px;
-    }
-    .comic-read-link {
-      font-family: 'Courier New', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.15em;
-      color: var(--red);
-      text-transform: uppercase;
-      transition: color 0.2s;
-    }
-    .comic-card:hover .comic-read-link { color: #e74c3c; }
-
-    /* ===================== CHARACTERS ===================== */
+    /* ── CREW ── */
     .crew-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 32px;
-      margin-top: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 28px;
     }
     .crew-card {
-      background: var(--dark);
+      background: #0f0f0f;
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 8px;
-      padding: 32px 24px;
+      padding: 30px 22px;
       text-align: center;
       transition: transform 0.3s;
     }
     .crew-card:hover { transform: translateY(-4px); }
     .crew-img {
-      width: 140px;
-      height: 140px;
+      width: 130px;
+      height: 130px;
       object-fit: contain;
-      margin: 0 auto 20px;
-      filter: drop-shadow(0 0 20px rgba(77,184,255,0.3));
+      margin: 0 auto 18px;
+      filter: drop-shadow(0 0 18px rgba(77,184,255,0.28));
     }
-    .crew-card h3 {
+    .crew-name {
       font-family: 'Courier New', monospace;
-      font-size: 1rem;
-      letter-spacing: 0.15em;
-      margin-bottom: 6px;
-      color: var(--white);
+      font-size: 0.95rem;
+      letter-spacing: 0.14em;
+      margin-bottom: 5px;
+      color: #f0e6c8;
     }
-    .crew-title {
-      font-size: 0.75rem;
-      color: var(--gray);
-      margin-bottom: 16px;
+    .crew-role {
+      font-size: 0.73rem;
+      color: #666;
+      margin-bottom: 14px;
       font-style: italic;
     }
     .crew-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 5px;
       justify-content: center;
     }
     .crew-tag {
       font-family: 'Courier New', monospace;
-      font-size: 0.55rem;
-      letter-spacing: 0.15em;
+      font-size: 0.52rem;
+      letter-spacing: 0.12em;
       padding: 3px 8px;
-      border: 1px solid rgba(201,168,76,0.25);
+      border: 1px solid rgba(201,168,76,0.22);
       border-radius: 2px;
-      color: var(--gold);
+      color: #c9a84c;
     }
     .crew-quote {
       text-align: center;
       font-style: italic;
-      font-size: 1.1rem;
-      color: var(--gold);
-      margin-top: 32px;
-      opacity: 0.7;
+      font-size: 1.05rem;
+      color: #c9a84c;
+      margin-top: 28px;
+      opacity: 0.65;
     }
 
-    /* ===================== SHORTS ===================== */
-    .shorts-tabs {
+    /* ── SHORTS ── */
+    .shorts-links {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       justify-content: center;
-      margin-bottom: 28px;
+      margin-bottom: 26px;
+      flex-wrap: wrap;
     }
-    .shorts-tab {
+    .shorts-link-btn {
       font-family: 'Courier New', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.2em;
-      padding: 7px 16px;
-      border: 1px solid rgba(255,255,255,0.15);
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      padding: 8px 18px;
+      border: 1px solid rgba(255,255,255,0.14);
       border-radius: 3px;
-      color: var(--gray);
-      cursor: pointer;
+      color: #888;
       text-transform: uppercase;
       transition: all 0.2s;
     }
-    .shorts-tab.active, .shorts-tab:hover {
-      border-color: var(--red);
+    .shorts-link-btn:hover, .shorts-link-btn.active {
+      border-color: #8b1a1a;
       color: #fff;
-      background: rgba(192,57,43,0.1);
+      background: rgba(139,26,26,0.12);
     }
     .shorts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
     }
-    .shorts-label {
+    .short-label {
       font-family: 'Courier New', monospace;
-      font-size: 0.55rem;
-      letter-spacing: 0.25em;
-      color: var(--gray);
-      margin-bottom: 8px;
+      font-size: 0.52rem;
+      letter-spacing: 0.22em;
+      color: #555;
+      margin-bottom: 7px;
       text-transform: uppercase;
     }
-    .short-embed {
+    .short-wrap {
       border-radius: 6px;
       overflow: hidden;
       background: #111;
       border: 1px solid rgba(255,255,255,0.06);
     }
-    .short-embed iframe {
+    .short-wrap iframe {
       width: 100%;
       aspect-ratio: 9/16;
       border: none;
       display: block;
     }
-    .yt-embed iframe { aspect-ratio: 16/9; }
+    .short-wrap.yt iframe { aspect-ratio: 16/9; }
 
-    /* ===================== MERCH ===================== */
-    .merch-section {
-      background: var(--dark);
+    /* ── MERCH ── */
+    .merch-box {
+      background: #0f0f0f;
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 8px;
-      padding: 50px 32px;
+      padding: 48px 28px;
       text-align: center;
-      max-width: 500px;
+      max-width: 480px;
       margin: 0 auto;
     }
-    .merch-section img {
-      width: 80px;
-      margin: 0 auto 20px;
-      opacity: 0.8;
-      filter: drop-shadow(0 0 10px rgba(201,168,76,0.3));
+    .merch-box img {
+      width: 72px;
+      margin: 0 auto 18px;
+      opacity: 0.75;
+      filter: drop-shadow(0 0 8px rgba(201,168,76,0.28));
     }
-    .merch-coming {
+    .merch-soon {
       font-family: 'Courier New', monospace;
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       letter-spacing: 0.3em;
-      color: var(--gold);
+      color: #c9a84c;
       text-transform: uppercase;
       margin-bottom: 8px;
     }
-    .merch-section h2 { font-size: 1.4rem; margin-bottom: 12px; }
-    .merch-section p {
-      font-size: 0.85rem;
-      color: var(--gray);
-      line-height: 1.7;
-      margin-bottom: 28px;
+    .merch-h2 {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(1.1rem, 4vw, 1.4rem);
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+      color: #f0e6c8;
     }
-    .merch-form {
-      display: flex;
-      gap: 8px;
-      max-width: 340px;
-      margin: 0 auto;
+    .merch-p {
+      font-size: 0.82rem;
+      color: #666;
+      line-height: 1.75;
+      margin-bottom: 24px;
     }
+    .merch-form { display: flex; gap: 8px; max-width: 320px; margin: 0 auto; }
     .merch-input {
       flex: 1;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.15);
-      color: var(--white);
-      padding: 10px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #f0e6c8;
+      padding: 10px 12px;
       font-family: 'Courier New', monospace;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       border-radius: 3px;
       outline: none;
       transition: border-color 0.2s;
     }
-    .merch-input:focus { border-color: var(--gold); }
-    .merch-input::placeholder { color: var(--gray); }
+    .merch-input:focus { border-color: #c9a84c; }
+    .merch-input::placeholder { color: #555; }
     .merch-btn {
-      background: var(--red);
+      background: #8b1a1a;
       color: #fff;
       border: none;
-      padding: 10px 18px;
+      padding: 10px 16px;
       font-family: 'Courier New', monospace;
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       letter-spacing: 0.1em;
       border-radius: 3px;
       cursor: pointer;
@@ -585,116 +594,114 @@
     .merch-success {
       display: none;
       font-family: 'Courier New', monospace;
-      font-size: 0.7rem;
-      color: var(--gold);
+      font-size: 0.68rem;
+      color: #c9a84c;
       letter-spacing: 0.1em;
       margin-top: 12px;
     }
 
-    /* ===================== FOOTER ===================== */
+    /* ── FOOTER ── */
     footer {
-      background: var(--dark);
+      background: #0a0a0a;
       border-top: 1px solid rgba(255,255,255,0.06);
-      padding: 50px 24px 30px;
+      padding: 48px 20px 28px;
     }
-    .footer-inner {
-      max-width: 900px;
-      margin: 0 auto;
+    .footer-grid {
+      max-width: 860px;
+      margin: 0 auto 36px;
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 32px;
-      margin-bottom: 40px;
+      grid-template-columns: 1.5fr 1fr 1fr;
+      gap: 28px;
     }
-    .footer-brand { grid-column: 1; }
-    .footer-logo {
+    .footer-brand-logo {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
+      gap: 8px;
+      margin-bottom: 12px;
     }
-    .footer-logo img { height: 32px; opacity: 0.8; }
-    .footer-logo span {
+    .footer-brand-logo img { height: 30px; opacity: 0.75; }
+    .footer-brand-logo span {
       font-family: 'Courier New', monospace;
-      font-size: 0.8rem;
-      letter-spacing: 0.15em;
-      color: var(--gold);
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      color: #c9a84c;
       font-weight: bold;
     }
     .footer-desc {
-      font-size: 0.78rem;
-      color: var(--gray);
-      line-height: 1.7;
+      font-size: 0.75rem;
+      color: #555;
+      line-height: 1.75;
     }
     .footer-col h4 {
       font-family: 'Courier New', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.25em;
-      color: var(--gold);
+      font-size: 0.56rem;
+      letter-spacing: 0.26em;
+      color: #c9a84c;
       text-transform: uppercase;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
     .footer-col ul { list-style: none; }
     .footer-col ul li { margin-bottom: 8px; }
     .footer-col ul li a {
-      font-size: 0.78rem;
-      color: var(--gray);
+      font-size: 0.75rem;
+      color: #555;
       transition: color 0.2s;
     }
-    .footer-col ul li a:hover { color: var(--white); }
+    .footer-col ul li a:hover { color: #f0e6c8; }
     .footer-bottom {
-      max-width: 900px;
+      max-width: 860px;
       margin: 0 auto;
-      padding-top: 24px;
-      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.05);
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 8px;
     }
     .footer-copy {
       font-family: 'Courier New', monospace;
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       letter-spacing: 0.1em;
-      color: rgba(136,136,136,0.5);
+      color: rgba(85,85,85,0.6);
     }
-    .footer-copy a { color: rgba(201,168,76,0.5); }
-    .footer-copy a:hover { color: var(--gold); }
+    .footer-copy a { color: rgba(201,168,76,0.45); }
+    .footer-copy a:hover { color: #c9a84c; }
 
-    /* ===================== RESPONSIVE ===================== */
-    @media (max-width: 600px) {
-      nav { padding: 0 14px; }
-      .nav-links { gap: 2px; }
-      .nav-links a { font-size: 0.55rem; padding: 5px 5px; }
-      .nav-cta { padding: 6px 10px !important; }
-      .footer-inner { grid-template-columns: 1fr 1fr; }
-      .footer-brand { grid-column: 1 / -1; }
+    /* ── RESPONSIVE ── */
+    @media (max-width: 560px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .footer-grid > div:first-child { grid-column: 1 / -1; }
       .merch-form { flex-direction: column; }
-      .lore-teaser { padding: 28px 20px; }
+      nav { min-height: 52px; }
+    }
+    @media (max-width: 400px) {
+      .nav-links li a { font-size: 0.54rem; padding: 8px 5px; }
+      .nav-brand-text { font-size: 0.72rem; }
     }
   </style>
 </head>
 <body>
 
 <!-- TICKER TOP -->
-<div class="ticker-wrap">
-  <div class="ticker">
-    &nbsp;&nbsp;KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜ KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜ KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜ KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜&nbsp;&nbsp;KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜ KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜ KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜ KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜
+<div class="ticker-bar">
+  <div class="ticker-inner">
+    &nbsp;&nbsp;KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜ KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜ KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜&nbsp;&nbsp;KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜ KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜ KEEP THEM PIPES CLEAN ⚜ PIPE MOJO & GANJA ⚜ WHEN VOODOO MET PLUMBING ⚜
   </div>
 </div>
 
 <!-- NAV -->
 <nav>
-  <a href="index.html" class="nav-logo">
-    <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo Logo">
-    <div class="nav-logo-text">
+  <a href="index.html" class="nav-brand">
+    <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo">
+    <div class="nav-brand-text">
       PIPE MOJO
-      <span class="nav-logo-sub">Keep Them Pipes Clean</span>
+      <span class="nav-brand-sub">Keep Them Pipes Clean</span>
     </div>
   </a>
   <ul class="nav-links">
     <li><a href="comics.html">COMICS</a></li>
-    <li><a href="lore.html" class="lore-link">LORE</a></li>
+    <li><a href="lore.html" class="nav-lore">LORE</a></li>
     <li><a href="#shorts">SHORTS</a></li>
     <li><a href="#characters">CREW</a></li>
     <li><a href="#merch">MERCH</a></li>
@@ -703,98 +710,87 @@
 </nav>
 
 <!-- TICKER 2 -->
-<div class="ticker-wrap-2">
-  <div class="ticker-2">
-    &nbsp;&nbsp;ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜ ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜ ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜ ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜&nbsp;&nbsp;ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜ ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜ ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜ ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜
+<div class="ticker-bar gold">
+  <div class="ticker-inner">
+    &nbsp;&nbsp;ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜ ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜ ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜&nbsp;&nbsp;ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜ ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜ ISSUE #1 OUT NOW ⚜ @PIPEMOJO ⚜ THAT PLUMBING CURSE GON' GET YA ⚜
   </div>
 </div>
 
 <!-- HERO -->
-<div class="hero">
+<div class="hero-banner">
   <div class="hero-badge">Issue #1 Out Now</div>
-  <img 
-    src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/hero-mojo.jpg" 
-    alt="Pipe Mojo" 
+  <img
+    src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/hero-mojo.jpg"
+    alt="Pipe Mojo"
     class="hero-img"
     onerror="this.src='https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/mojo.png'"
   >
-  <h1>WHEN VOODOO<br>MET PLUMBING</h1>
+  <h1 class="hero-h1">WHEN VOODOO<br>MET PLUMBING</h1>
   <p class="hero-quote">"Keep them pipes clean —<br>or that plumbing curse gon' get ya."</p>
   <p class="hero-desc">
-    Pipe Mojo is a <em>voodoo doll plumber</em> with magic pins and zero tolerance for bad pipe work. 
+    Pipe Mojo is a <em>voodoo doll plumber</em> with magic pins and zero tolerance for bad pipe work.
     Ganja, his roach sidekick, mostly watches. <em>Two issues live. More dropping weekly.</em>
   </p>
   <div class="hero-btns">
-    <a href="comics.html" class="btn-primary">READ FREE ↗</a>
-    <a href="https://www.tiktok.com/@pipemojo" target="_blank" class="btn-secondary">@PIPEMOJO</a>
+    <a href="comics.html" class="btn-red">READ FREE ↗</a>
+    <a href="https://www.tiktok.com/@pipemojo" target="_blank" class="btn-outline">@PIPEMOJO</a>
     <a href="https://youtube.com/@pipemojo/shorts" target="_blank" class="btn-ghost">SHORTS</a>
   </div>
 </div>
 
-<!-- DIVIDER -->
-<div class="section-divider">⚜</div>
+<div class="divider">⚜</div>
 
-<!-- COMICS SECTION -->
-<section id="comics">
+<!-- ISSUES -->
+<section class="section" id="comics">
   <p class="section-label">The Universe</p>
-  <h2>READ THE ISSUES</h2>
-  <div class="comics-grid">
-    <a href="comics.html?issue=0" class="comic-card">
-      <div class="comic-cover-wrap">
-        <span class="comic-card-badge origin">ORIGIN</span>
-        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/IMG_1433.jpeg" 
-             alt="Issue 0 Cover"
-             onerror="this.style.background='#1a1208'; this.style.minHeight='200px'">
+  <h2 class="section-h2">READ THE ISSUES</h2>
+  <div class="issues-grid">
+    <a href="comics.html?issue=0" class="issue-card">
+      <div class="issue-cover">
+        <span class="issue-badge badge-origin">ORIGIN</span>
+        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/IMG_1433.jpeg" alt="Issue 0 Cover">
       </div>
-      <div class="comic-info">
-        <p class="comic-issue">Issue Zero · Origin Story</p>
-        <h3>WHEN VOODOO MET PLUMBING</h3>
-        <p>A haunted house job. Voodoo pins in a box. A cockroach named Ganja who almost goes down the drain. How it all started.</p>
-        <span class="comic-read-link">READ NOW →</span>
+      <div class="issue-info">
+        <p class="issue-num">Issue Zero · Origin Story</p>
+        <h3 class="issue-title">WHEN VOODOO MET PLUMBING</h3>
+        <p class="issue-desc">A haunted house job. Voodoo pins in a box. A cockroach named Ganja who almost goes down the drain. How it all started.</p>
+        <span class="issue-cta">READ NOW →</span>
       </div>
     </a>
-    <a href="comics.html?issue=1" class="comic-card">
-      <div class="comic-cover-wrap">
-        <span class="comic-card-badge">NEW</span>
-        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/IMG_1439.jpeg" 
-             alt="Issue 1 Cover"
-             onerror="this.style.background='#0d1520'; this.style.minHeight='200px'">
+    <a href="comics.html?issue=1" class="issue-card">
+      <div class="issue-cover">
+        <span class="issue-badge badge-new">NEW</span>
+        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/IMG_1439.jpeg" alt="Issue 1 Cover">
       </div>
-      <div class="comic-info">
-        <p class="comic-issue">Issue One · The Sewer Arc</p>
-        <h3>THE SYSTEM</h3>
-        <p>Down here nobody calls it plumbing. Fatbergs. Root intrusions. Something thumping in the deep that ain't supposed to be alive.</p>
-        <span class="comic-read-link">READ NOW →</span>
+      <div class="issue-info">
+        <p class="issue-num">Issue One · The Sewer Arc</p>
+        <h3 class="issue-title">THE SYSTEM</h3>
+        <p class="issue-desc">Down here nobody calls it plumbing. Fatbergs. Root intrusions. Something thumping in the deep that ain't supposed to be alive.</p>
+        <span class="issue-cta">READ NOW →</span>
       </div>
     </a>
   </div>
 
   <!-- LORE TEASER -->
   <div class="lore-teaser">
-    <p class="lore-teaser-eyebrow">New Orleans · 1847</p>
+    <p class="lore-eyebrow">New Orleans · 1847</p>
     <h3>THE LORE</h3>
-    <p>
-      Nobody remembers who stitched him together. 
-      <em>He wasn't made for anything grand.</em> 
-      Just meant to sit on a shelf and watch over a family that eventually moved on without him. 
-      Then came the storm.
-    </p>
+    <p>Nobody remembers who stitched him together. <em>He wasn't made for anything grand.</em> Just meant to sit on a shelf and watch over a family that eventually moved on without him. Then came the storm.</p>
     <a href="lore.html" class="btn-lore">READ THE ORIGIN ✦</a>
   </div>
 </section>
 
-<!-- DIVIDER -->
-<div class="section-divider">⚜</div>
+<div class="divider">⚜</div>
 
-<!-- CREW SECTION -->
-<section id="characters">
+<!-- CREW -->
+<section class="section" id="characters">
   <p class="section-label">The Crew</p>
-  <h2>MEET THE TEAM</h2>
+  <h2 class="section-h2">MEET THE TEAM</h2>
   <div class="crew-grid">
     <div class="crew-card">
       <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/mojo.png" alt="Pipe Mojo" class="crew-img">
-      <h3>PIPE MOJO</h3>
-      <p class="crew-title">Voodoo Plumber · X Eyes · No chill</p>
+      <p class="crew-name">PIPE MOJO</p>
+      <p class="crew-role">Voodoo Plumber · X Eyes · No chill</p>
       <div class="crew-tags">
         <span class="crew-tag">Red Wrench</span>
         <span class="crew-tag">Magic Pins</span>
@@ -804,8 +800,8 @@
     </div>
     <div class="crew-card">
       <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/ganja.png" alt="Ganja" class="crew-img">
-      <h3>GANJA</h3>
-      <p class="crew-title">Roach Sidekick · Knee-high · Big feelings</p>
+      <p class="crew-name">GANJA</p>
+      <p class="crew-role">Roach Sidekick · Knee-high · Big feelings</p>
       <div class="crew-tags">
         <span class="crew-tag">Orange Shell</span>
         <span class="crew-tag">Antennae</span>
@@ -817,55 +813,53 @@
   <p class="crew-quote">"KEEP THEM PIPES CLEAN."</p>
 </section>
 
-<!-- DIVIDER -->
-<div class="section-divider">⚜</div>
+<div class="divider">⚜</div>
 
-<!-- SHORTS SECTION -->
-<section id="shorts">
+<!-- SHORTS -->
+<section class="section" id="shorts">
   <p class="section-label">TikTok & YouTube</p>
-  <h2>LATEST SHORTS</h2>
-  <div class="shorts-tabs">
-    <a href="https://www.tiktok.com/@pipemojo" target="_blank" class="shorts-tab active">@PIPEMOJO</a>
-    <a href="https://youtube.com/@pipemojo/shorts" target="_blank" class="shorts-tab">YOUTUBE</a>
+  <h2 class="section-h2">LATEST SHORTS</h2>
+  <div class="shorts-links">
+    <a href="https://www.tiktok.com/@pipemojo" target="_blank" class="shorts-link-btn active">@PIPEMOJO</a>
+    <a href="https://youtube.com/@pipemojo/shorts" target="_blank" class="shorts-link-btn">YOUTUBE</a>
   </div>
   <div class="shorts-grid">
     <div>
-      <p class="shorts-label">TIKTOK</p>
-      <div class="short-embed">
+      <p class="short-label">TikTok</p>
+      <div class="short-wrap">
         <iframe src="https://www.tiktok.com/embed/v2/7633925017071357198" allowfullscreen></iframe>
       </div>
     </div>
     <div>
-      <p class="shorts-label">TIKTOK</p>
-      <div class="short-embed">
+      <p class="short-label">TikTok</p>
+      <div class="short-wrap">
         <iframe src="https://www.tiktok.com/embed/v2/7625489252142419213" allowfullscreen></iframe>
       </div>
     </div>
     <div>
-      <p class="shorts-label">YOUTUBE</p>
-      <div class="short-embed yt-embed">
+      <p class="short-label">YouTube</p>
+      <div class="short-wrap yt">
         <iframe src="https://www.youtube.com/embed/lAPYiV-1OMA" allowfullscreen></iframe>
       </div>
     </div>
     <div>
-      <p class="shorts-label">YOUTUBE</p>
-      <div class="short-embed yt-embed">
+      <p class="short-label">YouTube</p>
+      <div class="short-wrap yt">
         <iframe src="https://www.youtube.com/embed/LrLYLH5OA30" allowfullscreen></iframe>
       </div>
     </div>
   </div>
 </section>
 
-<!-- DIVIDER -->
-<div class="section-divider">⚜</div>
+<div class="divider">⚜</div>
 
-<!-- MERCH SECTION -->
-<section id="merch" style="padding-top: 0;">
-  <div class="merch-section">
+<!-- MERCH -->
+<section class="section" id="merch" style="padding-top:0;">
+  <div class="merch-box">
     <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo">
-    <p class="merch-coming">Coming Soon</p>
-    <h2>THE MERCH<br>IS COMING</h2>
-    <p>Pipe Mojo tees, stickers & prints. The full voodoo workshop, wearable. Drop your email — you'll be first to know when the shop opens.</p>
+    <p class="merch-soon">Coming Soon</p>
+    <h2 class="merch-h2">THE MERCH<br>IS COMING</h2>
+    <p class="merch-p">Pipe Mojo tees, stickers & prints. The full voodoo workshop, wearable. Drop your email — you'll be first to know when the shop opens.</p>
     <div class="merch-form">
       <input type="email" class="merch-input" placeholder="your@email.com" id="merch-email">
       <button class="merch-btn" onclick="submitMerch()">NOTIFY ME</button>
@@ -876,9 +870,9 @@
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-inner">
-    <div class="footer-brand">
-      <div class="footer-logo">
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand-logo">
         <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo">
         <span>PIPE MOJO</span>
       </div>
@@ -910,8 +904,8 @@
 
 <script>
   function submitMerch() {
-    const email = document.getElementById('merch-email').value;
-    if (email && email.includes('@')) {
+    const e = document.getElementById('merch-email');
+    if (e.value && e.value.includes('@')) {
       document.querySelector('.merch-form').style.display = 'none';
       document.getElementById('merch-success').style.display = 'block';
     }
