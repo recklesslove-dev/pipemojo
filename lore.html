@@ -2,814 +2,515 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0805">
 <title>The Lore — Pipe Mojo</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
   :root {
     --black: #0a0805;
-    --deep: #110e09;
     --gold: #c9a84c;
     --gold-light: #e8c96a;
     --gold-dark: #8a6820;
-    --red: #8b1a1a;
-    --red-bright: #c0392b;
-    --blue-glow: #1a6bb5;
-    --blue-neon: #4db8ff;
-    --cream: #f0e6c8;
-    --cream-dark: #d4c4a0;
-    --text: #e8dcc0;
+    --blue: #4db8ff;
+    --cream: #d4c4a0;
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    background-color: var(--black);
-    background-image: 
+    background: var(--black);
+    background-image:
       radial-gradient(ellipse at 20% 50%, rgba(26,107,181,0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 20%, rgba(139,26,26,0.08) 0%, transparent 50%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%230a0805'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23ffffff08'/%3E%3C/svg%3E");
+      radial-gradient(ellipse at 80% 20%, rgba(139,26,26,0.08) 0%, transparent 50%);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 20px;
+    padding: 36px 20px;
     font-family: 'Crimson Text', serif;
     overflow-x: hidden;
   }
 
-  /* Floating particles */
-  .particles {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 0;
-  }
-
+  /* Particles */
+  .particles { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
   .particle {
-    position: absolute;
-    width: 2px;
-    height: 2px;
-    background: var(--blue-neon);
-    border-radius: 50%;
-    animation: float linear infinite;
-    opacity: 0;
+    position: absolute; border-radius: 50%;
+    animation: float linear infinite; opacity: 0;
   }
-
   @keyframes float {
-    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
-    10% { opacity: 0.6; }
-    90% { opacity: 0.3; }
-    100% { transform: translateY(-10px) translateX(30px); opacity: 0; }
+    0% { transform: translateY(100vh); opacity: 0; }
+    10% { opacity: 0.5; }
+    90% { opacity: 0.2; }
+    100% { transform: translateY(-20px); opacity: 0; }
   }
 
+  /* Header */
   .header {
-    position: relative;
-    z-index: 2;
-    text-align: center;
-    margin-bottom: 50px;
+    position: relative; z-index: 2;
+    text-align: center; margin-bottom: 40px;
   }
-
   .header-eyebrow {
     font-family: 'Special Elite', cursive;
-    color: var(--gold);
-    font-size: 0.85rem;
-    letter-spacing: 0.4em;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    opacity: 0.8;
+    font-size: 0.75rem; letter-spacing: 0.4em;
+    color: var(--gold); text-transform: uppercase;
+    margin-bottom: 10px; opacity: 0.75;
   }
-
   .header h1 {
     font-family: 'Cinzel Decorative', serif;
-    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-size: clamp(2rem, 7vw, 3.5rem);
     font-weight: 900;
     color: var(--gold-light);
-    text-shadow: 
-      0 0 30px rgba(201,168,76,0.5),
-      0 0 60px rgba(201,168,76,0.2),
-      2px 2px 0 var(--gold-dark);
-    line-height: 1.1;
-    margin-bottom: 16px;
+    text-shadow: 0 0 30px rgba(201,168,76,0.5), 2px 2px 0 var(--gold-dark);
+    line-height: 1.1; margin-bottom: 14px;
   }
-
   .header-divider {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    justify-content: center;
+    display: flex; align-items: center; gap: 14px; justify-content: center;
   }
-
-  .divider-line {
-    height: 1px;
-    width: 80px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  }
-
-  .divider-icon {
-    color: var(--gold);
-    font-size: 1.2rem;
-  }
+  .divider-line { height: 1px; width: 70px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
 
   .hint {
-    position: relative;
-    z-index: 2;
+    position: relative; z-index: 2;
     font-family: 'Special Elite', cursive;
-    color: var(--gold);
-    font-size: 0.8rem;
-    letter-spacing: 0.2em;
-    text-align: center;
-    margin-bottom: 30px;
-    opacity: 0.7;
-    animation: pulse-hint 2s ease-in-out infinite;
+    font-size: 0.75rem; letter-spacing: 0.2em;
+    color: var(--gold); text-align: center;
+    margin-bottom: 28px; opacity: 0.6;
+    animation: hint-pulse 2s ease-in-out infinite;
   }
+  @keyframes hint-pulse { 0%,100%{opacity:0.4} 50%{opacity:0.85} }
 
-  @keyframes pulse-hint {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 0.9; }
-  }
-
-  /* CARD SCENE */
-  .card-scene {
-    position: relative;
-    z-index: 2;
-    width: min(340px, 90vw);
-    height: min(580px, calc(90vw * 1.7));
-    perspective: 1200px;
+  /* ── CARD WRAPPER ── */
+  .card-wrap {
+    position: relative; z-index: 2;
+    width: min(340px, 88vw);
     cursor: pointer;
-    margin: 0 auto;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* Glow behind card */
-  .card-scene::before {
+  /* glow behind card */
+  .card-wrap::before {
     content: '';
-    position: absolute;
-    inset: -20px;
-    background: radial-gradient(ellipse, rgba(77,184,255,0.15) 0%, transparent 70%);
+    position: absolute; inset: -20px;
+    background: radial-gradient(ellipse, rgba(77,184,255,0.12) 0%, transparent 70%);
     border-radius: 30px;
     animation: glow-pulse 3s ease-in-out infinite;
     pointer-events: none;
   }
+  @keyframes glow-pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
 
-  @keyframes glow-pulse {
-    0%, 100% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.05); }
-  }
-
-  .card {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 20px;
-  }
-
-  .card.flipped {
-    transform: rotateY(180deg);
-  }
-
+  /* ── SHARED CARD FACE STYLES ── */
   .card-face {
-    position: absolute;
     width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
     border-radius: 20px;
-    overflow: hidden;
-  }
-
-  /* ===== CARD FRONT ===== */
-  .card-front {
-    background: linear-gradient(160deg, #1a1208 0%, #0d0b06 40%, #12100a 100%);
     border: 2px solid var(--gold-dark);
     box-shadow:
       0 0 0 1px #0a0805,
       0 0 0 3px var(--gold-dark),
       inset 0 0 40px rgba(0,0,0,0.8),
       0 20px 60px rgba(0,0,0,0.8),
-      0 0 30px rgba(77,184,255,0.15);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    padding: 18px;
+      0 0 30px rgba(77,184,255,0.12);
+    overflow: hidden;
+    position: relative;
   }
 
-  .card-border-ornament {
-    position: absolute;
-    inset: 8px;
-    border: 1px solid rgba(201,168,76,0.3);
-    border-radius: 14px;
-    pointer-events: none;
-  }
-
-  .card-border-ornament::before {
+  /* inner border ornament */
+  .card-face::before {
     content: '';
-    position: absolute;
-    inset: 4px;
-    border: 1px solid rgba(201,168,76,0.15);
-    border-radius: 10px;
+    position: absolute; inset: 8px;
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 14px;
+    pointer-events: none; z-index: 0;
   }
 
-  /* Corner ornaments */
-  .corner {
-    position: absolute;
-    width: 28px;
-    height: 28px;
-    opacity: 0.7;
+  /* ── FRONT FACE ── */
+  .card-front {
+    background: linear-gradient(160deg, #1a1208 0%, #0d0b06 40%, #12100a 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: space-between;
+    padding: 20px 18px 24px;
+    min-height: min(580px, calc(88vw * 1.7));
   }
+
+  /* corner ornaments */
+  .corner { position: absolute; width: 26px; height: 26px; opacity: 0.65; z-index: 1; }
   .corner svg { width: 100%; height: 100%; }
   .corner-tl { top: 12px; left: 12px; }
   .corner-tr { top: 12px; right: 12px; transform: scaleX(-1); }
   .corner-bl { bottom: 12px; left: 12px; transform: scaleY(-1); }
   .corner-br { bottom: 12px; right: 12px; transform: scale(-1,-1); }
 
-  .card-top-label {
-    position: relative;
-    z-index: 2;
-    text-align: center;
-    padding-top: 8px;
+  .card-top {
+    position: relative; z-index: 1;
+    text-align: center; padding-top: 6px;
   }
-
-  .card-top-label span {
+  .card-top span {
     font-family: 'Cinzel Decorative', serif;
-    font-size: 0.65rem;
-    letter-spacing: 0.35em;
-    color: var(--gold);
-    text-transform: uppercase;
-    display: block;
+    font-size: 0.62rem; letter-spacing: 0.35em;
+    color: var(--gold); text-transform: uppercase; display: block;
   }
-
   .card-roman {
     font-family: 'Cinzel Decorative', serif;
-    font-size: 1.4rem;
-    color: var(--gold-light);
+    font-size: 1.4rem; color: var(--gold-light);
     text-shadow: 0 0 15px rgba(201,168,76,0.5);
-    margin-top: 4px;
-    display: block;
+    margin-top: 4px; display: block;
   }
 
-  .card-art-area {
-    position: relative;
-    z-index: 2;
-    width: 85%;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 12px 0;
+  .card-art {
+    position: relative; z-index: 1;
+    width: 82%; flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    margin: 14px 0;
   }
-
-  .card-art-frame {
-    width: 100%;
-    aspect-ratio: 3/4;
-    border: 1px solid rgba(201,168,76,0.4);
+  .art-frame {
+    width: 100%; aspect-ratio: 3/4;
+    border: 1px solid rgba(201,168,76,0.35);
     border-radius: 8px;
     background: linear-gradient(180deg, #0d1520 0%, #080c14 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
   }
-
-  .card-art-frame::before {
+  .art-frame::before {
     content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at 50% 40%, rgba(77,184,255,0.12) 0%, transparent 70%);
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 40%, rgba(77,184,255,0.1) 0%, transparent 70%);
   }
-
-  .card-logo-img {
-    width: 80%;
-    filter: drop-shadow(0 0 20px rgba(77,184,255,0.6)) drop-shadow(0 0 8px rgba(201,168,76,0.4));
+  .art-frame img {
+    width: 76%;
+    position: relative; z-index: 1;
+    filter: drop-shadow(0 0 18px rgba(77,184,255,0.55)) drop-shadow(0 0 6px rgba(201,168,76,0.35));
     animation: logo-float 4s ease-in-out infinite;
-    position: relative;
-    z-index: 1;
   }
+  @keyframes logo-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
 
-  @keyframes logo-float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-  }
-
-  /* Pipe decorations in art frame */
-  .pipe-deco {
-    position: absolute;
-    opacity: 0.15;
-  }
-  .pipe-deco-1 { bottom: 10px; left: 8px; font-size: 2rem; color: var(--gold); }
-  .pipe-deco-2 { top: 10px; right: 8px; font-size: 1.5rem; color: var(--blue-neon); transform: rotate(45deg); }
-
-  .card-title-front {
-    position: relative;
-    z-index: 2;
+  .card-bottom {
+    position: relative; z-index: 1;
     text-align: center;
-    padding-bottom: 8px;
-    width: 100%;
   }
-
-  .card-title-front h2 {
+  .card-bottom h2 {
     font-family: 'Cinzel Decorative', serif;
-    font-size: clamp(0.9rem, 3vw, 1.2rem);
+    font-size: clamp(0.85rem, 3vw, 1.1rem);
     color: var(--gold-light);
-    text-shadow: 0 0 15px rgba(201,168,76,0.4);
-    letter-spacing: 0.1em;
-    line-height: 1.2;
-    margin-bottom: 4px;
+    text-shadow: 0 0 12px rgba(201,168,76,0.4);
+    letter-spacing: 0.1em; line-height: 1.2; margin-bottom: 4px;
   }
-
-  .card-subtitle-front {
+  .card-bottom-sub {
     font-family: 'Special Elite', cursive;
-    font-size: 0.6rem;
-    letter-spacing: 0.25em;
-    color: var(--gold-dark);
-    text-transform: uppercase;
+    font-size: 0.58rem; letter-spacing: 0.22em;
+    color: var(--gold-dark); text-transform: uppercase;
   }
 
-  .tap-indicator {
-    position: absolute;
-    bottom: 22px;
-    left: 50%;
+  .tap-hint {
+    position: absolute; bottom: 20px; left: 50%;
     transform: translateX(-50%);
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
+    z-index: 2;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
     animation: tap-bounce 2s ease-in-out infinite;
   }
+  @keyframes tap-bounce { 0%,100%{transform:translateX(-50%) translateY(0);opacity:0.6} 50%{transform:translateX(-50%) translateY(-4px);opacity:1} }
+  .tap-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+  .tap-text { font-family: 'Special Elite', cursive; font-size: 0.5rem; letter-spacing: 0.2em; color: var(--blue); text-transform: uppercase; }
 
-  @keyframes tap-bounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.7; }
-    50% { transform: translateX(-50%) translateY(-4px); opacity: 1; }
-  }
-
-  .tap-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--blue-neon);
-    box-shadow: 0 0 8px var(--blue-neon);
-  }
-
-  .tap-text {
-    font-family: 'Special Elite', cursive;
-    font-size: 0.5rem;
-    letter-spacing: 0.2em;
-    color: var(--blue-neon);
-    text-transform: uppercase;
-  }
-
-  /* ===== CARD BACK ===== */
+  /* ── BACK FACE ── */
   .card-back {
     background: linear-gradient(160deg, #0e0c08 0%, #080705 40%, #0d0b07 100%);
-    border: 2px solid var(--gold-dark);
-    box-shadow:
-      0 0 0 1px #0a0805,
-      0 0 0 3px var(--gold-dark),
-      inset 0 0 40px rgba(0,0,0,0.8),
-      0 20px 60px rgba(0,0,0,0.8),
-      0 0 30px rgba(201,168,76,0.1);
-    transform: rotateY(180deg);
-    display: flex;
-    flex-direction: column;
-    padding: 22px 20px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--gold-dark) transparent;
+    padding: 22px 20px 20px;
+    display: none; /* hidden by default, shown via JS */
   }
 
-  .card-back::-webkit-scrollbar { width: 3px; }
-  .card-back::-webkit-scrollbar-track { background: transparent; }
-  .card-back::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 2px; }
-
-  .back-border-ornament {
-    position: absolute;
-    inset: 8px;
-    border: 1px solid rgba(201,168,76,0.25);
-    border-radius: 14px;
-    pointer-events: none;
+  .back-header {
+    text-align: center; margin-bottom: 16px;
   }
-
-  .lore-header {
-    text-align: center;
-    margin-bottom: 16px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .lore-title {
+  .back-title {
     font-family: 'Cinzel Decorative', serif;
-    font-size: 0.9rem;
-    letter-spacing: 0.2em;
+    font-size: 0.88rem; letter-spacing: 0.2em;
     color: var(--gold-light);
-    text-shadow: 0 0 15px rgba(201,168,76,0.4);
-    display: block;
-    margin-bottom: 8px;
+    text-shadow: 0 0 12px rgba(201,168,76,0.4);
+    display: block; margin-bottom: 8px;
   }
-
-  .lore-divider {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: center;
+  .back-divider {
+    display: flex; align-items: center; gap: 8px; justify-content: center;
   }
+  .back-divider-line { height: 1px; flex: 1; background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent); }
+  .back-divider-dot { width: 4px; height: 4px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 5px var(--gold); }
 
-  .lore-divider-line {
-    height: 1px;
-    flex: 1;
-    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.5), transparent);
-  }
-
-  .lore-divider-dot {
-    width: 4px;
-    height: 4px;
-    background: var(--gold);
-    border-radius: 50%;
-    box-shadow: 0 0 6px var(--gold);
-  }
-
-  .lore-content {
-    position: relative;
-    z-index: 1;
-    flex: 1;
-  }
-
-  .lore-section {
-    margin-bottom: 14px;
-  }
-
+  .lore-section { margin-bottom: 14px; }
   .lore-place {
     font-family: 'Special Elite', cursive;
-    font-size: 0.6rem;
-    letter-spacing: 0.3em;
-    color: var(--blue-neon);
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 6px;
-    opacity: 0.8;
+    font-size: 0.58rem; letter-spacing: 0.3em;
+    color: var(--blue); text-transform: uppercase;
+    display: block; margin-bottom: 5px; opacity: 0.8;
   }
-
   .lore-text {
     font-family: 'Crimson Text', serif;
-    font-size: 0.85rem;
-    line-height: 1.65;
-    color: var(--cream-dark);
+    font-size: 0.82rem; line-height: 1.7;
+    color: var(--cream);
   }
-
-  .lore-text em {
-    color: var(--gold-light);
-    font-style: italic;
-  }
+  .lore-text em { color: var(--gold-light); font-style: italic; }
+  .lore-text + .lore-text { margin-top: 5px; }
 
   .lore-break {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 12px 0;
-    opacity: 0.4;
+    display: flex; align-items: center; gap: 8px;
+    margin: 11px 0; opacity: 0.35;
   }
-
-  .lore-break-line {
-    flex: 1;
-    height: 1px;
-    background: var(--gold-dark);
-  }
-
-  .lore-break-sym {
-    color: var(--gold);
-    font-size: 0.7rem;
-  }
+  .lore-break-line { flex: 1; height: 1px; background: var(--gold-dark); }
+  .lore-break-sym { color: var(--gold); font-size: 0.65rem; }
 
   .lore-footer {
-    text-align: center;
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(201,168,76,0.2);
-    position: relative;
-    z-index: 1;
+    text-align: center; margin-top: 14px;
+    padding-top: 12px; border-top: 1px solid rgba(201,168,76,0.18);
   }
-
   .lore-tagline {
     font-family: 'Special Elite', cursive;
-    font-size: 0.6rem;
-    letter-spacing: 0.15em;
-    color: var(--gold);
-    line-height: 1.8;
-    text-transform: uppercase;
+    font-size: 0.58rem; letter-spacing: 0.14em;
+    color: var(--gold); line-height: 1.9; text-transform: uppercase;
   }
-
   .lore-tagline strong {
-    color: var(--gold-light);
-    font-size: 0.72rem;
-    display: block;
-    text-shadow: 0 0 10px rgba(201,168,76,0.4);
-    margin-bottom: 4px;
-    letter-spacing: 0.1em;
-  }
-
-  /* Flip back button */
-  .flip-back {
-    text-align: center;
-    margin-top: 12px;
-    position: relative;
-    z-index: 1;
+    color: var(--gold-light); font-size: 0.7rem;
+    display: block; letter-spacing: 0.1em; margin-bottom: 3px;
+    text-shadow: 0 0 8px rgba(201,168,76,0.35);
   }
 
   .flip-back-btn {
+    display: block; width: 100%;
+    margin-top: 14px;
     font-family: 'Special Elite', cursive;
-    font-size: 0.55rem;
-    letter-spacing: 0.25em;
-    color: var(--blue-neon);
-    text-transform: uppercase;
-    opacity: 0.6;
-    cursor: pointer;
-    background: none;
-    border: none;
-    padding: 4px 8px;
+    font-size: 0.58rem; letter-spacing: 0.22em;
+    color: var(--blue); text-transform: uppercase;
+    background: none; border: none; cursor: pointer;
+    opacity: 0.6; padding: 4px;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* Bottom section */
-  .bottom-section {
-    position: relative;
-    z-index: 2;
-    text-align: center;
-    margin-top: 40px;
+  /* flip animation */
+  .card-wrap.animating .card-front,
+  .card-wrap.animating .card-back {
+    animation: flip-out 0.18s ease-in forwards;
   }
+  @keyframes flip-out { to { transform: scaleX(0); opacity: 0; } }
+  .card-wrap.animating-in .card-front,
+  .card-wrap.animating-in .card-back {
+    animation: flip-in 0.18s ease-out forwards;
+  }
+  @keyframes flip-in { from { transform: scaleX(0); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
 
-  .bottom-tagline {
+  /* ── BOTTOM ── */
+  .bottom {
+    position: relative; z-index: 2;
+    text-align: center; margin-top: 36px;
+  }
+  .bottom-tag {
     font-family: 'Special Elite', cursive;
-    font-size: 0.75rem;
-    letter-spacing: 0.2em;
-    color: rgba(201,168,76,0.5);
-    text-transform: uppercase;
+    font-size: 0.7rem; letter-spacing: 0.2em;
+    color: rgba(201,168,76,0.4); text-transform: uppercase;
+    margin-bottom: 14px;
   }
-
-  .social-links {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    margin-top: 16px;
-  }
-
+  .social-links { display: flex; gap: 16px; justify-content: center; }
   .social-link {
     font-family: 'Special Elite', cursive;
-    font-size: 0.7rem;
-    letter-spacing: 0.15em;
-    color: var(--blue-neon);
-    text-decoration: none;
+    font-size: 0.68rem; letter-spacing: 0.14em;
+    color: var(--blue); text-decoration: none;
     padding: 6px 14px;
-    border: 1px solid rgba(77,184,255,0.3);
-    border-radius: 3px;
-    transition: all 0.3s;
+    border: 1px solid rgba(77,184,255,0.28);
+    border-radius: 3px; transition: all 0.25s;
     text-transform: uppercase;
   }
+  .social-link:hover { background: rgba(77,184,255,0.08); border-color: var(--blue); }
 
-  .social-link:hover {
-    background: rgba(77,184,255,0.1);
-    border-color: var(--blue-neon);
-    box-shadow: 0 0 15px rgba(77,184,255,0.2);
+  .back-home {
+    display: inline-block; margin-top: 14px;
+    font-family: 'Special Elite', cursive;
+    font-size: 0.62rem; letter-spacing: 0.18em;
+    color: rgba(201,168,76,0.45); text-transform: uppercase;
+    text-decoration: none; transition: color 0.2s;
   }
-
-  /* Floating wrenches decoration */
-  .bg-deco {
-    position: fixed;
-    font-size: 3rem;
-    opacity: 0.03;
-    pointer-events: none;
-    z-index: 0;
-    color: var(--gold);
-  }
-  .bg-deco-1 { top: 10%; left: 5%; transform: rotate(-30deg); font-size: 5rem; }
-  .bg-deco-2 { top: 60%; right: 3%; transform: rotate(45deg); font-size: 4rem; }
-  .bg-deco-3 { bottom: 10%; left: 10%; transform: rotate(15deg); }
-
-  @media (max-width: 400px) {
-    .card-scene {
-      width: 88vw;
-      height: calc(88vw * 1.7);
-    }
-  }
+  .back-home:hover { color: var(--gold); }
 </style>
 </head>
 <body>
 
-<!-- Background decorations -->
-<div class="bg-deco bg-deco-1">🔧</div>
-<div class="bg-deco bg-deco-2">🔧</div>
-<div class="bg-deco bg-deco-3">🔧</div>
-
-<!-- Particles -->
 <div class="particles" id="particles"></div>
 
-<!-- Header -->
+<!-- HEADER -->
 <div class="header">
   <p class="header-eyebrow">Pipe Mojo Universe</p>
   <h1>The Lore</h1>
   <div class="header-divider">
     <div class="divider-line"></div>
-    <span class="divider-icon">✦</span>
+    <span style="color:var(--gold)">✦</span>
     <div class="divider-line"></div>
   </div>
 </div>
 
-<p class="hint">✦ tap the card ✦</p>
+<p class="hint" id="hint-text">✦ tap the card ✦</p>
 
-<!-- TAROT CARD -->
-<div class="card-scene" onclick="flipCard()" id="cardScene">
-  <div class="card" id="card">
+<!-- CARD -->
+<div class="card-wrap" id="cardWrap" onclick="flipCard()">
 
-    <!-- FRONT -->
-    <div class="card-face card-front">
-      <div class="card-border-ornament"></div>
+  <!-- FRONT -->
+  <div class="card-face card-front" id="cardFront">
 
-      <!-- Corner ornaments -->
-      <div class="corner corner-tl">
-        <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 26 L2 2 L26 2" stroke="#c9a84c" stroke-width="1.5" fill="none"/>
-          <circle cx="6" cy="6" r="2" fill="#c9a84c" opacity="0.6"/>
-        </svg>
-      </div>
-      <div class="corner corner-tr">
-        <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 26 L2 2 L26 2" stroke="#c9a84c" stroke-width="1.5" fill="none"/>
-          <circle cx="6" cy="6" r="2" fill="#c9a84c" opacity="0.6"/>
-        </svg>
-      </div>
-      <div class="corner corner-bl">
-        <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 26 L2 2 L26 2" stroke="#c9a84c" stroke-width="1.5" fill="none"/>
-          <circle cx="6" cy="6" r="2" fill="#c9a84c" opacity="0.6"/>
-        </svg>
-      </div>
-      <div class="corner corner-br">
-        <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 26 L2 2 L26 2" stroke="#c9a84c" stroke-width="1.5" fill="none"/>
-          <circle cx="6" cy="6" r="2" fill="#c9a84c" opacity="0.6"/>
-        </svg>
-      </div>
+    <div class="corner corner-tl">
+      <svg viewBox="0 0 26 26" fill="none"><path d="M2 24L2 2L24 2" stroke="#c9a84c" stroke-width="1.5"/><circle cx="5" cy="5" r="2" fill="#c9a84c" opacity="0.6"/></svg>
+    </div>
+    <div class="corner corner-tr">
+      <svg viewBox="0 0 26 26" fill="none"><path d="M2 24L2 2L24 2" stroke="#c9a84c" stroke-width="1.5"/><circle cx="5" cy="5" r="2" fill="#c9a84c" opacity="0.6"/></svg>
+    </div>
+    <div class="corner corner-bl">
+      <svg viewBox="0 0 26 26" fill="none"><path d="M2 24L2 2L24 2" stroke="#c9a84c" stroke-width="1.5"/><circle cx="5" cy="5" r="2" fill="#c9a84c" opacity="0.6"/></svg>
+    </div>
+    <div class="corner corner-br">
+      <svg viewBox="0 0 26 26" fill="none"><path d="M2 24L2 2L24 2" stroke="#c9a84c" stroke-width="1.5"/><circle cx="5" cy="5" r="2" fill="#c9a84c" opacity="0.6"/></svg>
+    </div>
 
-      <div class="card-top-label">
-        <span>Guardian of the Underground</span>
-        <span class="card-roman">I</span>
-      </div>
+    <div class="card-top">
+      <span>Guardian of the Underground</span>
+      <span class="card-roman">I</span>
+    </div>
 
-      <div class="card-art-area">
-        <div class="card-art-frame">
-          <span class="pipe-deco pipe-deco-1">⚙</span>
-          <span class="pipe-deco pipe-deco-2">⚙</span>
-          <img 
-            src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" 
-            alt="Pipe Mojo" 
-            class="card-logo-img"
-            onerror="this.style.display='none'; this.parentElement.innerHTML += '<div style=\'color:#c9a84c;font-size:3rem;text-shadow:0 0 20px rgba(77,184,255,0.8);\'>☠</div>'"
-          >
-        </div>
-      </div>
-
-      <div class="card-title-front">
-        <h2>Pipe Mojo</h2>
-        <span class="card-subtitle-front">& Ganja • Est. New Orleans 1847</span>
-      </div>
-
-      <div class="tap-indicator">
-        <div class="tap-dot"></div>
-        <span class="tap-text">tap to reveal</span>
+    <div class="card-art">
+      <div class="art-frame">
+        <img
+          src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png"
+          alt="Pipe Mojo"
+          onerror="this.style.display='none'"
+        >
       </div>
     </div>
 
-    <!-- BACK -->
-    <div class="card-face card-back">
-      <div class="back-border-ornament"></div>
+    <div class="card-bottom">
+      <h2>Pipe Mojo</h2>
+      <span class="card-bottom-sub">& Ganja · Est. New Orleans 1847</span>
+    </div>
 
-      <div class="lore-header">
-        <span class="lore-title">Origins</span>
-        <div class="lore-divider">
-          <div class="lore-divider-line"></div>
-          <div class="lore-divider-dot"></div>
-          <div class="lore-divider-line"></div>
-        </div>
-      </div>
-
-      <div class="lore-content">
-
-        <div class="lore-section">
-          <span class="lore-place">New Orleans · 1847</span>
-          <p class="lore-text">
-            Nobody remembers who stitched him together. Burlap. Twine. Two button eyes marked with an X. A tiny top hat someone thought was funny at the time. He wasn't made for anything grand — just meant to sit on a shelf and watch over a family that eventually moved on without him.
-          </p>
-          <p class="lore-text" style="margin-top:6px;">So he waited. For a long time.</p>
-        </div>
-
-        <div class="lore-break">
-          <div class="lore-break-line"></div>
-          <span class="lore-break-sym">✦</span>
-          <div class="lore-break-line"></div>
-        </div>
-
-        <div class="lore-section">
-          <span class="lore-place">The Storm</span>
-          <p class="lore-text">
-            Then came the storm. The kind New Orleans does better than anywhere else on earth. The flood took him under — through drains, tunnels, and passages the city above had long forgotten. When the water finally settled he was somewhere deep beneath the streets.
-          </p>
-          <p class="lore-text" style="margin-top:6px;"><em>For the first time in his existence — he moved.</em></p>
-        </div>
-
-        <div class="lore-break">
-          <div class="lore-break-line"></div>
-          <span class="lore-break-sym">✦</span>
-          <div class="lore-break-line"></div>
-        </div>
-
-        <div class="lore-section">
-          <span class="lore-place">The Work</span>
-          <p class="lore-text">
-            Turns out the city below has problems. Blockages. Root intrusions. Buildup nobody wants to talk about. He started fixing things. Not because anyone asked. Not because anyone knew he existed. Just because the flow was off and somebody had to deal with it.
-          </p>
-          <p class="lore-text" style="margin-top:6px;"><em>That somebody became him.</em></p>
-        </div>
-
-        <div class="lore-break">
-          <div class="lore-break-line"></div>
-          <span class="lore-break-sym">✦</span>
-          <div class="lore-break-line"></div>
-        </div>
-
-        <div class="lore-section">
-          <span class="lore-place">About Ganja</span>
-          <p class="lore-text">
-            The roach found him first. Back in the old house. Never afraid. Never left. Whatever strange energy lives beneath New Orleans changed them both over the years. Ganja's been around longer than any roach has a right to be.
-          </p>
-          <p class="lore-text" style="margin-top:6px;">Pipe Mojo talks. Ganja doesn't. <em>He doesn't need to. That look he gives says plenty.</em></p>
-        </div>
-
-        <div class="lore-break">
-          <div class="lore-break-line"></div>
-          <span class="lore-break-sym">✦</span>
-          <div class="lore-break-line"></div>
-        </div>
-
-        <div class="lore-section">
-          <span class="lore-place">The Legend</span>
-          <p class="lore-text">
-            The workers who catch glimpses don't talk about it much. Just whispers between night crews and maintenance guys. A small figure in a top hat. A wrench that glows sometimes. A roach that knows where trouble is before trouble knows it's there.
-          </p>
-          <p class="lore-text" style="margin-top:6px;">Most people never see them.</p>
-        </div>
-
-      </div>
-
-      <div class="lore-footer">
-        <div class="lore-tagline">
-          <strong>Pipe Mojo</strong>
-          Guardian of the Underground · Keeper of the Flow<br>
-          Nobody's Hero — Everybody's Plumber
-        </div>
-      </div>
-
-      <div class="flip-back">
-        <button class="flip-back-btn" onclick="event.stopPropagation(); flipCard()">↩ flip back</button>
-      </div>
+    <div class="tap-hint">
+      <div class="tap-dot"></div>
+      <span class="tap-text">tap to reveal</span>
     </div>
 
   </div>
+
+  <!-- BACK -->
+  <div class="card-face card-back" id="cardBack">
+
+    <div class="back-header">
+      <span class="back-title">Origins</span>
+      <div class="back-divider">
+        <div class="back-divider-line"></div>
+        <div class="back-divider-dot"></div>
+        <div class="back-divider-line"></div>
+      </div>
+    </div>
+
+    <div class="lore-section">
+      <span class="lore-place">New Orleans · 1847</span>
+      <p class="lore-text">Nobody remembers who stitched him together. Burlap. Twine. Two button eyes marked with an X. A tiny top hat someone thought was funny at the time. He wasn't made for anything grand — just meant to sit on a shelf and watch over a family that eventually moved on without him.</p>
+      <p class="lore-text">So he waited. For a long time.</p>
+    </div>
+
+    <div class="lore-break"><div class="lore-break-line"></div><span class="lore-break-sym">✦</span><div class="lore-break-line"></div></div>
+
+    <div class="lore-section">
+      <span class="lore-place">The Storm</span>
+      <p class="lore-text">Then came the storm. The kind New Orleans does better than anywhere else on earth. The flood took him under — through drains, tunnels, and passages the city above had long forgotten. When the water finally settled he was somewhere deep beneath the streets.</p>
+      <p class="lore-text"><em>For the first time in his existence — he moved.</em></p>
+    </div>
+
+    <div class="lore-break"><div class="lore-break-line"></div><span class="lore-break-sym">✦</span><div class="lore-break-line"></div></div>
+
+    <div class="lore-section">
+      <span class="lore-place">The Work</span>
+      <p class="lore-text">Turns out the city below has problems. Blockages. Root intrusions. Buildup nobody wants to talk about. He started fixing things. Not because anyone asked. Not because anyone knew he existed. Just because the flow was off and somebody had to deal with it.</p>
+      <p class="lore-text"><em>That somebody became him.</em></p>
+    </div>
+
+    <div class="lore-break"><div class="lore-break-line"></div><span class="lore-break-sym">✦</span><div class="lore-break-line"></div></div>
+
+    <div class="lore-section">
+      <span class="lore-place">About Ganja</span>
+      <p class="lore-text">The roach found him first. Back in the old house. Never afraid. Never left. Whatever strange energy lives beneath New Orleans changed them both over the years. Ganja's been around longer than any roach has a right to be.</p>
+      <p class="lore-text">Pipe Mojo talks. Ganja doesn't. <em>He doesn't need to. That look he gives says plenty.</em></p>
+    </div>
+
+    <div class="lore-break"><div class="lore-break-line"></div><span class="lore-break-sym">✦</span><div class="lore-break-line"></div></div>
+
+    <div class="lore-section">
+      <span class="lore-place">The Legend</span>
+      <p class="lore-text">The workers who catch glimpses don't talk about it much. Just whispers between night crews and maintenance guys. A small figure in a top hat. A wrench that glows sometimes. A roach that knows where trouble is before trouble knows it's there.</p>
+      <p class="lore-text">Most people never see them.</p>
+    </div>
+
+    <div class="lore-footer">
+      <div class="lore-tagline">
+        <strong>Pipe Mojo</strong>
+        Guardian of the Underground · Keeper of the Flow<br>
+        Nobody's Hero — Everybody's Plumber
+      </div>
+    </div>
+
+    <button class="flip-back-btn" onclick="event.stopPropagation(); flipCard()">↩ flip back</button>
+
+  </div>
+
 </div>
 
-<!-- Bottom -->
-<div class="bottom-section">
-  <p class="bottom-tagline">Follow the flow</p>
+<!-- BOTTOM -->
+<div class="bottom">
+  <p class="bottom-tag">Follow the flow</p>
   <div class="social-links">
     <a class="social-link" href="https://tiktok.com/@pipemojo" target="_blank">TikTok</a>
     <a class="social-link" href="https://youtube.com/@pipemojo" target="_blank">YouTube</a>
   </div>
+  <a class="back-home" href="index.html">← Back to Site</a>
 </div>
 
 <script>
-  // Flip card
+  let isFlipped = false;
+  const front = document.getElementById('cardFront');
+  const back  = document.getElementById('cardBack');
+  const hint  = document.getElementById('hint-text');
+  const wrap  = document.getElementById('cardWrap');
+
   function flipCard() {
-    document.getElementById('card').classList.toggle('flipped');
+    // Animate out
+    wrap.style.transform = 'scaleX(0.95)';
+    wrap.style.opacity = '0.7';
+    wrap.style.transition = 'transform 0.15s ease-in, opacity 0.15s ease-in';
+
+    setTimeout(() => {
+      // Swap faces
+      if (!isFlipped) {
+        front.style.display = 'none';
+        back.style.display = 'block';
+        hint.textContent = '✦ tap to flip back ✦';
+        isFlipped = true;
+      } else {
+        back.style.display = 'none';
+        front.style.display = 'flex';
+        hint.textContent = '✦ tap the card ✦';
+        isFlipped = false;
+      }
+      // Animate in
+      wrap.style.transition = 'transform 0.15s ease-out, opacity 0.15s ease-out';
+      wrap.style.transform = 'scaleX(1)';
+      wrap.style.opacity = '1';
+    }, 150);
   }
 
-  // Generate particles
+  // Particles
   const container = document.getElementById('particles');
-  for (let i = 0; i < 25; i++) {
+  for (let i = 0; i < 22; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.animationDuration = (8 + Math.random() * 12) + 's';
-    p.style.animationDelay = (Math.random() * 10) + 's';
-    p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
-    // Alternate blue and gold particles
-    if (Math.random() > 0.6) {
-      p.style.background = '#c9a84c';
-      p.style.boxShadow = '0 0 4px #c9a84c';
-    } else {
-      p.style.boxShadow = '0 0 4px #4db8ff';
-    }
+    const size = 1 + Math.random() * 2;
+    p.style.cssText = `
+      left: ${Math.random() * 100}%;
+      width: ${size}px; height: ${size}px;
+      animation-duration: ${8 + Math.random() * 12}s;
+      animation-delay: ${Math.random() * 10}s;
+      background: ${Math.random() > 0.6 ? '#c9a84c' : '#4db8ff'};
+      box-shadow: 0 0 4px ${Math.random() > 0.6 ? '#c9a84c' : '#4db8ff'};
+    `;
     container.appendChild(p);
   }
 </script>
