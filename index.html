@@ -540,19 +540,114 @@
     .short-embed iframe { display: block; width:100%; height:100%; border:none; }
 
     /* ── MERCH ── */
-    .merch-section { padding: 5rem 0; text-align:center; background: linear-gradient(135deg, rgba(232,40,30,.07) 0%, rgba(91,26,170,.12) 50%, rgba(0,229,255,.05) 100%), var(--black); }
-    .merch-inner { max-width:640px; margin:0 auto; padding:0 1.25rem; }
-    .merch-stamp { display:inline-block; font-family:'Bebas Neue',cursive; font-size:.8rem; letter-spacing:5px; color:var(--gold); border:2px solid rgba(245,200,66,.4); padding:3px 14px; border-radius:3px; margin-bottom:1.25rem; }
-    .merch-title { font-family:'Bangers',cursive; font-size:clamp(2.8rem,9vw,5rem); letter-spacing:4px; line-height:.95; margin-bottom:1.25rem; }
-    .merch-title span { color:var(--red); }
-    .merch-desc { font-family:'Special Elite',cursive; font-size:.9rem; color:rgba(255,255,255,.45); line-height:1.8; margin-bottom:2rem; }
-    .email-form { display:flex; max-width:380px; margin:0 auto; border-radius:5px; overflow:hidden; }
-    .email-input { flex:1; padding:.9rem 1rem; background:rgba(255,255,255,.06); border:2px solid rgba(255,255,255,.12); border-right:none; border-radius:5px 0 0 5px; color:#fff; font-family:'Special Elite',cursive; font-size:.9rem; outline:none; -webkit-appearance:none; transition:border-color .2s; }
-    .email-input:focus { border-color:var(--cyan); }
-    .email-input::placeholder { color:rgba(255,255,255,.3); }
-    .email-submit { padding:.9rem 1.2rem; background:var(--cyan); color:#000; border:none; font-family:'Bebas Neue',cursive; font-size:.95rem; letter-spacing:2px; border-radius:0 5px 5px 0; cursor:pointer; transition:background .2s; }
-    .email-submit:active { background:#fff; }
-    #merch-confirm { display:none; margin-top:.9rem; font-family:'Special Elite',cursive; font-size:.85rem; color:var(--toxic); }
+    .merch-section {
+      padding: 5rem 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,40,30,.06) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 100%, rgba(91,26,170,.1) 0%, transparent 60%),
+        var(--black);
+    }
+    .merch-section .section-inner { text-align: center; }
+    .merch-header { margin-bottom: 3rem; }
+    .merch-main-title {
+      font-family: 'Bangers', cursive;
+      font-size: clamp(2.8rem, 9vw, 5rem);
+      letter-spacing: 4px; line-height: .95;
+      margin-bottom: 0.75rem;
+    }
+    .merch-main-title span { color: var(--red); }
+    .merch-subtitle {
+      font-family: 'Special Elite', cursive;
+      font-size: .9rem; color: rgba(255,255,255,.4);
+      line-height: 1.7;
+    }
+
+    .merch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+      gap: 1.5rem;
+      margin: 2.5rem auto;
+      max-width: 700px;
+      text-align: left;
+    }
+
+    .merch-card {
+      background: #0d0b09;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    @media (hover:hover) {
+      .merch-card:hover {
+        transform: translateY(-6px);
+        border-color: var(--cyan);
+        box-shadow: 0 16px 48px rgba(0,229,255,.12);
+      }
+    }
+    .merch-card:active { transform: scale(.98); }
+
+    .merch-card-img-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      overflow: hidden;
+      background: #111;
+    }
+    .merch-card-img-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform .4s;
+    }
+    @media (hover:hover) {
+      .merch-card:hover .merch-card-img-wrap img { transform: scale(1.04); }
+    }
+
+    .merch-badge {
+      position: absolute;
+      top: 12px; left: 12px;
+      background: var(--red);
+      color: #fff;
+      font-family: 'Bebas Neue', cursive;
+      font-size: .75rem; letter-spacing: 2px;
+      padding: 3px 10px;
+      border-radius: 3px;
+      z-index: 2;
+    }
+
+    .merch-card-info {
+      padding: 1rem 1.25rem 1.25rem;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .merch-card-name {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.1rem; letter-spacing: 2px;
+      color: #fff;
+    }
+    .merch-card-type {
+      font-family: 'Special Elite', cursive;
+      font-size: .78rem; color: rgba(255,255,255,.35);
+    }
+    .merch-card-price {
+      font-family: 'Bangers', cursive;
+      font-size: 1.4rem; letter-spacing: 2px;
+      color: var(--cyan);
+      margin-top: 6px;
+    }
+
+    .merch-follow-note {
+      font-family: 'Special Elite', cursive;
+      font-size: .85rem;
+      color: rgba(255,255,255,.3);
+      margin-top: 1.5rem;
+    }
+    .merch-follow-note a {
+      color: var(--cyan);
+      border-bottom: 1px solid rgba(0,229,255,.3);
+      transition: color .2s, border-color .2s;
+    }
+    .merch-follow-note a:hover { color: #fff; border-color: #fff; }
 
     /* ── FOOTER ── */
     footer { background:#030303; border-top:1px solid rgba(255,255,255,.05); padding:3.5rem 1.25rem 2rem; padding-bottom: max(2rem, calc(1rem + var(--safe))); }
@@ -815,18 +910,44 @@
 
 <!-- MERCH -->
 <section class="merch-section" id="merch">
-  <div class="merch-inner">
-    <div style="display:flex;justify-content:center;margin-bottom:1.5rem;" class="reveal">
-      <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo" class="pm-logo-img xl">
+  <div class="section-inner">
+    <div class="merch-header reveal">
+      <p class="section-eyebrow">The Shop</p>
+      <h2 class="merch-main-title">MERCH IS<br><span>DROPPING</span> SOON</h2>
+      <p class="merch-subtitle">First drops incoming. Keep them pipes clean.</p>
     </div>
-    <span class="merch-stamp reveal">Coming Soon</span>
-    <h2 class="merch-title reveal">THE <span>MERCH</span><br>IS COMING</h2>
-    <p class="merch-desc reveal">Pipe Mojo tees, stickers &amp; prints. The full voodoo workshop, wearable. Drop your email — you'll be first to know when the shop opens.</p>
-    <div class="email-form reveal">
-      <input type="email" id="merch-email" class="email-input" placeholder="your@email.com" inputmode="email" autocomplete="email">
-      <button class="email-submit" onclick="handleSignup()">NOTIFY ME</button>
+
+    <div class="merch-grid">
+
+      <div class="merch-card reveal">
+        <div class="merch-card-img-wrap">
+          <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/IMG_1763.jpeg" alt="Keep Them Pipes Clean Sticker">
+          <span class="merch-badge">COMING SOON</span>
+        </div>
+        <div class="merch-card-info">
+          <span class="merch-card-name">KEEP THEM PIPES CLEAN</span>
+          <span class="merch-card-type">Die-Cut Sticker · 3"</span>
+          <span class="merch-card-price">$5.00</span>
+        </div>
+      </div>
+
+      <div class="merch-card reveal" style="transition-delay:.12s">
+        <div class="merch-card-img-wrap">
+          <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/IMG_1764.jpeg" alt="Keep Them Pipes Clean Sticker Flatlay">
+          <span class="merch-badge">COMING SOON</span>
+        </div>
+        <div class="merch-card-info">
+          <span class="merch-card-name">PIPE MOJO MAGNET</span>
+          <span class="merch-card-type">Die-Cut Magnet · 3"</span>
+          <span class="merch-card-price">Coming Soon</span>
+        </div>
+      </div>
+
     </div>
-    <p id="merch-confirm">✓ You're on the list. Keep them pipes clean.</p>
+
+    <p class="merch-follow-note reveal">
+      Follow <a href="https://www.tiktok.com/@pipemojo" target="_blank" rel="noopener">@pipemojo</a> for drop announcements
+    </p>
   </div>
 </section>
 
@@ -849,7 +970,7 @@
         <li><a href="comics.html?issue=1">Issue #1 — The System</a></li>
         <li><a href="lore.html">The Lore</a></li>
         <li><a href="#characters">Meet the Crew</a></li>
-        <li><a href="#merch">Merch Waitlist</a></li>
+        <li><a href="#merch">Merch</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -867,15 +988,6 @@
 </footer>
 
 <script>
-  function handleSignup() {
-    const el = document.getElementById('merch-email');
-    if (!el.value || !el.value.includes('@')) { el.focus(); return; }
-    document.getElementById('merch-confirm').style.display = 'block';
-    el.value = '';
-  }
-  document.getElementById('merch-email').addEventListener('keydown', e => {
-    if (e.key === 'Enter') handleSignup();
-  });
   const observer = new IntersectionObserver(entries => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
   }, { threshold: 0.08 });
