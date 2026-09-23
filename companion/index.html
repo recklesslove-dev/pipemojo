@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0a0c">
+<title>Pipe Mojo</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Mojo">
+<style>
+  :root {
+    --top: #0d0a0c;
+    --bottom: #140c07;
+    --ink: #e8dcc4;
+    --glow: #7a3fb0;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  :root:not([data-theme="light"]), :root[data-theme="dark"] { color-scheme: dark; }
+  html, body { height: 100%; margin: 0; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); background: var(--top); }
+  body {
+    background: linear-gradient(var(--top), var(--bottom));
+    overflow: hidden;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  .stage { position: fixed; inset: 0; }
+  .backdrop, .mojo {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  .backdrop { object-fit: cover; filter: blur(28px) brightness(.45) saturate(1.2); transform: scale(1.15); }
+  .mojo { object-fit: contain; opacity: 0; }
+  .mojo.on { opacity: 1; }
+  /* Any portrait screen: go edge to edge */
+  @media (orientation: portrait) { .mojo { object-fit: cover; } .backdrop { display: none; } }
+  .wake {
+    position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
+    transform: translateX(-50%);
+    color: var(--ink); background: rgba(20, 12, 7, .72);
+    border: 1px solid rgba(122, 63, 176, .6); border-radius: 999px;
+    padding: 12px 22px; font-size: 17px; font-style: italic;
+    box-shadow: 0 0 24px rgba(122, 63, 176, .35);
+    display: none;
+  }
+  .wake.show { display: block; }
+  @media (prefers-reduced-motion: reduce) { .backdrop { display: none; } }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <video class="backdrop" id="bg" muted playsinline loop preload="auto"></video>
+  <video class="mojo on" id="a" muted playsinline preload="auto"></video>
+  <video class="mojo" id="b" muted playsinline preload="auto"></video>
+  <button class="wake" id="wake" type="button">Tap to wake Mojo</button>
+</div>
+<script>
+  // Clip library. v1 = idle only; tap reactions and bits get added here.
+  const CLIPS = {
+    idle: "idle.mp4"
+  };
+
+  const a = document.getElementById("a");
+  const b = document.getElementById("b");
+  const bg = document.getElementById("bg");
+  const wake = document.getElementById("wake");
+  let front = a, back = b;
+  const SWAP_EARLY = 0.06; // seconds before the end to hand off
+
+  [a, b, bg].forEach(v => { v.src = CLIPS.idle; });
+
+  // Double-buffered loop: when the front clip nears its end, start the
+  // back one from 0 and swap. Avoids Safari's hitch on the loop attribute.
+  function swap() {
+    back.currentTime = 0;
+    back.play().catch(() => {});
+    back.classList.add("on");
+    front.classList.remove("on");
+    front.pause();
+    [front, back] = [back, front];
+    watch(front);
+  }
+
+  function watch(v) {
+    if ("requestVideoFrameCallback" in HTMLVideoElement.prototype) {
+      const tick = (now, meta) => {
+        if (v !== front) return;
+        if (v.duration && meta.mediaTime >= v.duration - SWAP_EARLY) swap();
+        else v.requestVideoFrameCallback(tick);
+      };
+      v.requestVideoFrameCallback(tick);
+    } else {
+      v.loop = true; // fallback: plain loop
+    }
+  }
+
+  async function start() {
+    try {
+      await front.play();
+      bg.play().catch(() => {});
+      wake.classList.remove("show");
+      watch(front);
+    } catch (e) {
+      wake.classList.add("show");
+    }
+  }
+
+  // Keep the screen awake while he's on the desk (Safari 16.4+).
+  let lock = null;
+  async function keepAwake() {
+    try { if ("wakeLock" in navigator && !lock) lock = await navigator.wakeLock.request("screen"); lock.addEventListener("release", () => { lock = null; }); } catch (e) {}
+  }
+
+  document.getElementById("stage").addEventListener("click", () => { start(); keepAwake(); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") { front.play().catch(() => {}); bg.play().catch(() => {}); if (lock === null) keepAwake(); }
+  });
+
+  start();
+</script>
+</body>
+</html>
