@@ -38,6 +38,8 @@
   .backdrop { object-fit: cover; filter: blur(28px) brightness(.45) saturate(1.2); transform: scale(1.15); }
   .mojo { object-fit: contain; opacity: 0; }
   .mojo.on { opacity: 1; }
+  .react { transition: opacity .18s ease; }
+  .react.bit { transition: opacity .45s ease; }
   /* Any portrait screen: go edge to edge */
   @media (orientation: portrait) { .mojo { object-fit: cover; } .backdrop { display: none; } }
   .wake {
@@ -58,12 +60,15 @@
   <video class="backdrop" id="bg" muted playsinline loop preload="auto"></video>
   <video class="mojo on" id="a" muted playsinline preload="auto"></video>
   <video class="mojo" id="b" muted playsinline preload="auto"></video>
+  <video class="mojo react" id="r" muted playsinline preload="auto"></video>
   <button class="wake" id="wake" type="button">Tap to wake Mojo</button>
 </div>
 <script>
-  // Clip library. v1 = idle only; tap reactions and bits get added here.
+  // Clip library. Tap reactions play on tap; bits play on their own every 30-60s.
   const CLIPS = {
-    idle: "idle.mp4"
+    idle: "idle.mp4",
+    reactions: ["react-glare.mp4", "react-wrench.mp4", "react-hattip.mp4"],
+    bits: ["bit-stretch.mp4", "bit-yawn.mp4", "bit-look.mp4", "bit-twirl.mp4"]
   };
 
   const a = document.getElementById("a");
@@ -105,7 +110,7 @@
       await front.play();
       bg.play().catch(() => {});
       wake.classList.remove("show");
-      watch(front);
+      if (!started) { started = true; watch(front); scheduleBit(); }
     } catch (e) {
       wake.classList.add("show");
     }
@@ -117,7 +122,58 @@
     try { if ("wakeLock" in navigator && !lock) lock = await navigator.wakeLock.request("screen"); lock.addEventListener("release", () => { lock = null; }); } catch (e) {}
   }
 
-  document.getElementById("stage").addEventListener("click", () => { start(); keepAwake(); });
+  // Overlay clips: tap reactions (on tap) and idle bits (on a random timer).
+  const r = document.getElementById("r");
+  let playing = null;            // null | "react" | "bit"
+  let started = false;
+  const last = { react: -1, bit: -1 };
+  const BIT_MIN = 30, BIT_MAX = 60; // seconds between idle bits
+  let bitTimer = null;
+
+  function pick(kind, list) {
+    if (list.length === 1) return 0;
+    let i; do { i = Math.floor(Math.random() * list.length); } while (i === last[kind]);
+    last[kind] = i;
+    return i;
+  }
+
+  async function playOverlay(kind) {
+    const list = kind === "react" ? CLIPS.reactions : CLIPS.bits;
+    if (!list.length) return;
+    playing = kind;
+    r.classList.toggle("bit", kind === "bit");
+    r.src = list[pick(kind, list)];
+    try { await r.play(); r.classList.add("on"); }
+    catch (e) { playing = null; }
+  }
+
+  function scheduleBit() {
+    clearTimeout(bitTimer);
+    const wait = (BIT_MIN + Math.random() * (BIT_MAX - BIT_MIN)) * 1000;
+    bitTimer = setTimeout(() => {
+      if (!playing && document.visibilityState === "visible") playOverlay("bit");
+      else scheduleBit();
+    }, wait);
+  }
+
+  r.addEventListener("ended", () => {
+    r.classList.remove("on");
+    const was = playing;
+    setTimeout(() => { if (playing === was) playing = null; }, 450);
+    scheduleBit();
+  });
+
+  function react() {
+    if (playing === "react") return;   // let the current reaction finish
+    clearTimeout(bitTimer);            // a tap interrupts a bit
+    playOverlay("react");
+  }
+
+  document.getElementById("stage").addEventListener("click", () => {
+    keepAwake();
+    if (!started || front.paused) { start(); return; }
+    react();
+  });
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") { front.play().catch(() => {}); bg.play().catch(() => {}); if (lock === null) keepAwake(); }
   });
