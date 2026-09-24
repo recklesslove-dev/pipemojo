@@ -28,6 +28,8 @@
     overflow: hidden;
     -webkit-user-select: none; user-select: none;
     -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
     font-family: Georgia, "Times New Roman", serif;
   }
   .stage { position: fixed; top: 0; left: 0; right: 0; height: 100vh; height: 100lvh; }
@@ -38,8 +40,8 @@
   .backdrop { object-fit: cover; filter: blur(28px) brightness(.45) saturate(1.2); transform: scale(1.15); }
   .mojo { object-fit: contain; opacity: 0; }
   .mojo.on { opacity: 1; }
-  .react { transition: opacity .18s ease; }
-  .react.bit { transition: opacity .45s ease; }
+  .react { transition: opacity .4s ease; }      /* fade back to idle */
+  .react.on { transition: opacity .15s ease; }  /* snap in on tap */
   /* Any portrait screen: go edge to edge */
   @media (orientation: portrait) { .mojo { object-fit: cover; } .backdrop { display: none; } }
   .wake {
@@ -67,9 +69,31 @@
   // Clip library. Tap reactions play on tap; bits play on their own every 30-60s.
   const CLIPS = {
     idle: "idle.mp4",
-    reactions: ["react-glare.mp4", "react-wrench.mp4", "react-hattip.mp4"],
+    // Single tap anywhere: random from this list, never twice in a row
+    reactions: ["react-glare.mp4", "react-wrench.mp4", "react-hattip.mp4",
+                "react-startle.mp4", "react-shoo.mp4", "react-wrenchtap.mp4"],
+    rare: "rare-thumbs.mp4",       // 1 in 10 single taps
+    laugh: "special-laugh.mp4",    // triple-tap the belly
+    stomp: "special-stomp.mp4",    // 5+ fast taps anywhere
+    powerup: "special-powerup.mp4", // long-press (hold) anywhere
+    // Voodoo magic: double-tap plays a random one; 1 in 4 idle bits are magic
+    magic: ["special-powerup.mp4", "magic-rage.mp4", "magic-smoke.mp4",
+            "magic-surge.mp4", "magic-levitate.mp4"],
     bits: ["bit-stretch.mp4", "bit-yawn.mp4", "bit-look.mp4", "bit-twirl.mp4"]
   };
+  // Slower dissolve back to idle for clips that end further from home (seconds)
+  const FADE_OUT = { "magic-surge.mp4": 0.8, "seasonal-pumpkin.mp4": 0.6 };
+
+  // Halloween: Oct 1-31 these join the idle bits and the double-tap spells
+  const HALLOWEEN = ["seasonal-pumpkin.mp4", "seasonal-bats.mp4"];
+  const FORCE_HALLOWEEN = false; // set true to preview outside October
+  if (FORCE_HALLOWEEN || new Date().getMonth() === 9) {
+    CLIPS.bits.push(...HALLOWEEN);
+    CLIPS.magic.push(...HALLOWEEN);
+  }
+  const MAGIC_IDLE_CHANCE = 0.25;
+  // Belly zone in video pixels (video is 400x736)
+  const BELLY = { x: 115, y: 360, w: 170, h: 150 };
 
   const a = document.getElementById("a");
   const b = document.getElementById("b");
@@ -122,11 +146,11 @@
     try { if ("wakeLock" in navigator && !lock) lock = await navigator.wakeLock.request("screen"); lock.addEventListener("release", () => { lock = null; }); } catch (e) {}
   }
 
-  // Overlay clips: tap reactions (on tap) and idle bits (on a random timer).
+  // Overlay clips: tap reactions, specials, and idle bits (random timer).
   const r = document.getElementById("r");
   let playing = null;            // null | "react" | "bit"
   let started = false;
-  const last = { react: -1, bit: -1 };
+  const last = { react: -1, bit: -1, magic: -1 };
   const BIT_MIN = 30, BIT_MAX = 60; // seconds between idle bits
   let bitTimer = null;
 
@@ -137,43 +161,109 @@
     return i;
   }
 
-  async function playOverlay(kind) {
-    const list = kind === "react" ? CLIPS.reactions : CLIPS.bits;
-    if (!list.length) return;
+  async function playClip(src, kind) {
+    clearTimeout(bitTimer);
     playing = kind;
-    r.classList.toggle("bit", kind === "bit");
-    r.src = list[pick(kind, list)];
+    r.classList.remove("on");
+    r.style.transition = "";
+    r.dataset.fade = FADE_OUT[src.split("/").pop()] || FADE_OUT[src] || "";
+    r.src = src;
     try { await r.play(); r.classList.add("on"); }
-    catch (e) { playing = null; }
+    catch (e) { playing = null; scheduleBit(); }
   }
 
   function scheduleBit() {
     clearTimeout(bitTimer);
     const wait = (BIT_MIN + Math.random() * (BIT_MAX - BIT_MIN)) * 1000;
     bitTimer = setTimeout(() => {
-      if (!playing && document.visibilityState === "visible") playOverlay("bit");
+      if (!playing && document.visibilityState === "visible") {
+        if (Math.random() < MAGIC_IDLE_CHANCE) playClip(CLIPS.magic[pick("magic", CLIPS.magic)], "bit");
+        else playClip(CLIPS.bits[pick("bit", CLIPS.bits)], "bit");
+      }
       else scheduleBit();
     }, wait);
   }
 
   r.addEventListener("ended", () => {
+    const fade = parseFloat(r.dataset.fade) || 0.4;
+    r.style.transition = `opacity ${fade}s ease`;
     r.classList.remove("on");
-    const was = playing;
-    setTimeout(() => { if (playing === was) playing = null; }, 450);
+    const src = r.src;
+    setTimeout(() => { if (r.src === src) playing = null; }, fade * 1000);
     scheduleBit();
   });
 
   function react() {
     if (playing === "react") return;   // let the current reaction finish
-    clearTimeout(bitTimer);            // a tap interrupts a bit
-    playOverlay("react");
+    const src = Math.random() < 0.1
+      ? CLIPS.rare
+      : CLIPS.reactions[pick("react", CLIPS.reactions)];
+    playClip(src, "react");
   }
 
-  document.getElementById("stage").addEventListener("click", () => {
+  function magic() { playClip(CLIPS.magic[pick("magic", CLIPS.magic)], "react"); }
+
+  // Map a screen tap to video pixels (handles cover and contain layouts)
+  function toVideo(x, y) {
+    const W = window.innerWidth, H = window.innerHeight;
+    const vw = front.videoWidth || 400, vh = front.videoHeight || 736;
+    const fit = getComputedStyle(front).objectFit;
+    const s = fit === "cover" ? Math.max(W / vw, H / vh) : Math.min(W / vw, H / vh);
+    return { x: (x - (W - vw * s) / 2) / s, y: (y - (H - vh * s) / 2) / s };
+  }
+  function inBelly(x, y) {
+    const v = toVideo(x, y);
+    return v.x >= BELLY.x && v.x <= BELLY.x + BELLY.w && v.y >= BELLY.y && v.y <= BELLY.y + BELLY.h;
+  }
+
+  let taps = [], bellyTaps = [], bellyTimer = null;
+  // Long-press: hold ~0.6s to power him up
+  let holdTimer = null, suppressClick = false;
+  const stage = document.getElementById("stage");
+  stage.addEventListener("pointerdown", () => {
+    if (!started) return;
+    clearTimeout(holdTimer);
+    holdTimer = setTimeout(() => {
+      suppressClick = true;
+      taps = []; bellyTaps = []; clearTimeout(bellyTimer);
+      playClip(CLIPS.powerup, "react");
+    }, 600);
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(ev =>
+    stage.addEventListener(ev, () => clearTimeout(holdTimer)));
+  stage.addEventListener("contextmenu", e => e.preventDefault());
+
+  function onTap(e) {
+    if (suppressClick) { suppressClick = false; return; }
     keepAwake();
     if (!started || front.paused) { start(); return; }
+    const now = performance.now();
+    taps = taps.filter(t => now - t < 2000); taps.push(now);
+
+    // Tap spam: 5+ taps in 2 seconds, anywhere
+    if (taps.length >= 5) {
+      taps = []; bellyTaps = []; clearTimeout(bellyTimer);
+      playClip(CLIPS.stomp, "react");
+      return;
+    }
+    // Belly: wait a beat to see if it's a triple-tap
+    if (inBelly(e.clientX, e.clientY)) {
+      bellyTaps = bellyTaps.filter(t => now - t < 1000); bellyTaps.push(now);
+      clearTimeout(bellyTimer);
+      bellyTimer = setTimeout(() => {
+        const n = bellyTaps.length; bellyTaps = [];
+        if (n === 3) playClip(CLIPS.laugh, "react");
+        else if (n === 2) magic();
+        else if (n === 1) react();
+      }, 350);
+      return;
+    }
+    // Double-tap (exactly 2 quick taps): random voodoo magic
+    if (taps.length === 2 && now - taps[0] < 350) { magic(); return; }
     react();
-  });
+  }
+
+  document.getElementById("stage").addEventListener("click", onTap);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") { front.play().catch(() => {}); bg.play().catch(() => {}); if (lock === null) keepAwake(); }
   });
