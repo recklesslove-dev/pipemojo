@@ -44,6 +44,13 @@
   .react.on { transition: opacity .15s ease; }  /* snap in on tap */
   /* Any portrait screen: go edge to edge */
   @media (orientation: portrait) { .mojo { object-fit: cover; } .backdrop { display: none; } }
+  .mute {
+    position: absolute; top: calc(env(safe-area-inset-top, 0px) + 12px); right: 12px;
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 1px solid rgba(122, 63, 176, .5); background: rgba(20, 12, 7, .55);
+    color: var(--ink); font-size: 18px; line-height: 38px; text-align: center;
+    padding: 0; opacity: .55; z-index: 5;
+  }
   .wake {
     position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
     transform: translateX(-50%);
@@ -64,7 +71,9 @@
   <video class="mojo" id="b" muted playsinline preload="auto"></video>
   <video class="mojo react" id="r" muted playsinline preload="auto"></video>
   <button class="wake" id="wake" type="button">Tap to wake Mojo</button>
+  <button class="mute" id="mute" type="button" aria-label="Sound on or off">🔊</button>
 </div>
+<script src="sounds.js"></script>
 <script>
   // Clip library. Tap reactions play on tap; bits play on their own every 30-60s.
   const CLIPS = {
@@ -146,6 +155,112 @@
     try { if ("wakeLock" in navigator && !lock) lock = await navigator.wakeLock.request("screen"); lock.addEventListener("release", () => { lock = null; }); } catch (e) {}
   }
 
+  // ---------- Sound ----------
+  // Per clip: [sound, seconds into the clip, volume, playback speed]
+  const SFX = {
+    "react-glare.mp4":     [["rustle", 0.05, 0.5]],
+    "react-wrench.mp4":    [["swoosh", 0.3, 0.6], ["swoosh", 1.45, 0.5]],
+    "react-hattip.mp4":    [["rustle", 0.3, 0.5], ["swoosh", 0.75, 0.3]],
+    "react-startle.mp4":   [["boing", 0.3, 0.6]],
+    "react-shoo.mp4":      [["swoosh", 0.3, 0.45], ["swoosh", 1.7, 0.4]],
+    "react-wrenchtap.mp4": [["clang", 1.12, 0.45], ["clang", 1.88, 0.5], ["clang", 2.47, 0.55]],
+    "rare-thumbs.mp4":     [["ping", 1.0, 0.5]],
+    "special-laugh.mp4":   [["giggle", 0.35, 0.6, 0.85], ["giggle", 1.9, 0.45, 0.8]],
+    "special-stomp.mp4":   [["rustle2", 0.3, 0.4], ["thud", 0.88, 0.7], ["thud", 1.38, 0.75], ["thud", 1.83, 0.7],
+                            ["thud", 2.48, 0.8], ["thud", 3.13, 0.75], ["thud", 3.53, 0.85]],
+    "special-powerup.mp4": [["twinkle", 0.2, 0.3], ["buzz", 0.3, 0.35], ["zap", 1.0, 0.5]],
+    "magic-rage.mp4":      [["fire", 0.1, 0.6]],
+    "magic-smoke.mp4":     [["swoosh", 0.3, 0.3, 0.7], ["chime", 0.4, 0.5]],
+    "magic-surge.mp4":     [["buzz", 0.4, 0.25], ["zap", 0.55, 0.45], ["zap", 1.8, 0.4]],
+    "magic-levitate.mp4":  [["twinkle", 0.5, 0.5], ["chime", 2.9, 0.25]],
+    "bit-look.mp4":        [["knock", 0, 0.35]],
+    "bit-stretch.mp4":     [["rustle", 0.3, 0.4], ["rustle2", 3.2, 0.3]],
+    "bit-yawn.mp4":        [["rustle2", 0.3, 0.25]],
+    "bit-twirl.mp4":       [["swoosh", 0.65, 0.45, 1.15]],
+    "seasonal-pumpkin.mp4":[["twinkle", 1.2, 0.5], ["swoosh", 3.35, 0.4], ["chime", 3.45, 0.3]],
+    "seasonal-bats.mp4":   [["wings", 0.55, 0.6]]
+  };
+  const HUM_VOL = 0.12, DRIP_MIN = 10, DRIP_MAX = 25; // background
+  const DRIPS = ["drip1", "drip2", "drip3", "drip4"];
+
+  let actx = null, master = null, buffers = {}, active = [], dripTimer = null;
+  let muted = false;
+  try { muted = localStorage.getItem("mojo-muted") === "1"; } catch (e) {}
+  const muteBtn = document.getElementById("mute");
+  muteBtn.textContent = muted ? "🔇" : "🔊";
+
+  function b64ToBuf(b64) {
+    const bin = atob(b64), bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes.buffer;
+  }
+  function decode(buf) {
+    return new Promise((ok, bad) => { const p = actx.decodeAudioData(buf, ok, bad); if (p && p.then) p.then(ok, bad); });
+  }
+
+  // Must be called from a tap (iPhone only allows sound after a user gesture)
+  function initAudio() {
+    if (actx) { if (actx.state !== "running") actx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC || !window.MOJO_SOUNDS) return;
+    actx = new AC();
+    master = actx.createGain();
+    master.gain.value = muted ? 0 : 1;
+    master.connect(actx.destination);
+    Promise.all(Object.entries(window.MOJO_SOUNDS).map(([name, b64]) =>
+      decode(b64ToBuf(b64)).then(b => { buffers[name] = b; }).catch(() => {})
+    )).then(startAmbient);
+  }
+
+  function playSound(name, when = 0, vol = 1, rate = 1, loop = false) {
+    const buf = buffers[name];
+    if (!actx || !buf) return null;
+    const src = actx.createBufferSource(), g = actx.createGain();
+    src.buffer = buf; src.playbackRate.value = rate; g.gain.value = vol;
+    if (loop) { src.loop = true; src.loopStart = 0.05; src.loopEnd = buf.duration - 0.05; }
+    src.connect(g); g.connect(master);
+    src.start(actx.currentTime + when);
+    return src;
+  }
+
+  function startAmbient() {
+    playSound("hum", 0, HUM_VOL, 1, true);
+    scheduleDrip();
+  }
+  function scheduleDrip() {
+    clearTimeout(dripTimer);
+    dripTimer = setTimeout(() => {
+      if (document.visibilityState === "visible")
+        playSound(DRIPS[Math.floor(Math.random() * DRIPS.length)], 0,
+                  0.12 + Math.random() * 0.13, 0.9 + Math.random() * 0.2);
+      scheduleDrip();
+    }, (DRIP_MIN + Math.random() * (DRIP_MAX - DRIP_MIN)) * 1000);
+  }
+
+  function stopClipSounds() {
+    active.forEach(s => { try { s.stop(); } catch (e) {} });
+    active = [];
+  }
+  function clipSounds(src) {
+    stopClipSounds();
+    const cues = SFX[src] || SFX[src.split("/").pop()];
+    if (!cues) return;
+    cues.forEach(([name, t, vol, rate]) => {
+      const s = playSound(name, t, vol, rate || 1);
+      if (s) active.push(s);
+    });
+  }
+
+  muteBtn.addEventListener("pointerdown", e => e.stopPropagation());
+  muteBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    muted = !muted;
+    muteBtn.textContent = muted ? "🔇" : "🔊";
+    try { localStorage.setItem("mojo-muted", muted ? "1" : "0"); } catch (err) {}
+    initAudio();
+    if (master) master.gain.setTargetAtTime(muted ? 0 : 1, actx.currentTime, 0.05);
+  });
+
   // Overlay clips: tap reactions, specials, and idle bits (random timer).
   const r = document.getElementById("r");
   let playing = null;            // null | "react" | "bit"
@@ -168,7 +283,7 @@
     r.style.transition = "";
     r.dataset.fade = FADE_OUT[src.split("/").pop()] || FADE_OUT[src] || "";
     r.src = src;
-    try { await r.play(); r.classList.add("on"); }
+    try { await r.play(); r.classList.add("on"); clipSounds(src); }
     catch (e) { playing = null; scheduleBit(); }
   }
 
@@ -221,6 +336,7 @@
   let holdTimer = null, suppressClick = false;
   const stage = document.getElementById("stage");
   stage.addEventListener("pointerdown", () => {
+    initAudio();
     if (!started) return;
     clearTimeout(holdTimer);
     holdTimer = setTimeout(() => {
@@ -235,6 +351,7 @@
 
   function onTap(e) {
     if (suppressClick) { suppressClick = false; return; }
+    initAudio();
     keepAwake();
     if (!started || front.paused) { start(); return; }
     const now = performance.now();
@@ -265,6 +382,7 @@
 
   document.getElementById("stage").addEventListener("click", onTap);
   document.addEventListener("visibilitychange", () => {
+    if (actx) { if (document.visibilityState === "visible") actx.resume(); else actx.suspend(); }
     if (document.visibilityState === "visible") { front.play().catch(() => {}); bg.play().catch(() => {}); if (lock === null) keepAwake(); }
   });
 
