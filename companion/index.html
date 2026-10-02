@@ -91,15 +91,17 @@
     bits: ["bit-stretch.mp4", "bit-yawn.mp4", "bit-look.mp4", "bit-twirl.mp4"]
   };
   // Slower dissolve back to idle for clips that end further from home (seconds)
-  const FADE_OUT = { "magic-surge.mp4": 0.8, "seasonal-pumpkin.mp4": 0.6 };
+  const FADE_OUT = { "magic-surge.mp4": 0.8, "seasonal-pumpkin.mp4": 0.6,
+                     "seasonal-spider.mp4": 0.6, "seasonal-ghost.mp4": 0.6 };
 
   // Halloween: Oct 1-31 these join the idle bits and the double-tap spells
-  const HALLOWEEN = ["seasonal-pumpkin.mp4", "seasonal-bats.mp4"];
+  // Halloween: Oct 1-31, about 1 in 3 idle bits and double-tap spells are Halloween
+  const HALLOWEEN = ["seasonal-pumpkin.mp4", "seasonal-bats.mp4", "seasonal-spider.mp4",
+                     "seasonal-pumpkinhead.mp4", "seasonal-ghost.mp4"];
+  const HALLOWEEN_CHANCE = 1 / 3;
   const FORCE_HALLOWEEN = false; // set true to preview outside October
-  if (FORCE_HALLOWEEN || new Date().getMonth() === 9) {
-    CLIPS.bits.push(...HALLOWEEN);
-    CLIPS.magic.push(...HALLOWEEN);
-  }
+  const HALLOWEEN_ON = FORCE_HALLOWEEN || new Date().getMonth() === 9;
+  function halloweenTime() { return HALLOWEEN_ON && Math.random() < HALLOWEEN_CHANCE; }
   const MAGIC_IDLE_CHANCE = 0.25;
   // Belly zone in video pixels (video is 400x736)
   const BELLY = { x: 115, y: 360, w: 170, h: 150 };
@@ -178,7 +180,10 @@
     "bit-yawn.mp4":        [["yawn", 0.4, 0.6, 0.8], ["rustle2", 0.3, 0.15]],
     "bit-twirl.mp4":       [["swoosh", 0.65, 0.45, 1.15]],
     "seasonal-pumpkin.mp4":[["twinkle", 1.2, 0.5], ["swoosh", 3.35, 0.4], ["chime", 3.45, 0.3]],
-    "seasonal-bats.mp4":   [["wings", 0.55, 0.6]]
+    "seasonal-bats.mp4":   [["wings", 0.55, 0.6]],
+    "seasonal-spider.mp4": [["crawl", 0.1, 0.5], ["swoosh", 1.75, 0.45, 1.2]],
+    "seasonal-pumpkinhead.mp4": [["wand", 0.25, 0.5], ["fire", 0.6, 0.25, 0.8], ["wand", 3.4, 0.35, 0.85]],
+    "seasonal-ghost.mp4":  [["ghost", 1.1, 0.6, 1.1]]
   };
   const HUM_VOL = 0.12, DRIP_MIN = 10, DRIP_MAX = 25; // background
   const DRIPS = ["drip1", "drip2", "drip3", "drip4"];
@@ -265,7 +270,7 @@
   const r = document.getElementById("r");
   let playing = null;            // null | "react" | "bit"
   let started = false;
-  const last = { react: -1, bit: -1, magic: -1 };
+  const last = { react: -1, bit: -1, magic: -1, hw: -1 };
   const BIT_MIN = 30, BIT_MAX = 60; // seconds between idle bits
   let bitTimer = null;
 
@@ -292,7 +297,8 @@
     const wait = (BIT_MIN + Math.random() * (BIT_MAX - BIT_MIN)) * 1000;
     bitTimer = setTimeout(() => {
       if (!playing && document.visibilityState === "visible") {
-        if (Math.random() < MAGIC_IDLE_CHANCE) playClip(CLIPS.magic[pick("magic", CLIPS.magic)], "bit");
+        if (halloweenTime()) playClip(HALLOWEEN[pick("hw", HALLOWEEN)], "bit");
+        else if (Math.random() < MAGIC_IDLE_CHANCE) playClip(CLIPS.magic[pick("magic", CLIPS.magic)], "bit");
         else playClip(CLIPS.bits[pick("bit", CLIPS.bits)], "bit");
       }
       else scheduleBit();
@@ -316,7 +322,10 @@
     playClip(src, "react");
   }
 
-  function magic() { playClip(CLIPS.magic[pick("magic", CLIPS.magic)], "react"); }
+  function magic() {
+    if (halloweenTime()) playClip(HALLOWEEN[pick("hw", HALLOWEEN)], "react");
+    else playClip(CLIPS.magic[pick("magic", CLIPS.magic)], "react");
+  }
 
   // Map a screen tap to video pixels (handles cover and contain layouts)
   function toVideo(x, y) {
