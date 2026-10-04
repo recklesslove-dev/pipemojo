@@ -85,6 +85,7 @@
     laugh: "special-laugh.mp4",    // triple-tap the belly
     stomp: "special-stomp.mp4",    // 5+ fast taps anywhere
     powerup: "special-powerup.mp4", // long-press (hold) anywhere
+    ganja: "rare-ganja.mp4",        // very rare idle cameo (lights flicker)
     // Voodoo magic: double-tap plays a random one; 1 in 4 idle bits are magic
     magic: ["special-powerup.mp4", "magic-rage.mp4", "magic-smoke.mp4",
             "magic-surge.mp4", "magic-levitate.mp4"],
@@ -92,7 +93,8 @@
   };
   // Slower dissolve back to idle for clips that end further from home (seconds)
   const FADE_OUT = { "magic-surge.mp4": 0.8, "seasonal-pumpkin.mp4": 0.6,
-                     "seasonal-spider.mp4": 0.6, "seasonal-ghost.mp4": 0.6 };
+                     "seasonal-spider.mp4": 0.6, "seasonal-ghost.mp4": 0.6,
+                     "rare-ganja.mp4": 0.01 }; // ganja ends dark: lights snap back on
 
   // Halloween: Oct 1-31 these join the idle bits and the double-tap spells
   // Halloween: Oct 1-31, about 1 in 3 idle bits and double-tap spells are Halloween
@@ -103,6 +105,7 @@
   const HALLOWEEN_ON = FORCE_HALLOWEEN || new Date().getMonth() === 9;
   function halloweenTime() { return HALLOWEEN_ON && Math.random() < HALLOWEEN_CHANCE; }
   const MAGIC_IDLE_CHANCE = 0.25;
+  const GANJA_CHANCE = 1 / 15;   // of idle bits
   // Belly zone in video pixels (video is 400x736)
   const BELLY = { x: 115, y: 360, w: 170, h: 150 };
 
@@ -158,7 +161,7 @@
   }
 
   // ---------- Sound ----------
-  // Per clip: [sound, seconds into the clip, volume, playback speed]
+  // Per clip: [sound, seconds into the clip, volume, playback speed, optional max length]
   const SFX = {
     "react-glare.mp4":     [["rustle", 0.05, 0.5]],
     "react-wrench.mp4":    [["swoosh", 0.3, 0.6], ["swoosh", 1.45, 0.5]],
@@ -183,7 +186,9 @@
     "seasonal-bats.mp4":   [["wings", 0.55, 0.6]],
     "seasonal-spider.mp4": [["crawl", 0.1, 0.5], ["swoosh", 1.75, 0.45, 1.2]],
     "seasonal-pumpkinhead.mp4": [["wand", 0.25, 0.5], ["fire", 0.6, 0.25, 0.8], ["wand", 3.4, 0.35, 0.85]],
-    "seasonal-ghost.mp4":  [["ghost", 1.1, 0.6, 1.1]]
+    "seasonal-ghost.mp4":  [["ghost", 1.1, 0.6, 1.1]],
+    "rare-ganja.mp4":      [["buzz", 0.0, 0.3, 1.3, 0.45], ["zap", 0.2, 0.3], ["pop", 0.3, 0.55],
+                            ["pop", 5.15, 0.5, 0.85], ["buzz", 5.45, 0.3, 1.3, 0.55], ["zap", 5.7, 0.25]]
   };
   const HUM_VOL = 0.12, DRIP_MIN = 10, DRIP_MAX = 25; // background
   const DRIPS = ["drip1", "drip2", "drip3", "drip4"];
@@ -250,9 +255,9 @@
     stopClipSounds();
     const cues = SFX[src] || SFX[src.split("/").pop()];
     if (!cues) return;
-    cues.forEach(([name, t, vol, rate]) => {
+    cues.forEach(([name, t, vol, rate, dur]) => {
       const s = playSound(name, t, vol, rate || 1);
-      if (s) active.push(s);
+      if (s) { if (dur) s.stop(actx.currentTime + t + dur); active.push(s); }
     });
   }
 
@@ -297,7 +302,8 @@
     const wait = (BIT_MIN + Math.random() * (BIT_MAX - BIT_MIN)) * 1000;
     bitTimer = setTimeout(() => {
       if (!playing && document.visibilityState === "visible") {
-        if (halloweenTime()) playClip(HALLOWEEN[pick("hw", HALLOWEEN)], "bit");
+        if (Math.random() < GANJA_CHANCE) playClip(CLIPS.ganja, "bit");
+        else if (halloweenTime()) playClip(HALLOWEEN[pick("hw", HALLOWEEN)], "bit");
         else if (Math.random() < MAGIC_IDLE_CHANCE) playClip(CLIPS.magic[pick("magic", CLIPS.magic)], "bit");
         else playClip(CLIPS.bits[pick("bit", CLIPS.bits)], "bit");
       }
