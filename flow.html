@@ -55,6 +55,14 @@ h1 span{color:var(--cyan);text-shadow:0 0 18px rgba(0,229,255,.45)}
 .win h2{font-family:"Pirata One",Georgia,serif;font-weight:400;font-size:2.7rem;margin:0;color:var(--cyan);
   text-shadow:0 0 22px rgba(0,229,255,.4)}
 .win p{margin:8px 0 18px;max-width:30ch;line-height:1.45;color:var(--ink)}
+.zone{margin:12px 0 0;font-weight:800;font-size:.85rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--zone,#c97a3d)}
+.zone-up .kicker{margin:0;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-size:.8rem;color:var(--gold)}
+.zone-up h2{color:var(--zone,#00e5ff)!important;text-shadow:0 0 24px var(--zone,#00e5ff)!important;font-size:3rem!important}
+.zone-up img{animation:zpop .6s cubic-bezier(.2,1.4,.4,1)}
+@keyframes zpop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.zone-up img{animation:none}}
+body{transition:background .8s}
+.resume-btns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:260px}
 .win .board-note{margin:12px 0 0;font-size:.85rem;color:var(--muted)}
 .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
 button{font:inherit;font-weight:800;font-size:1rem;border:0;border-radius:10px;padding:12px 16px;cursor:pointer;
@@ -81,6 +89,7 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
     </div>
   </header>
 
+  <p class="zone" id="zone"></p>
   <div class="stats" aria-live="polite">
     <div><span class="k">Level</span><span class="v" id="lvl">1</span></div>
     <div><span class="k">Taps</span><span class="v" id="taps">0</span></div>
@@ -96,6 +105,23 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
       <p id="winText"></p>
       <button class="go" id="next">Next level</button>
       <p class="board-note" id="boardNote"></p>
+    </div>
+    <div class="win zone-up" id="zoneUp" hidden>
+      <img src="/assets/mojo-front.png" alt="" width="638" height="1100">
+      <p class="kicker">Zone unlocked</p>
+      <h2 id="zoneName"></h2>
+      <p id="zoneText"></p>
+      <button class="go" id="zoneGo"></button>
+    </div>
+    <div class="win" id="resume" hidden>
+      <img src="/assets/mojo-front.png" alt="" width="638" height="1100">
+      <h2>Welcome back</h2>
+      <p id="resumeText"></p>
+      <div class="resume-btns">
+        <button class="go" id="cont">Continue</button>
+        <button id="fresh">New run from level 1</button>
+      </div>
+      <p class="board-note">Your leaderboard spot stays either way.</p>
     </div>
   </div>
 
@@ -118,8 +144,47 @@ const rot=m=>((m<<1)|(m>>3))&15;
 const rotK=(m,k)=>{for(let i=0;i<k;i++)m=rot(m);return m};
 const rnd=k=>Math.floor(Math.random()*k);
 
-const C={water:'#00e5ff',waterLight:'#c8f9ff',copper:'#c97a3d',copperDark:'#8f4f22',outline:'#0b0710',
-  tile:'#1a1224',tileWet:'#122029',red:'#e8281e'};
+/* ---------- zones: every 25 levels the pipes, water and backdrop change ---------- */
+const ZONES=[
+  {name:'The Basement',from:1,hints:3,accent:'#c97a3d',
+   copper:'#c97a3d',copperDark:'#8f4f22',hl:'rgba(255,214,170,.35)',cap:'#a8622f',outline:'#0b0710',
+   water:'#00e5ff',waterLight:'#c8f9ff',rgb:'0,229,255',tile:'#1a1224',tileWet:'#122029',
+   bg:'radial-gradient(ellipse 90% 50% at 20% 10%, rgba(91,26,170,.28) 0%, transparent 60%),radial-gradient(ellipse 70% 40% at 90% 90%, rgba(0,229,255,.07) 0%, transparent 60%),#060606',
+   blurb:''},
+  {name:'The Bayou',from:25,hints:2,accent:'#8fd14f',
+   copper:'#8a5a36',copperDark:'#5a3a22',hl:'rgba(220,170,120,.3)',cap:'#6e4628',outline:'#0a0c06',
+   water:'#7fbf3f',waterLight:'#dcf7b0',rgb:'127,191,63',tile:'#131a11',tileWet:'#1b2a14',
+   bg:'radial-gradient(ellipse 90% 55% at 30% 15%, rgba(80,130,40,.30) 0%, transparent 60%),radial-gradient(ellipse 80% 40% at 80% 95%, rgba(140,180,90,.12) 0%, transparent 60%),#070906',
+   blurb:'Rusty iron and swamp water from here on. Hints drop to 2 per level.'},
+  {name:'The Graveyard',from:50,hints:1,accent:'#9fe8ff',
+   copper:'#d8d0c0',copperDark:'#968c7a',hl:'rgba(255,255,255,.5)',cap:'#b8ae9c',outline:'#0a0a10',
+   water:'#7fdcff',waterLight:'#effbff',rgb:'127,220,255',tile:'#14141c',tileWet:'#16202c',
+   bg:'radial-gradient(ellipse 100% 55% at 50% 0%, rgba(150,170,200,.18) 0%, transparent 65%),radial-gradient(ellipse 70% 40% at 15% 95%, rgba(127,220,255,.08) 0%, transparent 60%),#07070b',
+   blurb:'Bone pipes, ghost water. One hint per level now.'},
+  {name:'Voodoo Gold',from:75,hints:0,accent:'#f5c842',
+   copper:'#d9a73a',copperDark:'#8f6a1e',hl:'rgba(255,240,190,.5)',cap:'#b8892a',outline:'#0b0710',
+   water:'#b45cff',waterLight:'#ecd4ff',rgb:'180,92,255',tile:'#1a1026',tileWet:'#25123c',
+   bg:'radial-gradient(ellipse 90% 55% at 25% 10%, rgba(120,40,220,.42) 0%, transparent 62%),radial-gradient(ellipse 70% 45% at 85% 90%, rgba(245,200,66,.12) 0%, transparent 60%),#08040d',
+   blurb:'Gold pipes running potion. No more hints. You\'re on your own.'},
+  {name:'Hellfire',from:100,hints:0,accent:'#ff6a2a',
+   copper:'#2e2729',copperDark:'#150f11',hl:'rgba(255,120,70,.28)',cap:'#3d3234',outline:'#5a1a0c',
+   water:'#ff5a1f',waterLight:'#ffd27a',rgb:'255,90,31',tile:'#1b0c0a',tileWet:'#2c120b',
+   bg:'radial-gradient(ellipse 90% 55% at 50% 100%, rgba(230,60,20,.32) 0%, transparent 62%),radial-gradient(ellipse 70% 40% at 20% 0%, rgba(120,10,10,.30) 0%, transparent 60%),#0a0303',
+   blurb:'Cast iron and lava. Bragging rights start here.'}
+];
+const zoneIndex=l=>Math.min(ZONES.length-1,Math.floor(l/25));
+const C={red:'#e8281e'};
+let zoneNow=-1;
+function applyZone(l){
+  const zi=zoneIndex(l);if(zi===zoneNow)return;
+  zoneNow=zi;const z=ZONES[zi];
+  Object.assign(C,z);
+  document.body.style.background=z.bg;document.body.style.backgroundAttachment='fixed';
+  document.documentElement.style.setProperty('--zone',z.accent);
+  document.querySelector('meta[name="theme-color"]').setAttribute('content','#060606');
+  const b=document.getElementById('board');if(b)b.style.borderColor='rgba('+z.rgb+',.22)';
+  const el=document.getElementById('zone');if(el)el.textContent='Zone: '+z.name+(zi<ZONES.length-1?' (next zone at level '+ZONES[zi+1].from+')':' (final zone)');
+}
 
 const cv=document.getElementById('game'), ctx=cv.getContext('2d');
 const board=document.getElementById('board');
@@ -166,6 +231,11 @@ const Snd={
   clunk(){this.tone(170,0.1,'square',0.07,85);this.tone(95,0.12,'sine',0.25,60);this.noise(0.05,2400,900,0.12)},
   bloop(k){const f=260+Math.min(k,14)*35;this.tone(f,0.14,'sine',0.2,f*2.1)},
   hint(){this.tone(880,0.14,'triangle',0.14);this.tone(1320,0.22,'triangle',0.11,null,0.11)},
+  zone(){
+    this.noise(1.2,150,3000,0.25,0,0.6);
+    [262,330,392,523,659].forEach((f,i)=>this.tone(f,0.5,'triangle',0.13,null,0.15+i*0.11));
+    this.tone(1047,0.9,'sine',0.12,null,0.75);
+  },
   win(){
     for(let i=0;i<6;i++){const f=320+i*90+Math.random()*60;this.tone(f,0.13,'sine',0.17,f*2.2,i*0.07)}
     this.noise(1.15,1600,140,0.32,0.45,0.9);
@@ -187,6 +257,26 @@ let level=1,n,sol,cur,startCur,sr,er,moves=0,par=0,anims={},solved=false,solvedA
 let Wd=0,Hd=0,cell=0,gut=0,padTop=0;
 let best=1;
 try{best=parseInt(localStorage.getItem('pm-flow-best')||'1',10)||1}catch(e){}
+
+/* ---------- autosave ---------- */
+const SAVE='pm-flow-save';
+function saveGame(){
+  try{localStorage.setItem(SAVE,JSON.stringify({v:1,level,n,sol,cur,startCur,sr,er,moves,par,hints,solved}))}catch(e){}
+}
+function loadSave(){
+  try{
+    const s=JSON.parse(localStorage.getItem(SAVE)||'null');
+    if(s&&s.v===1&&s.level>=1&&Array.isArray(s.cur)&&s.cur.length===s.n*s.n&&Array.isArray(s.sol)&&s.sol.length===s.n*s.n)return s;
+  }catch(e){}
+  return null;
+}
+function restore(s){
+  if(s.solved){level=s.level+1;generate();return}
+  level=s.level;applyZone(level);n=s.n;sol=s.sol;cur=s.cur;startCur=s.startCur||s.cur.slice();sr=s.sr;er=s.er;
+  moves=s.moves||0;par=s.par||0;hints=typeof s.hints==='number'?Math.min(s.hints,ZONES[zoneNow].hints):ZONES[zoneNow].hints;
+  hintTile=-1;solved=false;anims={};path=solutionPath();flow=computeFlow();
+  $('win').hidden=true;updateStats();resize();
+}
 
 function computeFlow(){
   const f=new Uint8Array(n*n);
@@ -256,7 +346,8 @@ function generateRandom(){
 }
 
 function generate(){
-  hints=3;hintTile=-1;
+  applyZone(level);
+  hints=ZONES[zoneNow].hints;hintTile=-1;
   if(level===1)generateTutorial();else generateRandom();
   startCur=cur.slice();
   path=solutionPath();
@@ -265,12 +356,12 @@ function generate(){
   moves=0;solved=false;anims={};
   flow=computeFlow();
   $('win').hidden=true;
-  updateStats();resize();
+  updateStats();resize();saveGame();
 }
 
 function updateStats(){
   $('lvl').textContent=level;$('taps').textContent=moves;$('par').textContent=par;$('best').textContent=best;
-  $('hint').textContent=`Hint (${hints})`;$('hint').disabled=hints<=0||solved;
+  $('hint').textContent=ZONES[zoneNow].hints?`Hint (${hints})`:'No hints';$('hint').disabled=hints<=0||solved;
 }
 
 function leaks(){
@@ -296,7 +387,7 @@ function useHint(){
   const i=path.slice().reverse().find(k=>cur[k]!==sol[k]);
   if(i===undefined)return;
   hints--;hintTile=i;hintAt=performance.now();
-  Snd.hint();updateStats();
+  Snd.hint();updateStats();saveGame();
 }
 
 function resize(){
@@ -329,7 +420,7 @@ function bitCount(m){let c=0;while(m){c+=m&1;m>>=1}return c}
 function drawPipe(cx,cy,mask,angle,filled,t){
   const r=cell/2,w=cell*0.26;
   ctx.save();ctx.translate(cx,cy);ctx.rotate(angle);
-  if(filled)arms(mask,r,w+cell*0.16,'rgba(0,229,255,.13)');
+  if(filled)arms(mask,r,w+cell*0.16,'rgba('+C.rgb+',.15)');
   arms(mask,r,w+cell*0.06,C.outline);
   arms(mask,r,w,C.copper);
   couplings(mask,r,w);
@@ -342,12 +433,12 @@ function drawPipe(cx,cy,mask,angle,filled,t){
       ctx.setLineDash([]);
     }
   }else{
-    ctx.strokeStyle='rgba(255,214,170,.35)';ctx.lineWidth=w*0.16;ctx.lineCap='butt';
+    ctx.strokeStyle=C.hl;ctx.lineWidth=w*0.16;ctx.lineCap='butt';
     for(const d of DIRS){if(!(mask&d.b))continue;const o=w*0.22;ctx.beginPath();ctx.moveTo(-d.dy*o,d.dx*o);ctx.lineTo(d.dx*r-d.dy*o,d.dy*r+d.dx*o);ctx.stroke()}
   }
   if(bitCount(mask)===1){
     ctx.fillStyle=C.outline;ctx.beginPath();ctx.arc(0,0,w*0.78,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=filled?C.water:'#a8622f';ctx.beginPath();ctx.arc(0,0,w*0.62,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=filled?C.water:C.cap;ctx.beginPath();ctx.arc(0,0,w*0.62,0,Math.PI*2);ctx.fill();
   }
   ctx.restore();
 }
@@ -391,7 +482,7 @@ function draw(t){
     for(const [i,d] of leaks()){
       const x=i%n,y=(i/n)|0;
       const cx=gut+x*cell+cell/2+d.dx*cell*0.5,cy=y*cell+cell/2+d.dy*cell*0.5;
-      ctx.fillStyle=`rgba(0,229,255,${0.22+0.35*pulse})`;
+      ctx.fillStyle=`rgba(${C.rgb},${0.22+0.35*pulse})`;
       ctx.beginPath();ctx.arc(cx,cy,cell*(0.14+0.08*pulse),0,Math.PI*2);ctx.fill();
       ctx.fillStyle=C.waterLight;
       ctx.beginPath();ctx.arc(cx,cy,cell*0.06,0,Math.PI*2);ctx.fill();
@@ -446,7 +537,8 @@ cv.addEventListener('pointerdown',e=>{
   cur[i]=rot(cur[i]);anims[i]=performance.now();
   moves++;flow=computeFlow();updateStats();
   Snd.clunk();
-  if(flow.ok){win();return}
+  if(flow.ok){win();saveGame();return}
+  saveGame();
   if(flow.count>before)Snd.bloop(flow.count);
 });
 
@@ -455,7 +547,7 @@ function win(){
   Snd.win();
   if(level+1>best){best=level+1;try{localStorage.setItem('pm-flow-best',String(best))}catch(e){}}
   updateStats();
-  const used=3-hints;
+  const used=ZONES[zoneNow].hints-hints;
   const note=(moves<=par?' Right on par — clean run.':'')+(used?` Used ${used} hint${used>1?'s':''}.`:'');
   $('winText').textContent=`Level ${level} cleared in ${moves} taps. Par was ${par}.${note} Ganja's going for a ride.`;
   if(LB){
@@ -467,12 +559,33 @@ function win(){
 }
 
 $('hint').addEventListener('click',useHint);
-$('next').addEventListener('click',()=>{level++;generate()});
+$('next').addEventListener('click',()=>{
+  const before=zoneIndex(level);level++;generate();
+  const after=zoneIndex(level);
+  if(after>before){
+    const z=ZONES[after];
+    $('zoneName').textContent=z.name;$('zoneText').textContent=z.blurb;
+    $('zoneGo').textContent='Enter '+z.name;
+    $('zoneUp').hidden=false;Snd.zone();
+    setTimeout(()=>$('zoneGo').focus(),300);
+  }
+});
+$('zoneGo').addEventListener('click',()=>{$('zoneUp').hidden=true});
 $('newb').addEventListener('click',generate);
-$('restart').addEventListener('click',()=>{cur=startCur.slice();moves=0;solved=false;anims={};hintTile=-1;flow=computeFlow();$('win').hidden=true;updateStats()});
+$('restart').addEventListener('click',()=>{cur=startCur.slice();moves=0;solved=false;anims={};hintTile=-1;flow=computeFlow();$('win').hidden=true;updateStats();saveGame()});
 window.addEventListener('resize',resize);
 
-generate();
+const saved=loadSave();
+if(saved&&(saved.level>1||saved.moves>0||saved.solved)){
+  restore(saved);
+  $('resumeText').textContent='You were on level '+level+'. Pick up where you left off, or start a fresh climb.';
+  $('cont').textContent='Continue at level '+level;
+  $('resume').hidden=false;
+  $('cont').addEventListener('click',()=>{$('resume').hidden=true});
+  $('fresh').addEventListener('click',()=>{level=1;generate();$('resume').hidden=true});
+}else{
+  generate();
+}
 requestAnimationFrame(loop);
 })();
 </script>
