@@ -54,6 +54,9 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .overlay h1.cursed{color:var(--red);font-size:clamp(3.2rem,15vw,4.6rem);text-shadow:0 0 22px rgba(232,40,30,.45)}
 .overlay p{color:rgba(255,255,255,.75);max-width:30ch;line-height:1.45;margin:8px 0 18px}
 .overlay p strong{color:var(--gold)}
+#over{justify-content:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:22px;padding-bottom:28px}
+#over img{height:min(18vh,140px)}
+.lb-slot{width:100%}
 .btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 button,.btn{font:inherit;font-weight:800;font-size:1rem;border:0;border-radius:10px;padding:13px 22px;cursor:pointer}
 .primary{background:var(--cyan);color:#000}
@@ -92,9 +95,11 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
       <button class="primary" id="again">Play again</button>
       <a class="btn ghost" href="/play">Games</a>
     </div>
+    <div class="lb-slot" id="lb"></div>
   </div>
 </div>
 
+<script src="/lb.js"></script>
 <script>
 (function(){
 const cv=document.getElementById('c'),ctx=cv.getContext('2d'),stage=document.getElementById('stage');
@@ -106,6 +111,10 @@ let mojoHitAt=-9999,mojoMissAt=-9999,ganjaHitAt=-9999,ganjaMissAt=-9999;
 let quip='',quipAt=-9999;
 try{best=parseInt(localStorage.getItem('pm-whack-best')||'0',10)||0}catch(e){}
 $('best').textContent=best;
+
+/* ---------- leaderboard ---------- */
+const LB=window.PMLB?PMLB.mount($('lb'),{game:'whack',title:'Top 10'}):null;
+if(LB)LB.refresh();
 
 /* ---------- character art ---------- */
 const IMG={};
@@ -358,7 +367,8 @@ function gameOver(){
   const isBest=score>best;
   if(isBest){best=score;try{localStorage.setItem('pm-whack-best',String(best))}catch(e){};$('best').textContent=best}
   $('overText').innerHTML='You whacked <strong>'+score+'</strong> pipe'+(score===1?'':'s')+'.'+(isBest&&score>0?' New best.':' Best is '+best+'.');
-  setTimeout(()=>{$('over').hidden=false;$('again').focus()},700);
+  if(LB)LB.post(score);
+  setTimeout(()=>{$('over').hidden=false;$('over').scrollTop=0;$('again').focus()},700);
 }
 
 function voodooBlast(t){

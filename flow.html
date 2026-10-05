@@ -55,6 +55,7 @@ h1 span{color:var(--cyan);text-shadow:0 0 18px rgba(0,229,255,.45)}
 .win h2{font-family:"Pirata One",Georgia,serif;font-weight:400;font-size:2.7rem;margin:0;color:var(--cyan);
   text-shadow:0 0 22px rgba(0,229,255,.4)}
 .win p{margin:8px 0 18px;max-width:30ch;line-height:1.45;color:var(--ink)}
+.win .board-note{margin:12px 0 0;font-size:.85rem;color:var(--muted)}
 .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
 button{font:inherit;font-weight:800;font-size:1rem;border:0;border-radius:10px;padding:12px 16px;cursor:pointer;
   background:#221a2e;color:var(--ink)}
@@ -62,6 +63,8 @@ button.go{background:var(--cyan);color:#001216}
 button:disabled{opacity:.45;cursor:default}
 button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .hint{color:var(--muted);font-size:.88rem;margin:14px 2px 0;line-height:1.5}
+.lb-slot{margin-top:18px}
+.lb-slot .lb{max-width:none;margin:0}
 </style>
 </head>
 <body>
@@ -92,6 +95,7 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
       <h2>Flow's moving</h2>
       <p id="winText"></p>
       <button class="go" id="next">Next level</button>
+      <p class="board-note" id="boardNote"></p>
     </div>
   </div>
 
@@ -101,8 +105,11 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
     <button id="newb">New board</button>
   </div>
   <p class="hint">Each tap turns a pipe a quarter turn. Glowing blue means water's reaching it, and pulsing drips show where it's leaking out. Dead-end pipes don't matter — only the run to the drain.</p>
+
+  <section class="lb-slot" id="lb" aria-label="Leaderboard"></section>
 </main>
 
+<script src="/lb.js"></script>
 <script>
 (function(){
 const N=1,E=2,S=4,W=8;
@@ -117,6 +124,10 @@ const C={water:'#00e5ff',waterLight:'#c8f9ff',copper:'#c97a3d',copperDark:'#8f4f
 const cv=document.getElementById('game'), ctx=cv.getContext('2d');
 const board=document.getElementById('board');
 const $=id=>document.getElementById(id);
+
+/* ---------- leaderboard (ranked by levels cleared) ---------- */
+const LB=window.PMLB?PMLB.mount($('lb'),{game:'flow',title:'Top 10, levels cleared',unit:'Lv '}):null;
+if(LB)LB.refresh();
 
 /* ---------- character art ---------- */
 const IMG={};
@@ -447,6 +458,11 @@ function win(){
   const used=3-hints;
   const note=(moves<=par?' Right on par — clean run.':'')+(used?` Used ${used} hint${used>1?'s':''}.`:'');
   $('winText').textContent=`Level ${level} cleared in ${moves} taps. Par was ${par}.${note} Ganja's going for a ride.`;
+  if(LB){
+    LB.post(level);
+    let signedIn=false;try{signedIn=!!localStorage.getItem('pm-lb')}catch(e){}
+    $('boardNote').textContent=signedIn?'Posted to the leaderboard below.':'Scroll down to put your name on the leaderboard.';
+  }
   setTimeout(()=>{$('win').hidden=false;$('next').focus()},1300);
 }
 

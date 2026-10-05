@@ -1,0 +1,148 @@
+/* Pipe Mojo leaderboard — shared by whack.html and flow.html */
+(function(){
+const API='https://pipemojo-leaderboard.fvidaurri.workers.dev';
+const KEY='pm-lb';
+
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){return null}}
+function save(a){try{a?localStorage.setItem(KEY,JSON.stringify(a)):localStorage.removeItem(KEY)}catch(e){}}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function call(path,body){
+  let r;
+  try{
+    r=await fetch(API+path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});
+  }catch(e){const err=new Error('Can\'t reach the leaderboard. Check your connection and try again.');err.status=0;throw err}
+  let d={};try{d=await r.json()}catch(e){}
+  if(!r.ok){const err=new Error(d.error||'Leaderboard error. Try again.');err.status=r.status;throw err}
+  return d;
+}
+
+const CSS=`
+.lb{width:100%;max-width:340px;margin:16px auto 0;text-align:left;font-family:Nunito,system-ui,-apple-system,sans-serif}
+.lb h3{font-family:'Pirata One',Georgia,serif;font-weight:400;font-size:1.6rem;line-height:1;color:#f5c842;margin:0 0 8px}
+.lb ol{list-style:none;margin:0;padding:0;border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden}
+.lb li{display:flex;align-items:center;gap:10px;padding:7px 12px;font-weight:700;font-size:.95rem;background:rgba(255,255,255,.03)}
+.lb li:nth-child(odd){background:rgba(255,255,255,.06)}
+.lb li .r{width:1.6em;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums}
+.lb li .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb li .s{font-variant-numeric:tabular-nums;color:#00e5ff}
+.lb li.me{background:rgba(0,229,255,.14);box-shadow:inset 3px 0 0 #00e5ff}
+.lb li:first-child .r{color:#f5c842}
+.lb .empty{padding:12px;color:rgba(255,255,255,.55);font-size:.9rem}
+.lb .me-line{margin:0 0 8px;color:rgba(255,255,255,.75);font-size:.92rem}
+.lb .me-line b{color:#fff}
+.lb form{display:grid;gap:8px;margin:0 0 12px}
+.lb label{font-size:.85rem;font-weight:700;color:rgba(255,255,255,.75)}
+.lb input{font:inherit;font-size:16px;font-weight:700;width:100%;padding:10px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,.2);
+  background:#0d0910;color:#fff;-webkit-user-select:text;user-select:text}
+.lb input:focus{outline:none;border-color:#00e5ff}
+.lb .row{display:flex;gap:8px}
+.lb button{font:inherit;font-weight:800;font-size:.95rem;border:0;border-radius:9px;padding:10px 14px;cursor:pointer;background:#00e5ff;color:#000}
+.lb button.alt{background:transparent;color:#00e5ff;padding:4px 0;font-size:.85rem;text-decoration:underline;text-underline-offset:3px}
+.lb button:disabled{opacity:.5}
+.lb .err{color:#ff7a70;font-size:.88rem;font-weight:700;margin:0 0 8px}
+.lb .code{border:1.5px solid #f5c842;border-radius:10px;padding:12px;margin:0 0 12px;background:rgba(245,200,66,.08)}
+.lb .code p{margin:0 0 8px;font-size:.88rem;line-height:1.4;color:rgba(255,255,255,.85)}
+.lb .code strong{display:block;font-size:1.5rem;letter-spacing:2px;color:#f5c842;margin:0 0 10px;-webkit-user-select:text;user-select:text}
+`;
+let cssDone=false;
+function addCss(){if(cssDone)return;cssDone=true;const s=document.createElement('style');s.textContent=CSS;document.head.appendChild(s)}
+
+function Board(el,o){
+  this.el=el;this.game=o.game;this.title=o.title||'Top 10';this.unit=o.unit||'';
+  this.top=null;this.pending=0;this.rank=0;this.mode='claim';this.code=null;this.err='';this.busy=false;
+  el.addEventListener('click',e=>this.onClick(e));
+  el.addEventListener('submit',e=>{e.preventDefault();this.onSubmit(e.target)});
+  this.render();
+}
+Board.prototype.render=function(){
+  const a=load(),me=a?a.name.toLowerCase().replace(/ /g,''):'';
+  let h='<div class="lb"><h3>'+esc(this.title)+'</h3>';
+  if(this.code){
+    h+='<div class="code"><p>Save this recovery code in Notes. It\'s the only way to get <b>'+esc(a?a.name:'')+'</b> back on a new phone.</p>'+
+       '<strong>'+esc(this.code)+'</strong><div class="row"><button type="button" data-act="copy">Copy code</button>'+
+       '<button type="button" class="alt" data-act="saved">I saved it</button></div></div>';
+  }
+  if(this.err)h+='<p class="err">'+esc(this.err)+'</p>';
+  if(a){
+    h+='<p class="me-line">Playing as <b>'+esc(a.name)+'</b>'+(this.rank?', ranked #'+this.rank:'')+'</p>';
+  }else if(this.mode==='claim'){
+    const p=this.pending;
+    h+='<form data-form="claim"><label for="lb-name">'+(p?'Post your '+esc(this.unit?this.unit+p:p)+' to the board':'Claim a leaderboard name')+'</label>'+
+       '<div class="row"><input id="lb-name" name="name" maxlength="16" autocomplete="nickname" autocapitalize="words" placeholder="Your name">'+
+       '<button'+(this.busy?' disabled':'')+'>'+(p?'Post':'Claim')+'</button></div>'+
+       '<div><button type="button" class="alt" data-act="recover">Already have a name? Use your recovery code</button></div></form>';
+  }else{
+    h+='<form data-form="recover"><label for="lb-rname">Sign back in to your name</label>'+
+       '<input id="lb-rname" name="name" maxlength="16" autocapitalize="words" placeholder="Your name">'+
+       '<input name="code" maxlength="14" autocapitalize="characters" autocomplete="off" placeholder="Recovery code (XXXX-XXXX-XXXX)">'+
+       '<div class="row"><button'+(this.busy?' disabled':'')+'>Sign in</button></div>'+
+       '<div><button type="button" class="alt" data-act="claim">New player? Claim a name instead</button></div></form>';
+  }
+  if(this.top===null)h+='<ol><li class="empty">Loading the board…</li></ol>';
+  else if(!this.top.length)h+='<ol><li class="empty">No scores yet. Be the first on the board.</li></ol>';
+  else{
+    h+='<ol>'+this.top.map((r,i)=>{
+      const mine=me&&r.name.toLowerCase().replace(/ /g,'')===me;
+      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+esc(r.name)+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
+    }).join('')+'</ol>';
+  }
+  h+='</div>';
+  this.el.innerHTML=h;
+};
+Board.prototype.refresh=async function(){
+  try{const d=await call('/top?game='+this.game);this.top=d.top||[];}
+  catch(e){if(this.top===null)this.top=[];this.err=e.message}
+  this.render();
+};
+Board.prototype.post=function(score){
+  score=Math.floor(score)||0;
+  if(score<1){this.refresh();return}
+  this.pending=score;this.err='';
+  if(load())this.submit();else{this.render();this.refresh()}
+};
+Board.prototype.submit=async function(){
+  const a=load();if(!a||!this.pending){this.refresh();return}
+  try{
+    const d=await call('/score',{token:a.token,game:this.game,score:this.pending});
+    this.pending=0;this.rank=d.rank||0;this.top=d.top||[];this.err='';
+  }catch(e){
+    if(e.status===401){save(null);this.mode='recover';}
+    this.err=e.message;
+    if(this.top===null)await this.refresh();
+  }
+  this.render();
+};
+Board.prototype.onSubmit=async function(f){
+  if(this.busy)return;
+  const kind=f.getAttribute('data-form'),q=k=>f.querySelector('[name="'+k+'"]'),name=(q('name').value||'').trim();
+  this.busy=true;this.err='';this.render();
+  try{
+    if(kind==='claim'){
+      const d=await call('/claim',{name});
+      save({name:d.name,token:d.token});this.code=d.recovery;
+    }else{
+      const d=await call('/recover',{name,code:q('code')?q('code').value:''});
+      save({name:d.name,token:d.token});
+    }
+    this.busy=false;
+    if(this.pending)await this.submit();else await this.refresh();
+  }catch(e){
+    this.busy=false;this.err=e.message;this.render();
+    const keep=this.el.querySelector('input[name="name"]');if(keep){keep.value=name;}
+  }
+};
+Board.prototype.onClick=function(e){
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const act=b.getAttribute('data-act');
+  if(act==='recover'){this.mode='recover';this.err='';this.render()}
+  else if(act==='claim'){this.mode='claim';this.err='';this.render()}
+  else if(act==='saved'){this.code=null;this.render()}
+  else if(act==='copy'){
+    const c=this.code;
+    if(navigator.clipboard&&c)navigator.clipboard.writeText(c).then(()=>{b.textContent='Copied'},()=>{b.textContent='Long-press the code to copy'});
+  }
+};
+
+window.PMLB={mount:(el,o)=>{addCss();return new Board(el,o)}};
+})();
