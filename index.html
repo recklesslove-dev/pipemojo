@@ -216,12 +216,13 @@
       pointer-events: none; line-height: 1; z-index: 0;
     }
     .hero-char-img {
-      position: absolute; right: 0; bottom: 0;
-      height: 88%; max-width: 50%;
+      position: absolute; right: 2%; bottom: 3%;
+      height: 82%; max-width: 48%;
       object-fit: contain; object-position: bottom right;
-      opacity: 0.55;
-      mask-image: linear-gradient(to left, rgba(0,0,0,0.8) 30%, transparent 90%);
-      -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,0.8) 30%, transparent 90%);
+      opacity: 0.8;
+      filter: drop-shadow(0 0 30px rgba(91,26,170,0.45));
+      mask-image: linear-gradient(to left, #000 55%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to left, #000 55%, transparent 100%);
       z-index: 1;
     }
     .hero-glow {
@@ -361,6 +362,7 @@
       display:block; transition:transform .4s;
       padding: 1.5rem 1.5rem 0; mix-blend-mode: lighten;
     }
+    .char-card.mojo img { mix-blend-mode: normal; }
     @media (hover:hover) { .char-card:hover img { transform:scale(1.04); } }
     .char-overlay {
       position:absolute; bottom:0; left:0; right:0; padding:1.5rem;
@@ -480,7 +482,7 @@
 
 <!-- HERO -->
 <section class="hero">
-  <img class="hero-char-img" src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/hero-mojo.jpg" alt="Pipe Mojo" onerror="this.style.display='none'">
+  <img class="hero-char-img" src="/mojo.png" alt="Pipe Mojo" onerror="this.style.display='none'">
   <div class="hero-glow"></div>
   <div class="hero-content">
     <p class="hero-eyebrow">
@@ -524,7 +526,7 @@
     </div>
     <div class="chars-grid">
       <div class="char-card mojo reveal">
-        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/mojo.png" alt="Pipe Mojo">
+        <img src="/mojo.png" alt="Pipe Mojo">
         <div class="char-overlay">
           <h3 class="char-name">Pipe Mojo</h3>
           <p class="char-role">Voodoo Plumber · X Eyes · No chill</p>
