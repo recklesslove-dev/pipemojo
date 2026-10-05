@@ -80,7 +80,7 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
   <div class="overlay" id="start">
     <img src="/assets/mojo-front.png" alt="" width="638" height="1100">
     <h1>Whack-a-Pipe</h1>
-    <p>Pipes are rising. Tap each one before it crosses the red line. Let three through and you're cursed.</p>
+    <p>Pipes are rising. Tap each one before it crosses the red line. Let three through and you're cursed. Hit a glowing <strong>voodoo pipe</strong> to wipe the board and slow things down.</p>
     <div class="btns"><button class="primary" id="go">Start</button></div>
   </div>
 
@@ -100,7 +100,8 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
 const cv=document.getElementById('c'),ctx=cv.getContext('2d'),stage=document.getElementById('stage');
 const $=id=>document.getElementById(id);
 let W=0,H=0,dpr=1,LANES=4,laneW=0,pipeW=0,dangerY=0;
-let pipes=[],bursts=[],flash=0,score=0,lives=3,best=0,running=false,spawnT=0,last=0,streak=0;
+let pipes=[],bursts=[],flash=0,vflash=0,score=0,lives=3,best=0,running=false,spawnT=0,last=0,streak=0;
+let heat=0,sinceVoodoo=0; // heat drives the pace; the voodoo pipe cools it down
 let mojoHitAt=-9999,mojoMissAt=-9999,ganjaHitAt=-9999,ganjaMissAt=-9999;
 let quip='',quipAt=-9999;
 try{best=parseInt(localStorage.getItem('pm-whack-best')||'0',10)||0}catch(e){}
@@ -148,7 +149,8 @@ const Snd={
   miss(){this.tone(170,0.35,'sawtooth',0.1,55);this.noise(0.3,500,120,0.22,0,0.8)},
   over(){[330,247,165].forEach((f,i)=>this.tone(f,0.32,'triangle',0.18,f*0.8,i*0.22));this.noise(0.9,900,90,0.2,0.5,0.7)},
   start(){this.tone(392,0.12,'triangle',0.15);this.tone(587,0.18,'triangle',0.14,null,0.1)},
-  cheer(){[523,659,784].forEach((f,i)=>this.tone(f,0.14,'triangle',0.12,null,i*0.07))}
+  cheer(){[523,659,784].forEach((f,i)=>this.tone(f,0.14,'triangle',0.12,null,i*0.07))},
+  voodoo(){this.noise(0.7,200,4000,0.3,0,0.7);[196,247,294,392].forEach((f,i)=>this.tone(f,0.6,'sawtooth',0.07,f*1.5,i*0.05));this.tone(784,0.5,'triangle',0.14,1568,0.3);[0,0.08,0.16,0.24].forEach(d=>this.tone(500+Math.random()*500,0.1,'sine',0.12,1400,0.25+d))}
 };
 try{Snd.on=localStorage.getItem('pm-sound')!=='off'}catch(e){}
 function syncSoundBtn(){const b=$('sound');b.textContent=Snd.on?'Sound on':'Sound off';b.setAttribute('aria-pressed',String(Snd.on))}
@@ -177,12 +179,16 @@ window.addEventListener('resize',resize);
 resize();
 
 /* difficulty: faster ramp than before, more doubles, triples late */
-function speed(){return (H*0.17)+score*H*0.0078}
-function spawnGap(){return Math.max(0.36,1.2-score*0.033)}
+function speed(){return (H*0.17)+heat*H*0.0078}
+function spawnGap(){return Math.max(0.36,1.2-heat*0.033)}
 function spawnCount(){
-  if(score>=25&&Math.random()<0.15)return 3;
-  if(score>=5&&Math.random()<Math.min(0.55,0.3+score*0.01))return 2;
+  if(heat>=25&&Math.random()<0.15)return 3;
+  if(heat>=5&&Math.random()<Math.min(0.55,0.3+heat*0.01))return 2;
   return 1;
+}
+/* voodoo pipe: shows up after 15 points, roughly every 20-30 whacks, never two at once */
+function wantVoodoo(){
+  return score>=15&&sinceVoodoo>=20&&!pipes.some(p=>p.voodoo)&&Math.random()<0.35;
 }
 
 function freeLane(){
@@ -194,11 +200,35 @@ function spawn(){
   const n=spawnCount();
   for(let k=0;k<n;k++){
     const lane=freeLane();if(lane<0)return;
-    pipes.push({lane,x:lane*laneW+laneW/2,y:H+10,len:H*(0.16+Math.random()*0.1),v:speed()*(0.9+Math.random()*0.25)});
+    const voodoo=k===0&&wantVoodoo();
+    pipes.push({lane,voodoo,x:lane*laneW+laneW/2,y:H+10,len:H*(0.16+Math.random()*0.1),v:speed()*(voodoo?0.85:(0.9+Math.random()*0.25))});
+    if(voodoo)sinceVoodoo=0;
   }
 }
 
-function drawPipe(p){
+function drawVoodooPipe(p,t){
+  const x=p.x-pipeW/2,y=p.y,w=pipeW,len=p.len,pulse=0.5+0.5*Math.sin(t/140);
+  // aura
+  ctx.fillStyle='rgba(155,80,255,'+(0.10+0.12*pulse)+')';ctx.fillRect(x-16,y-14,w+32,len+20);
+  ctx.fillStyle='rgba(155,80,255,'+(0.08+0.08*pulse)+')';ctx.fillRect(x-26,y-24,w+52,len+40);
+  // body
+  ctx.fillStyle='#120a1a';ctx.fillRect(x-3,y,w+6,len);
+  ctx.fillStyle='#6a22c4';ctx.fillRect(x,y,w,len);
+  ctx.fillStyle='rgba(230,200,255,.35)';ctx.fillRect(x+w*0.18,y,w*0.14,len);
+  ctx.fillStyle='rgba(0,0,0,.25)';ctx.fillRect(x+w*0.72,y,w*0.28,len);
+  ctx.fillStyle='#f5c842';
+  for(let b=y+len*0.3;b<y+len;b+=len*0.3)ctx.fillRect(x-2,b,w+4,5);
+  // flange
+  ctx.fillStyle='#120a1a';ctx.fillRect(x-9,y-4,w+18,18);
+  ctx.fillStyle='#f5c842';ctx.fillRect(x-7,y-2,w+14,14);
+  ctx.fillStyle='rgba(255,255,255,.4)';ctx.fillRect(x-7,y-2,w+14,3);
+  // voodoo pin sticking out the top
+  ctx.strokeStyle='#d9d4cc';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(p.x,y-4);ctx.lineTo(p.x,y-26);ctx.stroke();
+  ctx.fillStyle='#e8281e';ctx.beginPath();ctx.arc(p.x,y-29,6+pulse*1.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.6)';ctx.beginPath();ctx.arc(p.x-2,y-31,2,0,Math.PI*2);ctx.fill();
+}
+function drawPipe(p,t){
+  if(p.voodoo){drawVoodooPipe(p,t);return}
   const x=p.x-pipeW/2,y=p.y,w=pipeW,len=p.len;
   ctx.fillStyle='#120a1a';ctx.fillRect(x-3,y,w+6,len);
   ctx.fillStyle='#c97a3d';ctx.fillRect(x,y,w,len);
@@ -306,12 +336,13 @@ function frame(t){
     if(spawnT<=0){spawn();spawnT=spawnGap()}
     for(let i=pipes.length-1;i>=0;i--){
       const p=pipes[i];p.y-=p.v*dt;
-      if(p.y<=dangerY){pipes.splice(i,1);loseLife(t)}
+      if(p.y<=dangerY){pipes.splice(i,1);if(!p.voodoo)loseLife(t)}
     }
   }
-  for(const p of pipes)drawPipe(p);
+  for(const p of pipes)drawPipe(p,t);
   drawBursts(dt);
   if(flash>0){ctx.fillStyle='rgba(232,40,30,'+(flash*0.35)+')';ctx.fillRect(0,0,W,H);flash=Math.max(0,flash-dt*2.5)}
+  if(vflash>0){ctx.fillStyle='rgba(155,80,255,'+(vflash*0.45)+')';ctx.fillRect(0,0,W,H);vflash=Math.max(0,vflash-dt*1.6)}
   requestAnimationFrame(frame);
 }
 
@@ -330,9 +361,20 @@ function gameOver(){
   setTimeout(()=>{$('over').hidden=false;$('again').focus()},700);
 }
 
+function voodooBlast(t){
+  // every pipe on screen pops and scores, and the pace cools way down
+  for(const q of pipes){burst(q.x,q.y);score++}
+  pipes=[];streak++;
+  heat=Math.floor(heat*0.4);
+  spawnT=1.4;vflash=1;
+  $('score').textContent=score;
+  mojoHitAt=t;ganjaHitAt=t;quip='Voodoo!';quipAt=t;
+  Snd.voodoo();
+}
+
 function start(){
   Snd.unlock();Snd.start();
-  pipes=[];bursts=[];score=0;lives=3;flash=0;spawnT=0.5;running=true;streak=0;quip='';
+  pipes=[];bursts=[];score=0;lives=3;flash=0;vflash=0;spawnT=0.5;running=true;streak=0;quip='';heat=0;sinceVoodoo=0;
   $('score').textContent=0;drawLives();
   $('start').hidden=true;$('over').hidden=true;
 }
@@ -345,7 +387,8 @@ cv.addEventListener('pointerdown',e=>{
     const p=pipes[i];
     if(x>p.x-pipeW/2-pad&&x<p.x+pipeW/2+pad&&y>p.y-pad-10&&y<p.y+p.len+pad){
       const t=performance.now();
-      pipes.splice(i,1);score++;streak++;$('score').textContent=score;burst(p.x,p.y);
+      if(p.voodoo){voodooBlast(t);return}
+      pipes.splice(i,1);score++;streak++;heat++;sinceVoodoo++;$('score').textContent=score;burst(p.x,p.y);
       Snd.whack(streak);mojoHitAt=t;ganjaHitAt=t;
       if(streak%10===0){say(['On fire!','Ten straight!','Unstoppable!'],t);Snd.cheer()}
       else if(Math.random()<0.18)say(HIT_QUIPS,t);
