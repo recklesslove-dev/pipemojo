@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#060606">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Mojo Games">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>Play | Pipe Mojo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#060606; --deep:#12100e; --cyan:#00e5ff; --toxic:#39ff14;
+  --red:#e8281e; --gold:#f5c842; --purple:#5b1aaa; --copper:#c97a3d;
+  --title:'Pirata One',Georgia,serif; --body:'Nunito',system-ui,-apple-system,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  min-height:100vh;color:#fff;font-family:var(--body);
+  background:
+    radial-gradient(ellipse 90% 50% at 50% 22%, rgba(91,26,170,.32) 0%, transparent 70%),
+    linear-gradient(180deg,#0c0610 0%,var(--black) 55%);
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+a{color:inherit;text-decoration:none}
+.top{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px max(18px,env(safe-area-inset-left)) 0 max(18px,env(safe-area-inset-right));
+  max-width:640px;margin:0 auto;
+}
+.home{display:flex;align-items:center;gap:8px;font-weight:800;font-size:.9rem;color:rgba(255,255,255,.6)}
+.home img{height:38px;width:auto}
+.home:focus-visible,.game:focus-visible{outline:3px solid var(--cyan);outline-offset:3px;border-radius:10px}
+main{max-width:640px;margin:0 auto;padding:0 18px 40px}
+.hero{display:flex;align-items:flex-end;gap:14px;margin:18px 0 26px}
+.hero img{width:110px;height:auto;flex:none;filter:drop-shadow(0 0 22px rgba(0,229,255,.25)) drop-shadow(0 0 40px rgba(91,26,170,.5))}
+h1{font-family:var(--title);font-weight:400;font-size:clamp(2.8rem,12vw,4rem);line-height:.95;letter-spacing:1px}
+.hero p{color:rgba(255,255,255,.65);margin-top:8px;line-height:1.45}
+.games{display:grid;gap:16px}
+.game{
+  position:relative;display:grid;grid-template-columns:96px 1fr;gap:16px;align-items:center;
+  padding:18px;border-radius:14px;background:var(--deep);
+  border:2px solid rgba(255,255,255,.08);overflow:hidden;
+  -webkit-tap-highlight-color:transparent;transition:transform .15s,border-color .2s;
+}
+.game:active{transform:scale(.98)}
+.game.whack{border-color:rgba(232,40,30,.45)}
+.game.flow{border-color:rgba(0,229,255,.4)}
+.game svg{width:96px;height:96px}
+.game h2{font-family:var(--title);font-weight:400;font-size:2.1rem;line-height:1}
+.game.whack h2{color:#ff5a4f}
+.game.flow h2{color:var(--cyan)}
+.game p{color:rgba(255,255,255,.62);font-size:.95rem;line-height:1.4;margin-top:4px}
+.best{display:inline-block;margin-top:10px;font-weight:800;font-size:.8rem;color:var(--gold)}
+.best:empty{display:none}
+.go{position:absolute;right:16px;top:16px;font-weight:800;font-size:.8rem;padding:5px 10px;border-radius:999px}
+.whack .go{background:var(--red);color:#fff}
+.flow .go{background:var(--cyan);color:#000}
+footer{text-align:center;color:rgba(255,255,255,.3);font-size:.8rem;margin-top:34px}
+@media (prefers-reduced-motion:reduce){.game{transition:none}}
+</style>
+</head>
+<body>
+<div class="top">
+  <a href="/" class="home"><img src="/logo.png" alt="">Pipe Mojo home</a>
+</div>
+<main>
+  <section class="hero">
+    <img src="/mojo.png" alt="Pipe Mojo holding a pipe wrench">
+    <div>
+      <h1>Mojo's Games</h1>
+      <p>Pick one. Keep them pipes clean.</p>
+    </div>
+  </section>
+
+  <div class="games">
+    <a class="game whack" href="/whack">
+      <svg viewBox="0 0 96 96" aria-hidden="true">
+        <rect x="0" y="0" width="96" height="96" rx="12" fill="#1a0b0b"/>
+        <line x1="8" y1="20" x2="88" y2="20" stroke="#e8281e" stroke-width="3" stroke-dasharray="6 5"/>
+        <rect x="14" y="44" width="16" height="52" fill="#c97a3d"/><rect x="11" y="40" width="22" height="9" fill="#8f4f22"/>
+        <rect x="40" y="26" width="16" height="70" fill="#c97a3d"/><rect x="37" y="22" width="22" height="9" fill="#8f4f22"/>
+        <rect x="66" y="58" width="16" height="38" fill="#c97a3d"/><rect x="63" y="54" width="22" height="9" fill="#8f4f22"/>
+        <circle cx="48" cy="16" r="3" fill="#00e5ff"/>
+      </svg>
+      <div>
+        <h2>Whack-a-Pipe</h2>
+        <p>Pipes keep rising. Tap them before they cross the red line.</p>
+        <span class="best" id="whackBest"></span>
+      </div>
+      <span class="go">Play</span>
+    </a>
+
+    <a class="game flow" href="/flow">
+      <svg viewBox="0 0 96 96" aria-hidden="true">
+        <rect x="0" y="0" width="96" height="96" rx="12" fill="#0b1416"/>
+        <path d="M0 30 H34 V66 H62 V30 H96" fill="none" stroke="#120a1a" stroke-width="16"/>
+        <path d="M0 30 H34 V66 H62 V30 H96" fill="none" stroke="#c97a3d" stroke-width="11"/>
+        <path d="M0 30 H34 V66 H48" fill="none" stroke="#3ee6cf" stroke-width="5"/>
+        <circle cx="48" cy="66" r="5" fill="#3ee6cf" opacity=".5"/>
+      </svg>
+      <div>
+        <h2>Flow</h2>
+        <p>Turn the pipes to run water from Mojo's valve to the drain.</p>
+        <span class="best" id="flowBest"></span>
+      </div>
+      <span class="go">Play</span>
+    </a>
+  </div>
+
+  <footer>pipemojo.com</footer>
+</main>
+<script>
+try{
+  var w=parseInt(localStorage.getItem('pm-whack-best')||'0',10);
+  if(w>0)document.getElementById('whackBest').textContent='Your best: '+w;
+  var f=parseInt(localStorage.getItem('pm-flow-best')||'1',10);
+  if(f>1)document.getElementById('flowBest').textContent='Furthest: level '+f;
+}catch(e){}
+</script>
+</body>
+</html>

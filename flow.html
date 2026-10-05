@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flow | Pipe Mojo</title>
+<meta name="theme-color" content="#160e1f">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#160e1f; --panel:#221531; --ink:#efe4d0; --muted:#a993b8;
+  --copper:#c97a3d; --flow:#3ee6cf; --red:#d8443a; --burlap:#c9a66b;
+  color-scheme:dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#160e1f; --panel:#221531; --ink:#efe4d0; } }
+:root[data-theme="dark"]{ --bg:#160e1f; --panel:#221531; --ink:#efe4d0; }
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+  font-family:Nunito,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:600px;margin:0 auto;padding:16px 14px 24px}
+.top{display:flex;align-items:center;gap:12px}
+.top img{width:58px;height:auto;flex:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5))}
+h1{font-family:"Pirata One",Georgia,serif;font-weight:400;font-size:2.4rem;line-height:1;margin:0;
+  letter-spacing:.01em;color:var(--burlap)}
+h1 span{color:var(--flow)}
+.sub{margin:4px 0 0;color:var(--muted);font-size:.95rem;line-height:1.35}
+.stats{display:flex;gap:18px;margin:16px 0 10px;font-weight:700}
+.stats div{display:flex;flex-direction:column}
+.stats .k{font-size:.78rem;color:var(--muted);font-weight:500}
+.stats .v{font-size:1.35rem;font-variant-numeric:tabular-nums}
+.board{position:relative;background:var(--panel);border-radius:14px;padding:10px 0;display:flex;justify-content:center}
+#game{display:block;touch-action:manipulation;cursor:pointer}
+.win{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;background:rgba(22,14,31,.84);border-radius:14px;padding:20px}
+.win[hidden]{display:none}
+.win h2{font-family:"Pirata One",Georgia,serif;font-weight:400;font-size:2.6rem;margin:0;color:var(--flow);letter-spacing:.03em}
+.win p{margin:8px 0 18px;max-width:30ch;line-height:1.4}
+.actions{display:flex;gap:10px;margin-top:14px}
+button{font:inherit;font-weight:800;font-size:1rem;border:0;border-radius:10px;padding:12px 16px;cursor:pointer;
+  background:#3a2752;color:var(--ink)}
+button.go{background:var(--copper);color:#1b0f08}
+button:focus-visible{outline:3px solid var(--flow);outline-offset:2px}
+.hint{color:var(--muted);font-size:.85rem;margin:12px 2px 0;line-height:1.4}
+.back{display:inline-block;font-weight:800;font-size:.9rem;color:var(--muted);text-decoration:none;margin-bottom:10px}
+.back:focus-visible{outline:3px solid var(--flow);outline-offset:2px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <a class="back" href="/play">‹ Games</a>
+  <header class="top">
+    <img id="mojo" src="/mojo.png" alt="" width="152" height="260">
+    <div>
+      <h1>Pipe Mojo: <span>Flow</span></h1>
+      <p class="sub">Tap pipes to turn them. Run Mojo's water from the valve to Ganja's drain.</p>
+    </div>
+  </header>
+
+  <div class="stats" aria-live="polite">
+    <div><span class="k">Level</span><span class="v" id="lvl">1</span></div>
+    <div><span class="k">Taps</span><span class="v" id="taps">0</span></div>
+    <div><span class="k">Par</span><span class="v" id="par">0</span></div>
+    <div><span class="k">Best level</span><span class="v" id="best">1</span></div>
+  </div>
+
+  <div class="board" id="board">
+    <canvas id="game" aria-label="Pipe puzzle board"></canvas>
+    <div class="win" id="win" hidden>
+      <img src="/mojo.png" alt="" style="width:64px;height:auto;margin-bottom:6px">
+      <h2>Flow's moving</h2>
+      <p id="winText"></p>
+      <button class="go" id="next">Next level</button>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button id="hint" class="go">Hint (3)</button>
+    <button id="restart">Restart level</button>
+    <button id="newb">New board</button>
+  </div>
+  <p class="hint">Each tap turns a pipe a quarter turn. Teal means water's reaching it, and pulsing drips show where it's leaking out. Dead-end pipes don't matter — only the run to the drain.</p>
+</main>
+
+<script>
+(function(){
+const N=1,E=2,S=4,W=8;
+const DIRS=[{b:N,dx:0,dy:-1,o:S},{b:E,dx:1,dy:0,o:W},{b:S,dx:0,dy:1,o:N},{b:W,dx:-1,dy:0,o:E}];
+const rot=m=>((m<<1)|(m>>3))&15;
+const rotK=(m,k)=>{for(let i=0;i<k;i++)m=rot(m);return m};
+const rnd=k=>Math.floor(Math.random()*k);
+
+const cv=document.getElementById('game'), ctx=cv.getContext('2d');
+const board=document.getElementById('board');
+const $=id=>document.getElementById(id);
+
+let level=1,n,sol,cur,startCur,sr,er,moves=0,par=0,anims={},solved=false,solvedAt=0,flow=null,path=[],hints=3,hintTile=-1,hintAt=0;
+let Wd=0,Hd=0,cell=0,gut=0;
+let best=1;
+try{best=parseInt(localStorage.getItem('pm-flow-best')||'1',10)||1}catch(e){}
+
+function computeFlow(){
+  const f=new Uint8Array(n*n);
+  const s=sr*n;
+  if(cur[s]&W){
+    const q=[s];f[s]=1;
+    while(q.length){
+      const i=q.shift(),x=i%n,y=(i/n)|0;
+      for(const d of DIRS){
+        if(!(cur[i]&d.b))continue;
+        const nx=x+d.dx,ny=y+d.dy;
+        if(nx<0||ny<0||nx>=n||ny>=n)continue;
+        const j=ny*n+nx;
+        if(f[j]||!(cur[j]&d.o))continue;
+        f[j]=1;q.push(j);
+      }
+    }
+  }
+  const e=er*n+n-1;
+  return {f,ok:!!(f[e]&&(cur[e]&E))};
+}
+
+function solutionPath(){
+  // BFS on solved layout from source cell to drain cell
+  const prev=new Int32Array(n*n).fill(-2),s=sr*n,t=er*n+n-1,q=[s];prev[s]=-1;
+  while(q.length){
+    const i=q.shift();if(i===t)break;
+    const x=i%n,y=(i/n)|0;
+    for(const d of DIRS){
+      if(!(sol[i]&d.b))continue;
+      const nx=x+d.dx,ny=y+d.dy;
+      if(nx<0||ny<0||nx>=n||ny>=n)continue;
+      const j=ny*n+nx;if(prev[j]!==-2)continue;
+      prev[j]=i;q.push(j);
+    }
+  }
+  const path=[];for(let i=t;i!==-1;i=prev[i])path.push(i);
+  return path;
+}
+
+function generateTutorial(){
+  n=3;sr=1;er=1;
+  const deco=[N|E,E|S,S|W,W|N,N,S];
+  sol=new Array(9).fill(0).map(()=>deco[rnd(deco.length)]);
+  for(let x=0;x<3;x++)sol[3+x]=W|E;
+  cur=sol.slice();
+  for(let x=0;x<3;x++)cur[3+x]=N|S;   // the straight run starts turned sideways
+  for(const i of[0,1,2,6,7,8])cur[i]=rotK(sol[i],rnd(4));
+}
+
+function generate(){
+  hints=3;hintTile=-1;
+  if(level===1){
+    generateTutorial();
+  }else{
+    generateRandom();
+  }
+  startCur=cur.slice();
+  path=solutionPath();
+  par=0;
+  for(const i of path){
+    for(let k=0;k<4;k++){if(rotK(cur[i],k)===sol[i]){par+=k;break}}
+  }
+  moves=0;solved=false;anims={};
+  flow=computeFlow();
+  $('win').hidden=true;
+  updateStats();resize();
+}
+
+function generateRandom(){
+  n=Math.min(3+level,9);
+  sol=new Array(n*n).fill(0);
+  const seen=new Array(n*n).fill(false);
+  const sx=rnd(n),sy=rnd(n);seen[sy*n+sx]=true;
+  const stack=[[sx,sy]];
+  while(stack.length){
+    const [x,y]=stack[stack.length-1];
+    const opts=DIRS.filter(d=>{const nx=x+d.dx,ny=y+d.dy;return nx>=0&&ny>=0&&nx<n&&ny<n&&!seen[ny*n+nx]});
+    if(!opts.length){stack.pop();continue}
+    const d=opts[rnd(opts.length)],nx=x+d.dx,ny=y+d.dy;
+    sol[y*n+x]|=d.b;sol[ny*n+nx]|=d.o;seen[ny*n+nx]=true;stack.push([nx,ny]);
+  }
+  sr=rnd(n);er=rnd(n);
+  sol[sr*n]|=W;sol[er*n+n-1]|=E;
+  let tries=0;
+  do{cur=sol.map(m=>rotK(m,rnd(4)));tries++}while(computeFlow().ok&&tries<50);
+}
+
+function updateStats(){
+  $('lvl').textContent=level;$('taps').textContent=moves;$('par').textContent=par;$('best').textContent=best;
+  $('hint').textContent=`Hint (${hints})`;$('hint').disabled=hints<=0||solved;
+}
+
+/* leak points: wet pipe ends that open onto nothing */
+function leaks(){
+  const out=[];
+  for(let i=0;i<n*n;i++){
+    if(!flow.f[i])continue;
+    const x=i%n,y=(i/n)|0;
+    for(const d of DIRS){
+      if(!(cur[i]&d.b))continue;
+      const nx=x+d.dx,ny=y+d.dy;
+      if(nx<0||ny<0||nx>=n||ny>=n){
+        if(d.b===W&&x===0&&y===sr)continue;   // source inlet
+        out.push([i,d]);continue;
+      }
+      const j=ny*n+nx;
+      if(!(cur[j]&d.o))out.push([i,d]);
+    }
+  }
+  return out;
+}
+
+function useHint(){
+  if(solved||hints<=0)return;
+  // first tile along the solution run that's turned wrong
+  const fromSource=path.slice().reverse();
+  const i=fromSource.find(k=>cur[k]!==sol[k]);
+  if(i===undefined)return;
+  hints--;hintTile=i;hintAt=performance.now();
+  updateStats();
+}
+
+function resize(){
+  const avail=Math.min(board.clientWidth-16,560);
+  cell=avail/(n+1.4);gut=cell*0.7;
+  Wd=gut*2+cell*n;Hd=cell*n;
+  const d=window.devicePixelRatio||1;
+  cv.style.width=Wd+'px';cv.style.height=Hd+'px';
+  cv.width=Math.round(Wd*d);cv.height=Math.round(Hd*d);
+  ctx.setTransform(d,0,0,d,0,0);
+}
+
+/* ---------- drawing ---------- */
+function arms(mask,r,width,color){
+  ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='butt';
+  for(const d of DIRS){
+    if(!(mask&d.b))continue;
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(d.dx*r,d.dy*r);ctx.stroke();
+  }
+  ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,width/2,0,Math.PI*2);ctx.fill();
+}
+function couplings(mask,r,w){
+  ctx.strokeStyle='#8f4f22';ctx.lineWidth=cell*0.07;ctx.lineCap='butt';
+  const at=r-cell*0.06;
+  for(const d of DIRS){
+    if(!(mask&d.b))continue;
+    const px=-d.dy,py=d.dx,cx=d.dx*at,cy=d.dy*at,h=w*0.5+cell*0.05;
+    ctx.beginPath();ctx.moveTo(cx+px*h,cy+py*h);ctx.lineTo(cx-px*h,cy-py*h);ctx.stroke();
+  }
+}
+function bitCount(m){let c=0;while(m){c+=m&1;m>>=1}return c}
+
+function drawPipe(cx,cy,mask,angle,filled,t){
+  const r=cell/2,w=cell*0.26;
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(angle);
+  arms(mask,r,w+cell*0.06,'#120a1a');
+  arms(mask,r,w,'#c97a3d');
+  couplings(mask,r,w);
+  if(filled){
+    arms(mask,r,w*0.55,'#3ee6cf');
+    if(solved){
+      ctx.setLineDash([cell*0.12,cell*0.16]);ctx.lineDashOffset=-t*0.04;
+      ctx.strokeStyle='#c9fff6';ctx.lineWidth=w*0.2;ctx.lineCap='round';
+      for(const d of DIRS){if(!(mask&d.b))continue;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(d.dx*r,d.dy*r);ctx.stroke()}
+      ctx.setLineDash([]);
+    }
+  }else{
+    ctx.strokeStyle='rgba(255,214,170,.35)';ctx.lineWidth=w*0.16;ctx.lineCap='butt';
+    for(const d of DIRS){if(!(mask&d.b))continue;const o=w*0.22;ctx.beginPath();ctx.moveTo(-d.dy*o,d.dx*o);ctx.lineTo(d.dx*r-d.dy*o,d.dy*r+d.dx*o);ctx.stroke()}
+  }
+  if(bitCount(mask)===1){
+    ctx.fillStyle='#120a1a';ctx.beginPath();ctx.arc(0,0,w*0.78,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=filled?'#3ee6cf':'#a8622f';ctx.beginPath();ctx.arc(0,0,w*0.62,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawValve(x,y,t){
+  const r=cell*0.24;
+  ctx.save();ctx.translate(x,y);ctx.rotate(solved?t*0.004:0);
+  ctx.strokeStyle='#d8443a';ctx.lineWidth=cell*0.06;
+  ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();
+  for(let k=0;k<4;k++){ctx.rotate(Math.PI/4*2);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(r,0);ctx.stroke()}
+  ctx.fillStyle='#7a1d17';ctx.beginPath();ctx.arc(0,0,cell*0.06,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+function drawDrain(x,y){
+  const r=cell*0.27;
+  ctx.fillStyle='#0b0710';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#8c8796';ctx.lineWidth=cell*0.045;ctx.stroke();
+  ctx.lineWidth=cell*0.035;
+  for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(x-r*0.65,y+k*r*0.38);ctx.lineTo(x+r*0.65,y+k*r*0.38);ctx.stroke()}
+}
+function drawRoach(x,y,s,ang){
+  if(s<=0.5)return;
+  ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.scale(s,s);
+  ctx.strokeStyle='#3a1d0b';ctx.lineWidth=0.045;ctx.lineCap='round';
+  for(const k of[-1,1])for(const yy of[-0.1,0.07,0.22]){ctx.beginPath();ctx.moveTo(0,yy);ctx.lineTo(k*0.36,yy+0.06);ctx.lineTo(k*0.44,yy+0.2);ctx.stroke()}
+  ctx.beginPath();ctx.moveTo(-0.06,-0.38);ctx.quadraticCurveTo(-0.28,-0.78,-0.52,-0.6);
+  ctx.moveTo(0.06,-0.38);ctx.quadraticCurveTo(0.28,-0.78,0.52,-0.6);ctx.stroke();
+  ctx.fillStyle='#9a5524';ctx.beginPath();ctx.ellipse(0,0.08,0.24,0.34,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#4a240d';ctx.lineWidth=0.03;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,-0.14);ctx.lineTo(0,0.4);ctx.stroke();
+  ctx.fillStyle='rgba(255,224,180,.4)';ctx.beginPath();ctx.ellipse(-0.1,-0.02,0.05,0.14,0.2,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#6b3614';ctx.beginPath();ctx.ellipse(0,-0.3,0.17,0.11,0,0,Math.PI*2);ctx.fill();
+  for(const k of[-1,1]){
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(k*0.09,-0.36,0.09,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#111';ctx.beginPath();ctx.arc(k*0.09+0.015,-0.35,0.04,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+function draw(t){
+  ctx.clearRect(0,0,Wd,Hd);
+  // tiles
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    const i=y*n+x,px=gut+x*cell,py=y*cell;
+    ctx.fillStyle=flow.f[i]?'#2f2346':'#2a1b3c';
+    ctx.fillRect(px+1.5,py+1.5,cell-3,cell-3);
+    let a=0;const an=anims[i];
+    if(an){const p=Math.min(1,(t-an)/140);a=-Math.PI/2*(1-(1-(1-p)*(1-p)));if(p>=1)delete anims[i]}
+    drawPipe(px+cell/2,py+cell/2,cur[i],a,flow.f[i],t);
+  }
+  // where the water stops: pulsing drips at open wet ends
+  if(!solved){
+    const pulse=0.5+0.5*Math.sin(t/220);
+    for(const [i,d] of leaks()){
+      const x=i%n,y=(i/n)|0;
+      const cx=gut+x*cell+cell/2+d.dx*cell*0.5,cy=y*cell+cell/2+d.dy*cell*0.5;
+      ctx.fillStyle=`rgba(62,230,207,${0.25+0.35*pulse})`;
+      ctx.beginPath();ctx.arc(cx,cy,cell*(0.14+0.08*pulse),0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#c9fff6';
+      ctx.beginPath();ctx.arc(cx,cy,cell*0.06,0,Math.PI*2);ctx.fill();
+    }
+  }
+  // hint: Mojo-red outline on the pipe to turn
+  if(hintTile>=0&&!solved){
+    const age=t-hintAt;
+    if(age<2600&&cur[hintTile]!==sol[hintTile]){
+      const x=hintTile%n,y=(hintTile/n)|0,a=0.55+0.45*Math.sin(age/120);
+      ctx.strokeStyle=`rgba(216,68,58,${a})`;ctx.lineWidth=Math.max(3,cell*0.07);
+      ctx.strokeRect(gut+x*cell+3,y*cell+3,cell-6,cell-6);
+    }else hintTile=-1;
+  }
+  // source stub + valve
+  const sy=sr*cell+cell/2,w=cell*0.26;
+  ctx.save();ctx.translate(gut/2,sy);
+  ctx.strokeStyle='#120a1a';ctx.lineWidth=w+cell*0.06;ctx.beginPath();ctx.moveTo(-gut/2,0);ctx.lineTo(gut/2+1,0);ctx.stroke();
+  ctx.strokeStyle='#c97a3d';ctx.lineWidth=w;ctx.stroke();
+  ctx.strokeStyle='#3ee6cf';ctx.lineWidth=w*0.55;ctx.stroke();
+  ctx.restore();
+  drawValve(gut*0.42,sy-cell*0.02,t);
+  // drain stub
+  const ey=er*cell+cell/2,ex=gut+n*cell;
+  ctx.save();ctx.translate(ex,ey);
+  ctx.strokeStyle='#120a1a';ctx.lineWidth=w+cell*0.06;ctx.beginPath();ctx.moveTo(-1,0);ctx.lineTo(gut,0);ctx.stroke();
+  ctx.strokeStyle='#c97a3d';ctx.lineWidth=w;ctx.stroke();
+  if(solved){ctx.strokeStyle='#3ee6cf';ctx.lineWidth=w*0.55;ctx.stroke()}
+  ctx.restore();
+  const dx=ex+gut*0.5;
+  drawDrain(dx,ey);
+  // Ganja
+  if(!solved){
+    drawRoach(dx,ey-cell*0.05,cell*0.55,Math.sin(t/300)*0.12);
+  }else{
+    const p=Math.min(1,(t-solvedAt)/1100);
+    drawRoach(dx,ey,cell*0.55*(1-p),p*14);
+  }
+}
+
+function loop(t){draw(t);requestAnimationFrame(loop)}
+
+/* ---------- input ---------- */
+cv.addEventListener('pointerdown',e=>{
+  if(solved)return;
+  const r=cv.getBoundingClientRect();
+  const x=Math.floor((e.clientX-r.left-gut)/cell),y=Math.floor((e.clientY-r.top)/cell);
+  if(x<0||y<0||x>=n||y>=n)return;
+  const i=y*n+x;
+  cur[i]=rot(cur[i]);anims[i]=performance.now();
+  moves++;flow=computeFlow();updateStats();
+  if(flow.ok)win();
+});
+
+function win(){
+  solved=true;solvedAt=performance.now();
+  if(level+1>best){best=level+1;try{localStorage.setItem('pm-flow-best',String(best))}catch(e){}}
+  updateStats();
+  const used=3-hints;
+  const note=(moves<=par?' Right on par — clean run.':'')+(used?` Used ${used} hint${used>1?'s':''}.`:'');
+  $('winText').textContent=`Level ${level} cleared in ${moves} taps. Par was ${par}.${note} Ganja's going for a ride.`;
+  setTimeout(()=>{$('win').hidden=false;$('next').focus()},1300);
+}
+
+$('hint').addEventListener('click',useHint);
+$('next').addEventListener('click',()=>{level++;generate()});
+$('newb').addEventListener('click',generate);
+$('restart').addEventListener('click',()=>{cur=startCur.slice();moves=0;solved=false;anims={};hintTile=-1;flow=computeFlow();$('win').hidden=true;updateStats()});
+window.addEventListener('resize',resize);
+
+
+
+generate();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

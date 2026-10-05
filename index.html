@@ -129,6 +129,8 @@
       white-space: nowrap;
       flex-shrink: 0;
     }
+    .nav-btns { display: flex; gap: 8px; flex-shrink: 0; }
+    .nav-play-btn { background: var(--cyan); color: #000; border-color: var(--cyan); }
     .nav-shop-btn:hover {
       background: var(--cyan);
       color: #000;
@@ -142,6 +144,8 @@
     }
     @media (max-width: 420px) {
       .nav-links { display: none; }
+      .nav-brand-tag { display: none; }
+      .nav-btns { gap: 6px; }
     }
 
     /* ── TICKER ── */
@@ -475,7 +479,10 @@
     <li><a href="#crew">CREW</a></li>
     <li><a href="#follow">FOLLOW</a></li>
   </ul>
-  <a href="https://www.stickermule.com/pipemojo" target="_blank" rel="noopener" class="nav-shop-btn">SHOP</a>
+  <div class="nav-btns">
+    <a href="/play" class="nav-shop-btn nav-play-btn">PLAY</a>
+    <a href="https://www.stickermule.com/pipemojo" target="_blank" rel="noopener" class="nav-shop-btn">SHOP</a>
+  </div>
 </nav>
 
 <!-- HERO BANNER -->
