@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Pipe Mojo">
-  <link rel="icon" type="image/png" href="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png">
-  <link rel="apple-touch-icon" href="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png">
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <title>Pipe Mojo | Keep Them Pipes Clean</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,7 +57,6 @@
       height: 48px; width: auto;
       flex-shrink: 0;
       object-fit: contain;
-      mix-blend-mode: lighten;
     }
     .pm-logo-img.sm { height: 36px; }
 
@@ -184,7 +183,6 @@
       position: relative; z-index: 2;
       filter: drop-shadow(0 0 20px rgba(0,229,255,0.35)) drop-shadow(0 0 50px rgba(91,26,170,0.4));
       animation: logo-float 6s ease-in-out infinite;
-      mix-blend-mode: lighten;
     }
     @keyframes logo-float {
       0%,100%{transform:translateY(0px);filter:drop-shadow(0 0 20px rgba(0,229,255,0.35)) drop-shadow(0 0 50px rgba(91,26,170,0.4))}
@@ -209,10 +207,11 @@
         linear-gradient(170deg, #100808 0%, #060408 60%, #04080e 100%);
     }
     .hero::before {
-      content: '⚜';
+      content: '\269C\FE0E';
       position: absolute; right: -2%; bottom: -5%;
       font-size: clamp(16rem, 40vw, 38rem);
-      color: rgba(255,255,255,0.018);
+      color: #fff; opacity: 0.025;
+      font-variant-emoji: text;
       pointer-events: none; line-height: 1; z-index: 0;
     }
     .hero-char-img {
@@ -224,6 +223,8 @@
       mask-image: linear-gradient(to left, #000 55%, transparent 100%);
       -webkit-mask-image: linear-gradient(to left, #000 55%, transparent 100%);
       z-index: 1;
+    }
+    .hero-glow { top: auto; bottom: 8%; right: 50%; transform: translateX(50%); }
     }
     .hero-glow {
       position: absolute; right: 10%; top: 50%;
@@ -316,6 +317,18 @@
     }
     .btn-ghost svg { width:18px; height:18px; fill:currentColor; flex-shrink:0; }
 
+    @media (max-width: 760px) {
+      .hero { flex-direction: column; align-items: stretch; min-height: auto; }
+      .hero::before { display: none; }
+      .hero-content { order: 1; padding-bottom: 1.5rem; }
+      .hero-char-img {
+        order: 2; position: relative; right: auto; bottom: auto;
+        width: min(80%, 340px); height: auto; max-width: none;
+        margin: 0 auto 3.5rem; opacity: 1;
+        mask-image: none; -webkit-mask-image: none;
+        filter: drop-shadow(0 0 28px rgba(0,229,255,0.25)) drop-shadow(0 0 60px rgba(91,26,170,0.5));
+      }
+  
     /* ── SECTIONS ── */
     .section-inner {
       max-width: 1060px; margin: 0 auto;
@@ -452,7 +465,7 @@
 <!-- NAV -->
 <nav>
   <a href="index.html" class="nav-brand">
-    <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo Logo" class="pm-logo-img">
+    <img src="/logo.png" alt="Pipe Mojo Logo" class="pm-logo-img">
     <div class="nav-brand-text">
       <span class="nav-brand-name">Pipe Mojo</span>
       <span class="nav-brand-tag">Keep Them Pipes Clean</span>
@@ -474,7 +487,7 @@
       <span aria-hidden="true">KEEP THEM PIPES CLEAN &nbsp;⚜&nbsp; PIPE MOJO &amp; GANJA &nbsp;⚜&nbsp; WHEN VOODOO MET PLUMBING &nbsp;⚜&nbsp; KEEP THEM PIPES CLEAN &nbsp;⚜&nbsp; PIPE MOJO &amp; GANJA &nbsp;⚜&nbsp; WHEN VOODOO MET PLUMBING &nbsp;⚜&nbsp;</span>
     </div>
     <div class="banner-logo-wrap">
-      <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo" class="banner-logo-img">
+      <img src="/logo.png" alt="Pipe Mojo" class="banner-logo-img">
       <div class="banner-glow"></div>
     </div>
   </div>
@@ -557,7 +570,7 @@
     <div class="quote-inner reveal">
       <p class="big-quote">"Keep them pipes clean."</p>
       <p class="quote-attr">
-        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="" style="height:16px;width:auto;opacity:.5;display:inline-block;">
+        <img src="/logo.png" alt="" style="height:16px;width:auto;opacity:.5;display:inline-block;">
         Pipe Mojo · @pipemojo
       </p>
     </div>
@@ -599,7 +612,7 @@
   <div class="footer-grid">
     <div class="footer-brand">
       <div class="footer-brand-name">
-        <img src="https://pub-cfe87c6399ec4c6e8a28b46d37b9a3bb.r2.dev/logo.png" alt="Pipe Mojo" class="pm-logo-img sm">
+        <img src="/logo.png" alt="Pipe Mojo" class="pm-logo-img sm">
         Pipe Mojo
       </div>
       <p>A voodoo doll plumber and his roach sidekick navigate the underground. Dark humor. Real plumbing. Supernatural solutions. Keep them pipes clean.</p>
