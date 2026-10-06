@@ -5,6 +5,14 @@ const KEY='pm-lb';
 
 function load(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){return null}}
 function save(a){try{a?localStorage.setItem(KEY,JSON.stringify(a)):localStorage.removeItem(KEY)}catch(e){}}
+const listeners=[];
+function emit(type){const a=load();listeners.forEach(fn=>{try{fn(type,a)}catch(e){}})}
+function switchPlayer(){
+  const a=load();if(!a)return false;
+  if(!confirm('Switch off '+a.name+' on this device?\n\nYour name and scores stay on the board. You\'ll need '+a.name+'\'s recovery code to sign back in here.'))return false;
+  fetch(API+'/signout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:a.token})}).catch(()=>{});
+  save(null);emit('signout');return true;
+}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 async function call(path,body){
@@ -53,6 +61,7 @@ function Board(el,o){
   this.el=el;this.game=o.game;this.onSignIn=o.onSignIn||null;this.title=o.title||'Top 10';this.unit=o.unit||'';
   this.top=null;this.pending=0;this.rank=0;this.mode='claim';this.code=null;this.err='';this.busy=false;
   el.addEventListener('click',e=>this.onClick(e));
+  listeners.push(type=>{if(type==='signout'){this.code=null;this.mode='claim'}this.rank=0;this.err='';this.render()});
   el.addEventListener('submit',e=>{e.preventDefault();this.onSubmit(e.target)});
   this.render();
 }
@@ -129,6 +138,7 @@ Board.prototype.onSubmit=async function(f){
     }
     this.busy=false;
     if(this.onSignIn)try{this.onSignIn(load())}catch(e){}
+    emit('signin');
     if(this.pending)await this.submit();else await this.refresh();
   }catch(e){
     this.busy=false;this.err=e.message;this.render();
@@ -141,12 +151,7 @@ Board.prototype.onClick=function(e){
   if(act==='recover'){this.mode='recover';this.err='';this.render()}
   else if(act==='claim'){this.mode='claim';this.err='';this.render()}
   else if(act==='saved'){this.code=null;this.render()}
-  else if(act==='switch'){
-    const a=load();if(!a)return;
-    if(!confirm('Switch off '+a.name+' on this device?\n\nYour name and scores stay on the board. You\'ll need '+a.name+'\'s recovery code to sign back in here.'))return;
-    fetch(API+'/signout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:a.token})}).catch(()=>{});
-    save(null);this.code=null;this.rank=0;this.err='';this.mode='claim';this.render();
-  }
+  else if(act==='switch'){switchPlayer()}
   else if(act==='copy'){
     const c=this.code;
     if(navigator.clipboard&&c)navigator.clipboard.writeText(c).then(()=>{b.textContent='Copied'},()=>{b.textContent='Long-press the code to copy'});
@@ -179,5 +184,5 @@ const flush=()=>{for(const g in queued){clearTimeout(timers[g]);sendSave(g,true)
 window.addEventListener('pagehide',flush);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush()});
 
-window.PMLB={mount:(el,o)=>{addCss();return new Board(el,o)},account:load,cloudSave,cloudLoad};
+window.PMLB={mount:(el,o)=>{addCss();return new Board(el,o)},account:load,cloudSave,cloudLoad,switchPlayer,onChange:fn=>listeners.push(fn)};
 })();

@@ -57,6 +57,10 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 #over{justify-content:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:22px;padding-bottom:28px}
 #over img{height:min(18vh,140px)}
 .lb-slot{width:100%}
+.overlay p.who{margin:16px 0 0;font-size:.9rem;color:rgba(255,255,255,.6)}
+.overlay p.who b{color:#fff}
+.who button{font:inherit;font-weight:800;font-size:.85rem;background:none;border:0;padding:0 0 0 6px;color:var(--cyan);
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 button,.btn{font:inherit;font-weight:800;font-size:1rem;border:0;border-radius:10px;padding:13px 22px;cursor:pointer}
 .primary{background:var(--cyan);color:#000}
@@ -85,6 +89,7 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
     <h1>Whack-a-Pipe</h1>
     <p>Pipes are rising. Tap each one before it crosses the red line. Let three through and you're cursed. Hit a glowing <strong>voodoo pipe</strong> to wipe the board and slow things down.</p>
     <div class="btns"><button class="primary" id="go">Start</button></div>
+    <p class="who" id="who"></p>
   </div>
 
   <div class="overlay" id="over" hidden>
@@ -115,6 +120,15 @@ $('best').textContent=best;
 /* ---------- leaderboard ---------- */
 const LB=window.PMLB?PMLB.mount($('lb'),{game:'whack',title:'Top 10'}):null;
 if(LB)LB.refresh();
+function showWho(){
+  const el=$('who');if(!el||!window.PMLB)return;
+  const a=PMLB.account(),esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  el.innerHTML=a?'Playing as <b>'+esc(a.name)+'</b><button type="button" id="whoSwitch">Switch player</button>'
+               :'Not signed in. After your round you can claim a name or sign in to post your score.';
+  const b=$('whoSwitch');if(b)b.addEventListener('click',()=>PMLB.switchPlayer());
+}
+showWho();
+if(window.PMLB)PMLB.onChange(showWho);
 
 /* ---------- character art ---------- */
 const IMG={};

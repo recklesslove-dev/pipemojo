@@ -191,7 +191,7 @@ const board=document.getElementById('board');
 const $=id=>document.getElementById(id);
 
 /* ---------- leaderboard (ranked by levels cleared) ---------- */
-const LB=window.PMLB?PMLB.mount($('lb'),{game:'flow',title:'Top 10, levels cleared',unit:'Lv ',onSignIn:()=>syncAfterSignIn()}):null;
+const LB=window.PMLB?PMLB.mount($('lb'),{game:'flow',title:'Top 10, levels cleared',unit:'Lv '}):null;
 if(LB)LB.refresh();
 
 /* ---------- character art ---------- */
@@ -260,17 +260,24 @@ try{best=parseInt(localStorage.getItem('pm-flow-best')||'1',10)||1}catch(e){}
 
 /* ---------- autosave ---------- */
 const SAVE='pm-flow-save';
+/* each player gets their own run on this device; 'pm-flow-save' alone is the guest run */
+const nameKey=x=>String(x||'').toLowerCase().replace(/ /g,'');
+const acct=()=>window.PMLB?PMLB.account():null;
+const slotFor=a=>a?SAVE+':'+nameKey(a.name):SAVE;
 let cloudReady=false; // only write to the cloud once we've checked what's already there
+let owner='';         // whose run is on the board ('' = guest)
 function saveGame(){
+  const a=acct();
+  if(nameKey(a&&a.name)!==owner)return; // never save one player's board into another's slot
   const obj={v:1,level,n,sol,cur,startCur,sr,er,moves,par,hints,solved,savedAt:Date.now()};
-  try{localStorage.setItem(SAVE,JSON.stringify(obj))}catch(e){}
-  if(cloudReady&&window.PMLB)PMLB.cloudSave('flow',obj);
+  try{localStorage.setItem(slotFor(a),JSON.stringify(obj))}catch(e){}
+  if(a&&cloudReady)PMLB.cloudSave('flow',obj);
 }
 function validSave(s){
   return !!(s&&s.v===1&&s.level>=1&&Array.isArray(s.cur)&&s.cur.length===s.n*s.n&&Array.isArray(s.sol)&&s.sol.length===s.n*s.n);
 }
-function loadSave(){
-  try{const s=JSON.parse(localStorage.getItem(SAVE)||'null');if(validSave(s))return s}catch(e){}
+function loadSave(k){
+  try{const s=JSON.parse(localStorage.getItem(k)||'null');if(validSave(s))return s}catch(e){}
   return null;
 }
 const saveLevel=s=>s.solved?s.level+1:s.level;
@@ -592,10 +599,15 @@ function offerLocal(s){
   askResume('You were on level '+level+'. Pick up where you left off, or start a fresh climb.',
     'Continue at level '+level,'New run from level 1',null,()=>{level=1;generate()});
 }
-const local=loadSave();
+// one-time move: before per-player runs, the signed-in player's run lived in the guest slot
+(function(){const a=acct();if(!a)return;try{const k=slotFor(a);
+  if(!localStorage.getItem(k)&&localStorage.getItem(SAVE)){localStorage.setItem(k,localStorage.getItem(SAVE));localStorage.removeItem(SAVE)}}catch(e){}})();
+
+owner=nameKey((acct()||{}).name);
+const local=loadSave(slotFor(acct()));
 if(local&&(local.level>1||local.moves>0||local.solved))offerLocal(local);else generate();
 
-if(window.PMLB&&PMLB.account()){
+if(acct()){
   PMLB.cloudLoad('flow').then(cloud=>{
     if(cloud===undefined)return; // couldn't reach the cloud; stay device-only this visit
     if(validSave(cloud)&&(!local||(cloud.savedAt||0)>(local.savedAt||0))){
@@ -610,20 +622,44 @@ if(window.PMLB&&PMLB.account()){
   });
 }
 
-function syncAfterSignIn(){
+/* switching players swaps runs */
+const toBoard=()=>board.scrollIntoView({behavior:'smooth',block:'center'});
+if(window.PMLB)PMLB.onChange((type,a)=>{
   cloudReady=false;
+  if(type==='signout'||!a){
+    owner='';
+    const g=loadSave(SAVE);
+    if(g&&(g.level>1||g.moves>0||g.solved)){
+      restore(g);toBoard();
+      askResume('Signed out. This device has a guest run at level '+level+'.',
+        'Continue at level '+level,'New run from level 1',null,()=>{level=1;generate()});
+    }else{level=1;generate()}
+    return;
+  }
+  const key=nameKey(a.name),wasGuest=owner==='',hadProgress=level>1||moves>0;
+  const mine=loadSave(slotFor(a));
   PMLB.cloudLoad('flow').then(cloud=>{
-    if(cloud===undefined)return;
-    if(validSave(cloud)&&saveLevel(cloud)!==level){
-      const there=saveLevel(cloud),here=level;
-      board.scrollIntoView({behavior:'smooth',block:'center'});
-      askResume('Found your saved run at level '+there+' from another device. This device is on level '+here+'.',
-        'Continue at level '+there,'Keep this run (level '+here+')',
-        ()=>{restore(cloud);cloudReady=true;saveGame()},
-        ()=>{cloudReady=true;saveGame()});
-    }else{cloudReady=true;saveGame()}
+    const reachable=cloud!==undefined;
+    let best=mine;
+    if(reachable&&validSave(cloud)&&(!best||(cloud.savedAt||0)>(best.savedAt||0)))best=cloud;
+    const go=()=>{if(reachable)cloudReady=true};
+    if(wasGuest&&hadProgress){
+      if(best&&saveLevel(best)!==level){
+        const there=saveLevel(best),here=level;toBoard();
+        askResume('Found '+a.name+'\'s saved run at level '+there+'. This device is on level '+here+'.',
+          'Continue at level '+there,'Keep this run (level '+here+')',
+          ()=>{owner=key;go();restore(best);saveGame()},
+          ()=>{owner=key;go();saveGame()});
+      }else{owner=key;go();saveGame()}
+    }else if(best){
+      owner=key;go();restore(best);toBoard();
+      askResume('Welcome back, '+a.name+'. You were on level '+level+'.',
+        'Continue at level '+level,'New run from level 1',null,()=>{level=1;generate()});
+    }else{
+      owner=key;go();level=1;generate();
+    }
   });
-}
+});
 requestAnimationFrame(loop);
 })();
 </script>
