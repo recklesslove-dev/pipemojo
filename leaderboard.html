@@ -65,6 +65,15 @@ li.msg{color:rgba(255,255,255,.55);font-weight:600}
 .play{display:block;text-align:center;margin-top:14px;font-weight:800;padding:13px;border-radius:10px}
 .whack .play{background:var(--red);color:#fff}
 .flow .play{background:var(--cyan);color:#000}
+.faq{margin-top:34px}
+.faq h2{font-family:var(--title);font-weight:400;font-size:2.2rem;color:var(--gold);margin-bottom:10px}
+.faq details{background:var(--deep);border:1px solid rgba(255,255,255,.1);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.faq summary{cursor:pointer;padding:13px 16px;font-weight:800;list-style:none;display:flex;justify-content:space-between;gap:10px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:'+';color:var(--gold);font-size:1.2rem;line-height:1}
+.faq details[open] summary::after{content:'–'}
+.faq details p{padding:0 16px 14px;color:rgba(255,255,255,.72);line-height:1.5}
+.faq summary:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
 .you{text-align:center;color:rgba(255,255,255,.6);margin-top:22px;font-size:.92rem}
 .you b{color:#fff}
 .top a:focus-visible,.play:focus-visible{outline:3px solid var(--gold);outline-offset:3px;border-radius:8px}
@@ -96,6 +105,24 @@ li.msg{color:rgba(255,255,255,.55);font-weight:600}
   </div>
 
   <p class="you" id="you"></p>
+
+  <section class="faq" aria-labelledby="faqh">
+    <h2 id="faqh">Questions</h2>
+    <details><summary>How do I get on the board?</summary>
+      <p>Play a round. In Whack-a-Pipe, claim a name on the Cursed screen when the round ends. In Flow, claim one in the leaderboard section under the board. Your score posts right away, and every game after that posts on its own.</p></details>
+    <details><summary>Is there a password?</summary>
+      <p>No passwords and no email. When you claim a name, you get a one-time <b>recovery code</b>. Save it in Notes. It's the only way to sign back in to your name, and nobody can look it up for you, not even us.</p></details>
+    <details><summary>How do I play on another phone or iPad?</summary>
+      <p>Open either game, tap <b>Already have a name? Use your recovery code</b>, and enter your name and code. Your scores follow you, and so does your Flow level.</p></details>
+    <details><summary>I lost my recovery code.</summary>
+      <p>If you're still signed in on any device, tap <b>New recovery code</b> next to your name under either game's leaderboard. You'll get a fresh code, and the old one stops working. If you're signed out everywhere, that name can't be recovered, so claim a new one.</p></details>
+    <details><summary>Can I change my name?</summary>
+      <p>Not right now. You can tap <b>Switch player</b> and claim a new name, but your old scores stay under the old one.</p></details>
+    <details><summary>Why didn't my score post?</summary>
+      <p>You need to be signed in to a name, and you need a connection. Whack-a-Pipe scores are also checked against how long the round actually lasted, so fake scores get turned away.</p></details>
+    <details><summary>Does Flow save my progress?</summary>
+      <p>Yes. Every move saves on your device. If you're signed in, your run also saves to your name each time you clear a level or leave the game, so you can pick it up on another device.</p></details>
+  </section>
 </main>
 <script>
 (function(){

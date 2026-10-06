@@ -309,13 +309,20 @@ const acct=()=>window.PMLB?PMLB.account():null;
 const slotFor=a=>a?SAVE+':'+nameKey(a.name):SAVE;
 let cloudReady=false; // only write to the cloud once we've checked what's already there
 let owner='';         // whose run is on the board ('' = guest)
-function saveGame(){
+let lastObj=null,dirty=false;
+function saveGame(important){ // every move saves on this device; the cloud copy updates on level changes and when you leave
   const a=acct();
   if(nameKey(a&&a.name)!==owner)return; // never save one player's board into another's slot
   const obj={v:1,level,n,sol,cur,startCur,sr,er,er2,frozen,startFrozen,locked,moves,par,hints,solved,savedAt:Date.now()};
   try{localStorage.setItem(slotFor(a),JSON.stringify(obj))}catch(e){}
-  if(a&&cloudReady)PMLB.cloudSave('flow',obj);
+  lastObj=obj;
+  if(!(a&&cloudReady))return;
+  if(important===false){dirty=true;return}
+  dirty=false;PMLB.cloudSave('flow',obj);
 }
+function pushIfDirty(){if(dirty&&lastObj&&cloudReady&&acct()){dirty=false;PMLB.cloudSave('flow',lastObj,true)}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')pushIfDirty()});
+window.addEventListener('pagehide',pushIfDirty);
 function validSave(s){
   return !!(s&&s.v===1&&s.level>=1&&Array.isArray(s.cur)&&s.cur.length===s.n*s.n&&Array.isArray(s.sol)&&s.sol.length===s.n*s.n);
 }
@@ -470,7 +477,7 @@ function useHint(){
   const i=path.slice().reverse().find(k=>!locked[k]&&cur[k]!==sol[k]);
   if(i===undefined)return;
   hints--;hintTile=i;hintAt=performance.now();
-  Snd.hint();updateStats();saveGame();
+  Snd.hint();updateStats();saveGame(false);
 }
 
 function resize(){
@@ -653,12 +660,12 @@ cv.addEventListener('pointerdown',e=>{
   if(x<0||y<0||x>=n||y>=n)return;
   const i=y*n+x,before=flow.count;
   if(locked[i]){bumpTile=i;bumpAt=performance.now();Snd.thud();return}
-  if(frozen[i]){frozen[i]=0;moves++;updateStats();Snd.crack();saveGame();return}
+  if(frozen[i]){frozen[i]=0;moves++;updateStats();Snd.crack();saveGame(false);return}
   cur[i]=rot(cur[i]);anims[i]=performance.now();
   moves++;flow=computeFlow();updateStats();
   Snd.clunk();
   if(flow.ok){win();saveGame();return}
-  saveGame();
+  saveGame(false);
   if(flow.count>before)Snd.bloop(flow.count);
 });
 
@@ -691,7 +698,7 @@ $('next').addEventListener('click',()=>{
 });
 $('zoneGo').addEventListener('click',()=>{$('zoneUp').hidden=true});
 $('newb').addEventListener('click',generate);
-$('restart').addEventListener('click',()=>{cur=startCur.slice();frozen=startFrozen.slice();bumpTile=-1;moves=0;solved=false;anims={};hintTile=-1;flow=computeFlow();$('win').hidden=true;updateStats();saveGame()});
+$('restart').addEventListener('click',()=>{cur=startCur.slice();frozen=startFrozen.slice();bumpTile=-1;moves=0;solved=false;anims={};hintTile=-1;flow=computeFlow();$('win').hidden=true;updateStats();saveGame(false)});
 window.addEventListener('resize',resize);
 
 /* ---------- startup: local save, then cloud save if signed in ---------- */

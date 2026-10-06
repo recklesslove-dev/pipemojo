@@ -76,7 +76,8 @@ Board.prototype.render=function(){
   if(this.err)h+='<p class="err">'+esc(this.err)+'</p>';
   if(a){
     h+='<p class="me-line">Playing as <b>'+esc(a.name)+'</b>'+(this.rank?', ranked #'+this.rank:'')+
-       ' <button type="button" class="alt switch" data-act="switch">Switch player</button></p>';
+       ' <button type="button" class="alt switch" data-act="switch">Switch player</button>'+
+       ' <button type="button" class="alt switch" data-act="newcode">New recovery code</button></p>';
   }else if(this.mode==='claim'){
     const p=this.pending;
     h+='<form data-form="claim"><label for="lb-name">'+(p?'Post your '+esc(this.unit?this.unit+p:p)+' to the board':'Claim a leaderboard name')+'</label>'+
@@ -158,6 +159,12 @@ Board.prototype.onClick=function(e){
   else if(act==='claim'){this.mode='claim';this.err='';this.render()}
   else if(act==='saved'){this.code=null;this.render()}
   else if(act==='switch'){switchPlayer()}
+  else if(act==='newcode'){
+    const a=load();if(!a)return;
+    if(!confirm('Make a new recovery code for '+a.name+'?\n\nYour old code will stop working. You\'ll see the new one once, so save it in Notes.'))return;
+    call('/newcode',{token:a.token}).then(d=>{this.code=d.recovery;this.err='';this.render();this.el.scrollIntoView({behavior:'smooth',block:'start'})})
+      .catch(e=>{this.err=e.message;this.render()});
+  }
   else if(act==='copy'){
     const c=this.code;
     if(navigator.clipboard&&c)navigator.clipboard.writeText(c).then(()=>{b.textContent='Copied'},()=>{b.textContent='Long-press the code to copy'});
@@ -174,9 +181,10 @@ function sendSave(game,keepalive){
       body:JSON.stringify({token:a.token,game,data:JSON.stringify(obj),savedAt:obj.savedAt||Date.now()})}).catch(()=>{});
   }catch(e){}
 }
-function cloudSave(game,obj){
+function cloudSave(game,obj,now){
   if(!load())return;
   queued[game]=obj;clearTimeout(timers[game]);
+  if(now){sendSave(game,true);return}
   timers[game]=setTimeout(()=>sendSave(game),1200);
 }
 async function cloudLoad(game){
