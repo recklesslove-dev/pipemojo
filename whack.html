@@ -111,7 +111,22 @@ const cv=document.getElementById('c'),ctx=cv.getContext('2d'),stage=document.get
 const $=id=>document.getElementById(id);
 let W=0,H=0,dpr=1,LANES=4,laneW=0,pipeW=0,dangerY=0;
 let pipes=[],bursts=[],flash=0,vflash=0,score=0,lives=3,best=0,running=false,spawnT=0,last=0,streak=0;
-let heat=0,sinceVoodoo=0; // heat drives the pace; the voodoo pipe cools it down
+let heat=0,sinceVoodoo=0,voodoosUsed=0; // heat drives the pace; the voodoo pipe cools it down, a little less each time
+/* zones every 100 points, like Flow: the pipes and backdrop change as you climb */
+const WZ=[
+  {name:'The Basement',copper:'#c97a3d',dark:'#8f4f22',hl:'rgba(255,214,170,.35)',water:'#00e5ff',
+   bg:'radial-gradient(ellipse 90% 60% at 50% 100%, rgba(91,26,170,.35) 0%, transparent 70%),linear-gradient(180deg,#0d0610,#080508)'},
+  {name:'The Bayou',copper:'#8a5a36',dark:'#5a3a22',hl:'rgba(220,170,120,.3)',water:'#7fbf3f',
+   bg:'radial-gradient(ellipse 90% 60% at 50% 100%, rgba(80,130,40,.35) 0%, transparent 70%),linear-gradient(180deg,#0a0d08,#060805)'},
+  {name:'The Graveyard',copper:'#d8d0c0',dark:'#968c7a',hl:'rgba(255,255,255,.5)',water:'#7fdcff',
+   bg:'radial-gradient(ellipse 90% 60% at 50% 0%, rgba(150,170,200,.22) 0%, transparent 70%),linear-gradient(180deg,#0b0b12,#07070b)'},
+  {name:'Voodoo Gold',copper:'#d9a73a',dark:'#8f6a1e',hl:'rgba(255,240,190,.5)',water:'#b45cff',
+   bg:'radial-gradient(ellipse 90% 60% at 50% 100%, rgba(120,40,220,.45) 0%, transparent 70%),linear-gradient(180deg,#0e0616,#08040d)'},
+  {name:'Hellfire',copper:'#3a3133',dark:'#1a1214',hl:'rgba(255,120,70,.35)',water:'#ff5a1f',
+   bg:'radial-gradient(ellipse 90% 60% at 50% 100%, rgba(230,60,20,.40) 0%, transparent 70%),linear-gradient(180deg,#140505,#0a0303)'}
+];
+let zone=0,P=WZ[0];
+function setZone(z){zone=z;P=WZ[z];stage.style.background=P.bg}
 let mojoHitAt=-9999,mojoMissAt=-9999,ganjaHitAt=-9999,ganjaMissAt=-9999;
 let quip='',quipAt=-9999,gpop='',gpopAt=-9999,gpopBad=false;
 try{best=parseInt(localStorage.getItem('pm-whack-best')||'0',10)||0}catch(e){}
@@ -254,16 +269,16 @@ function drawPipe(p,t){
   if(p.voodoo){drawVoodooPipe(p,t);return}
   const x=p.x-pipeW/2,y=p.y,w=pipeW,len=p.len;
   ctx.fillStyle='#120a1a';ctx.fillRect(x-3,y,w+6,len);
-  ctx.fillStyle='#c97a3d';ctx.fillRect(x,y,w,len);
-  ctx.fillStyle='rgba(255,214,170,.35)';ctx.fillRect(x+w*0.18,y,w*0.14,len);
+  ctx.fillStyle=P.copper;ctx.fillRect(x,y,w,len);
+  ctx.fillStyle=P.hl;ctx.fillRect(x+w*0.18,y,w*0.14,len);
   ctx.fillStyle='rgba(0,0,0,.22)';ctx.fillRect(x+w*0.72,y,w*0.28,len);
-  ctx.fillStyle='#8f4f22';
+  ctx.fillStyle=P.dark;
   for(let b=y+len*0.45;b<y+len;b+=len*0.45)ctx.fillRect(x-2,b,w+4,5);
   ctx.fillStyle='#120a1a';ctx.fillRect(x-9,y-4,w+18,18);
-  ctx.fillStyle='#8f4f22';ctx.fillRect(x-7,y-2,w+14,14);
-  ctx.fillStyle='rgba(255,214,170,.3)';ctx.fillRect(x-7,y-2,w+14,3);
+  ctx.fillStyle=P.dark;ctx.fillRect(x-7,y-2,w+14,14);
+  ctx.fillStyle=P.hl;ctx.fillRect(x-7,y-2,w+14,3);
   ctx.fillStyle='#0b0710';ctx.fillRect(x+3,y-2,w-6,6);
-  ctx.fillStyle='#00e5ff';ctx.fillRect(x+5,y-1,w-10,3);
+  ctx.fillStyle=P.water;ctx.fillRect(x+5,y-1,w-10,3);
 }
 
 function drawDanger(t){
@@ -359,7 +374,7 @@ function drawBursts(dt){
 function burst(x,y){
   const drops=[];
   for(let i=0;i<12;i++){const a=Math.random()*Math.PI*2,s=80+Math.random()*160;
-    drops.push({vx:Math.cos(a)*s,vy:Math.sin(a)*s-120,r:2+Math.random()*4,c:Math.random()<.6?'#00e5ff':'#c97a3d'})}
+    drops.push({vx:Math.cos(a)*s,vy:Math.sin(a)*s-120,r:2+Math.random()*4,c:Math.random()<.6?P.water:P.copper})}
   bursts.push({x,y,t:0,drops});
 }
 
@@ -399,11 +414,16 @@ function gameOver(){
   setTimeout(()=>{$('over').hidden=false;$('over').scrollTop=0;$('again').focus()},700);
 }
 
+function checkZone(t){
+  const z=Math.min(WZ.length-1,Math.floor(score/100));
+  if(z>zone){setZone(z);quip=WZ[z].name+'!';quipAt=t;pop(['!!!'],t);vflash=0.5;Snd.cheer()}
+}
 function voodooBlast(t){
   // every pipe on screen pops and scores, and the pace cools way down
   for(const q of pipes){burst(q.x,q.y);score++}
   pipes=[];streak++;
-  heat=Math.floor(heat*0.4);
+  heat=Math.floor(heat*Math.min(0.7,0.4+0.02*voodoosUsed));voodoosUsed++;
+  checkZone(t);
   spawnT=1.4;vflash=1;
   $('score').textContent=score;
   mojoHitAt=t;ganjaHitAt=t;quip='Voodoo!';quipAt=t;pop(['!!!'],t);
@@ -412,9 +432,10 @@ function voodooBlast(t){
 
 function start(){
   Snd.unlock();Snd.start();
-  pipes=[];bursts=[];score=0;lives=3;flash=0;vflash=0;spawnT=0.5;running=true;streak=0;quip='';gpop='';heat=0;sinceVoodoo=0;
+  pipes=[];bursts=[];score=0;lives=3;flash=0;vflash=0;spawnT=0.5;running=true;streak=0;quip='';gpop='';heat=0;sinceVoodoo=0;voodoosUsed=0;setZone(0);
   $('score').textContent=0;drawLives();
   $('start').hidden=true;$('over').hidden=true;
+  if(LB)LB.startRun();
 }
 
 cv.addEventListener('pointerdown',e=>{
@@ -428,7 +449,9 @@ cv.addEventListener('pointerdown',e=>{
       if(p.voodoo){voodooBlast(t);return}
       pipes.splice(i,1);score++;streak++;heat++;sinceVoodoo++;$('score').textContent=score;burst(p.x,p.y);
       Snd.whack(streak);mojoHitAt=t;ganjaHitAt=t;
-      if(streak%10===0){say(STREAK_QUIPS,t);pop(['!!!'],t);Snd.cheer()}
+      const zBefore=zone;checkZone(t);
+      if(zone!==zBefore){}
+      else if(streak%10===0){say(STREAK_QUIPS,t);pop(['!!!'],t);Snd.cheer()}
       else{
         if(Math.random()<0.18)say(HIT_QUIPS,t);
         if(Math.random()<0.22)pop(['!','!!'],t);

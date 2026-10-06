@@ -59,7 +59,7 @@ function addCss(){if(cssDone)return;cssDone=true;const s=document.createElement(
 
 function Board(el,o){
   this.el=el;this.game=o.game;this.onSignIn=o.onSignIn||null;this.title=o.title||'Top 10';this.unit=o.unit||'';
-  this.top=null;this.pending=0;this.rank=0;this.mode='claim';this.code=null;this.err='';this.busy=false;
+  this.top=null;this.pending=0;this.run=null;this.pendingRun=null;this.rank=0;this.mode='claim';this.code=null;this.err='';this.busy=false;
   el.addEventListener('click',e=>this.onClick(e));
   listeners.push(type=>{if(type==='signout'){this.code=null;this.mode='claim'}this.rank=0;this.err='';this.render()});
   el.addEventListener('submit',e=>{e.preventDefault();this.onSubmit(e.target)});
@@ -106,8 +106,13 @@ Board.prototype.refresh=async function(){
   catch(e){if(this.top===null)this.top=[];this.err=e.message}
   this.render();
 };
+Board.prototype.startRun=function(){ // ticket for this round, so the server can check the score against real play time
+  this.run=null;const me=this;
+  call('/start',{game:this.game}).then(d=>{me.run=d.run}).catch(()=>{});
+};
 Board.prototype.post=function(score){
   score=Math.floor(score)||0;
+  this.pendingRun=this.run;this.run=null;
   if(score<1){this.refresh();return}
   this.pending=score;this.err='';
   if(load())this.submit();else{this.render();this.refresh()}
@@ -115,10 +120,11 @@ Board.prototype.post=function(score){
 Board.prototype.submit=async function(){
   const a=load();if(!a||!this.pending){this.refresh();return}
   try{
-    const d=await call('/score',{token:a.token,game:this.game,score:this.pending});
-    this.pending=0;this.rank=d.rank||0;this.top=d.top||[];this.err='';
+    const d=await call('/score',{token:a.token,game:this.game,score:this.pending,run:this.pendingRun});
+    this.pending=0;this.pendingRun=null;this.rank=d.rank||0;this.top=d.top||[];this.err='';
   }catch(e){
     if(e.status===401){save(null);this.mode='recover';}
+    if(e.status===400){this.pending=0;this.pendingRun=null}
     this.err=e.message;
     if(this.top===null)await this.refresh();
   }
