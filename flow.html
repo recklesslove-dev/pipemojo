@@ -99,7 +99,7 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
     <img src="/assets/mojo-front.png" alt="" width="638" height="1100">
     <div>
       <h1>Pipe Mojo: <span>Flow</span></h1>
-      <p class="sub">Tap pipes to turn them. Run Mojo's water from the valve to Ganja's drain.</p>
+      <p class="sub" id="sub">Tap pipes to turn them. Run Mojo's water from the valve to Ganja's drain.</p>
     </div>
   </header>
 
@@ -462,6 +462,8 @@ function updateStats(){
   $('lvl').textContent=level;$('taps').textContent=moves;$('par').textContent=par;$('best').textContent=best;
   $('hint').textContent=Z.hints?`Hint (${hints})`:'No hints';$('hint').disabled=hints<=0||solved;
   const ds=$('drainStat');ds.hidden=er2<0;
+  $('sub').textContent='Tap pipes to turn them. Run Mojo\'s water from the valve to '+
+    (er3>=0?'Ganja\'s, Zydeco\'s and Beignet\'s drains.':er2>=0?'Ganja\'s and Zydeco\'s drains.':'Ganja\'s drain.');
   if(er2>=0&&flow){const k=drainsFilled(),t=drainCount();$('drains').textContent=k+'/'+t;$('drains').classList.toggle('done',k===t)}
 }
 
