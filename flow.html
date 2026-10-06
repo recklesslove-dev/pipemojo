@@ -46,6 +46,8 @@ h1 span{color:var(--cyan);text-shadow:0 0 18px rgba(0,229,255,.45)}
 .stats div{display:flex;flex-direction:column}
 .stats .k{font-size:.78rem;color:var(--muted);font-weight:500}
 .stats .v{font-size:1.35rem;font-variant-numeric:tabular-nums}
+.stats [hidden]{display:none!important}
+#drains.done{color:var(--zone,#39d353)}
 .board{position:relative;background:var(--panel);border:1px solid rgba(0,229,255,.14);border-radius:14px;
   padding:6px 0 8px;display:flex;justify-content:center;align-items:center;min-height:430px;box-shadow:0 0 40px rgba(91,26,170,.18)}
 #game{display:block;touch-action:manipulation;cursor:pointer}
@@ -107,6 +109,7 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
     <div><span class="k">Taps</span><span class="v" id="taps">0</span></div>
     <div><span class="k">Par</span><span class="v" id="par">0</span></div>
     <div><span class="k">Best level</span><span class="v" id="best">1</span></div>
+    <div id="drainStat" hidden><span class="k">Drains</span><span class="v" id="drains">0/2</span></div>
   </div>
 
   <div class="board" id="board">
@@ -192,7 +195,7 @@ const ZONES=[
    copper:'#7a3fc2',copperDark:'#f5c842',hl:'rgba(230,200,255,.4)',cap:'#5e2c9a',outline:'#0b0710',
    water:'#39d353',waterLight:'#c8ffd0',rgb:'57,211,83',tile:'#160d22',tileWet:'#122614',
    bg:'radial-gradient(ellipse 80% 50% at 15% 10%, rgba(122,63,194,.38) 0%, transparent 60%),radial-gradient(ellipse 70% 45% at 85% 20%, rgba(245,200,66,.16) 0%, transparent 60%),radial-gradient(ellipse 80% 45% at 50% 100%, rgba(57,211,83,.16) 0%, transparent 60%),#07040b',
-   blurb:'Two drains now. Fill both to clear the level.'},
+   blurb:'Zydeco the fly just showed up with a second drain. Fill Ganja\'s and Zydeco\'s to clear the level. The Drains counter shows how many are flowing.'},
   {name:'The Sewer Kingdom',from:175,hints:0,accent:'#a6ff00',locked:0.14,
    copper:'#5f5f4a',copperDark:'#3a3a2c',hl:'rgba(210,210,160,.25)',cap:'#4a4a3a',outline:'#050603',
    water:'#a6ff00',waterLight:'#eaffb0',rgb:'166,255,0',tile:'#10120c',tileWet:'#1a2410',
@@ -210,8 +213,9 @@ function zoneFor(l){
   if(l<PRESTIGE_AT)return Object.assign({},ZONES[Math.min(ZONES.length-1,period(l))]);
   const k=Math.floor((l-PRESTIGE_AT)/25),base=ZONES[k%ZONES.length],stars=1+Math.floor(k/ZONES.length);
   return Object.assign({},base,{
-    name:base.name+' '+'★'.repeat(stars),hints:0,frozen:0.08,locked:0.1,double:true,
-    blurb:'Back around with every twist turned on: frozen, bolted, two drains.'});
+    name:base.name+' '+'★'.repeat(stars),hints:0,frozen:0.08,locked:0.1,double:true,triple:stars>=2,
+    blurb:stars>=2?'Beignet the maggot crawled up a third drain. Ganja, Zydeco and Beignet are all waiting. Fill every one.'
+                  :'Back around with every twist turned on: frozen, bolted, two drains.'});
 }
 const C={red:'#e8281e'};
 let zoneNow=-1,Z=zoneFor(1);
@@ -237,7 +241,7 @@ if(LB)LB.refresh();
 
 /* ---------- character art ---------- */
 const IMG={};
-for(const k of['ganja-front','ganja-side']){const im=new Image();im.src='/assets/'+k+'.png';IMG[k]=im}
+for(const k of['ganja-front','ganja-side','fly-front','fly-side','maggot-front','maggot-side']){const im=new Image();im.src='/assets/'+k+'.png';IMG[k]=im}
 const ready=im=>im&&im.complete&&im.naturalWidth>0;
 
 /* ---------- sound (synthesized, no files) ---------- */
@@ -296,7 +300,7 @@ $('sound').addEventListener('click',()=>{
 document.addEventListener('pointerdown',()=>Snd.unlock(),{once:false,passive:true});
 
 /* ---------- game state ---------- */
-let level=1,n,sol,cur,startCur,sr,er,er2=-1,frozen=[],startFrozen=[],locked=[],bumpTile=-1,bumpAt=0,moves=0,par=0,anims={},solved=false,solvedAt=0,flow=null,path=[],hints=3,hintTile=-1,hintAt=0;
+let level=1,n,sol,cur,startCur,sr,er,er2=-1,er3=-1,frozen=[],startFrozen=[],locked=[],bumpTile=-1,bumpAt=0,moves=0,par=0,anims={},solved=false,solvedAt=0,flow=null,path=[],hints=3,hintTile=-1,hintAt=0;
 let Wd=0,Hd=0,cell=0,gut=0,padTop=0;
 let best=1;
 try{best=parseInt(localStorage.getItem('pm-flow-best')||'1',10)||1}catch(e){}
@@ -313,7 +317,7 @@ let lastObj=null,dirty=false;
 function saveGame(important){ // every move saves on this device; the cloud copy updates on level changes and when you leave
   const a=acct();
   if(nameKey(a&&a.name)!==owner)return; // never save one player's board into another's slot
-  const obj={v:1,level,n,sol,cur,startCur,sr,er,er2,frozen,startFrozen,locked,moves,par,hints,solved,savedAt:Date.now()};
+  const obj={v:1,level,n,sol,cur,startCur,sr,er,er2,er3,frozen,startFrozen,locked,moves,par,hints,solved,savedAt:Date.now()};
   try{localStorage.setItem(slotFor(a),JSON.stringify(obj))}catch(e){}
   lastObj=obj;
   if(!(a&&cloudReady))return;
@@ -335,7 +339,7 @@ function restore(s){
   if(s.solved){level=s.level+1;generate();return}
   level=s.level;applyZone(level);n=s.n;sol=s.sol;cur=s.cur;startCur=s.startCur||s.cur.slice();sr=s.sr;er=s.er;
   const z0=()=>new Array(n*n).fill(0);
-  er2=typeof s.er2==='number'?s.er2:-1;frozen=Array.isArray(s.frozen)?s.frozen:z0();
+  er2=typeof s.er2==='number'?s.er2:-1;er3=typeof s.er3==='number'?s.er3:-1;frozen=Array.isArray(s.frozen)?s.frozen:z0();
   startFrozen=Array.isArray(s.startFrozen)?s.startFrozen:frozen.slice();locked=Array.isArray(s.locked)?s.locked:z0();
   moves=s.moves||0;par=s.par||0;hints=typeof s.hints==='number'?Math.min(s.hints,Z.hints):Z.hints;
   hintTile=-1;solved=false;anims={};path=solutionPath();flow=computeFlow();
@@ -360,14 +364,18 @@ function computeFlow(){
     }
   }
   const e=er*n+n-1,okE=i=>!!(f[i]&&(cur[i]&E));
-  return {f,count,ok:okE(e)&&(er2<0||okE(er2*n+n-1))};
+  return {f,count,ok:okE(e)&&(er2<0||okE(er2*n+n-1))&&(er3<0||okE(er3*n+n-1))};
 }
 
+function drainFull(row){const i=row*n+n-1;return !!(flow&&flow.f[i]&&(cur[i]&E))}
+function drainsFilled(){return [er,er2,er3].filter(r=>r>=0&&drainFull(r)).length}
+const drainCount=()=>[er,er2,er3].filter(r=>r>=0).length;
 function solutionPath(){
   const a=pathTo(er*n+n-1);
   if(er2<0)return a;
-  const b=pathTo(er2*n+n-1),seen=new Set(a);
-  return a.concat(b.filter(i=>!seen.has(i)));
+  const seen=new Set(a);
+  for(const r of [er2,er3]){if(r<0)continue;for(const i of pathTo(r*n+n-1))if(!seen.has(i)){seen.add(i);a.push(i)}}
+  return a;
 }
 function pathTo(t){
   const prev=new Int32Array(n*n).fill(-2),s=sr*n,q=[s];prev[s]=-1;
@@ -387,7 +395,7 @@ function pathTo(t){
 }
 
 function generateTutorial(){
-  n=3;sr=1;er=1;er2=-1;
+  n=3;sr=1;er=1;er2=-1;er3=-1;
   const deco=[N|E,E|S,S|W,W|N,N,S];
   sol=new Array(9).fill(0).map(()=>deco[rnd(deco.length)]);
   for(let x=0;x<3;x++)sol[3+x]=W|E;
@@ -411,8 +419,10 @@ function generateRandom(){
   }
   sr=rnd(n);er=rnd(n);
   sol[sr*n]|=W;sol[er*n+n-1]|=E;
-  er2=-1;
+  er2=-1;er3=-1;
   if(Z.double&&n>=4){do{er2=rnd(n)}while(Math.abs(er2-er)<2);sol[er2*n+n-1]|=E}
+  if(Z.triple&&n>=7){let tries=0;do{er3=rnd(n);tries++}while((Math.abs(er3-er)<2||Math.abs(er3-er2)<2)&&tries<50);
+    if(Math.abs(er3-er)<2||Math.abs(er3-er2)<2)er3=-1;else sol[er3*n+n-1]|=E}
   let tries=0;
   do{cur=sol.map(m=>rotK(m,rnd(4)));tries++}while(computeFlow().ok&&tries<50);
 }
@@ -434,7 +444,7 @@ function addTwists(){
 }
 function generate(){
   applyZone(level);
-  hints=Z.hints;hintTile=-1;bumpTile=-1;er2=-1;
+  hints=Z.hints;hintTile=-1;bumpTile=-1;er2=-1;er3=-1;
   if(level===1)generateTutorial();else generateRandom();
   path=solutionPath();
   addTwists();
@@ -451,6 +461,8 @@ function generate(){
 function updateStats(){
   $('lvl').textContent=level;$('taps').textContent=moves;$('par').textContent=par;$('best').textContent=best;
   $('hint').textContent=Z.hints?`Hint (${hints})`:'No hints';$('hint').disabled=hints<=0||solved;
+  const ds=$('drainStat');ds.hidden=er2<0;
+  if(er2>=0&&flow){const k=drainsFilled(),t=drainCount();$('drains').textContent=k+'/'+t;$('drains').classList.toggle('done',k===t)}
 }
 
 function leaks(){
@@ -463,7 +475,7 @@ function leaks(){
       const nx=x+d.dx,ny=y+d.dy;
       if(nx<0||ny<0||nx>=n||ny>=n){
         if(d.b===W&&x===0&&y===sr)continue;
-        if(d.b===E&&x===n-1&&(y===er||y===er2))continue;
+        if(d.b===E&&x===n-1&&(y===er||y===er2||y===er3))continue;
         out.push([i,d]);continue;
       }
       if(!(cur[ny*n+nx]&d.o))out.push([i,d]);
@@ -544,12 +556,19 @@ function drawValve(x,y,t){
   ctx.fillStyle='#7a1d17';ctx.beginPath();ctx.arc(0,0,cell*0.06,0,Math.PI*2);ctx.fill();
   ctx.restore();
 }
-function drawDrain(x,y){
+function drawDrain(x,y,full,t){
   const r=cell*0.25;
+  if(er2>=0&&!solved){ // two-drain boards: make every drain obvious, and show which are still dry
+    const pulse=0.5+0.5*Math.sin(t/260);
+    ctx.strokeStyle=full?`rgba(${C.rgb},.9)`:`rgba(${C.rgb},${0.35+0.5*pulse})`;
+    ctx.lineWidth=Math.max(2,cell*0.06);
+    ctx.beginPath();ctx.arc(x,y,r+cell*(full?0.08:0.08+0.05*pulse),0,Math.PI*2);ctx.stroke();
+  }
   ctx.fillStyle='#050308';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='#8c8796';ctx.lineWidth=cell*0.045;ctx.stroke();
-  ctx.lineWidth=cell*0.035;
-  for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(x-r*0.65,y+k*r*0.38);ctx.lineTo(x+r*0.65,y+k*r*0.38);ctx.stroke()}
+  ctx.fillStyle=full?C.water:'#8c8796';
+  for(let k=0;k<6;k++){const a=k*Math.PI/3;ctx.beginPath();ctx.arc(x+Math.cos(a)*r*0.5,y+Math.sin(a)*r*0.5,r*0.13,0,Math.PI*2);ctx.fill()}
+  ctx.beginPath();ctx.arc(x,y,r*0.15,0,Math.PI*2);ctx.fill();
 }
 function drawIce(px,py,i){
   ctx.fillStyle='rgba(200,240,255,.42)';ctx.fillRect(px+2,py+2,cell-4,cell-4);
@@ -627,25 +646,31 @@ function draw(t){
   if(solved){ctx.strokeStyle=C.water;ctx.lineWidth=w*0.55;ctx.stroke()}
   ctx.restore();
   const dx=ex+gut*0.5;
-  drawDrain(dx,ey);
-  if(er2>=0){ // second drain (Mardi Gras and up)
-    const ey2=er2*cell+cell/2;
+  drawDrain(dx,ey,drainFull(er),t);
+  // extra drains: Zydeco (the fly) guards the second, Beignet (the maggot) the third
+  const crew=[[er2,'fly'],[er3,'maggot']];
+  for(const [row] of crew){
+    if(row<0)continue;
+    const ey2=row*cell+cell/2;
     ctx.save();ctx.translate(ex,ey2);
     ctx.strokeStyle=C.outline;ctx.lineWidth=w+cell*0.06;ctx.beginPath();ctx.moveTo(-1,0);ctx.lineTo(gut,0);ctx.stroke();
     ctx.strokeStyle=C.copper;ctx.lineWidth=w;ctx.stroke();
-    if(flow.f[er2*n+n-1]&&(cur[er2*n+n-1]&E)){ctx.strokeStyle=C.water;ctx.lineWidth=w*0.55;ctx.stroke()}
+    if(drainFull(row)){ctx.strokeStyle=C.water;ctx.lineWidth=w*0.55;ctx.stroke()}
     ctx.restore();
-    drawDrain(dx,ey2);
+    drawDrain(dx,ey2,drainFull(row),t);
   }
-  // Ganja
+  // Ganja, Zydeco and Beignet stand on their drains, then get washed away when the level clears
   const fit=im=>ready(im)?Math.min(cell*0.95,gut*1.05*im.naturalHeight/im.naturalWidth):cell*0.95;
-  const gh=fit(IMG['ganja-front']);
-  if(!solved){
-    if(ready(IMG['ganja-front']))drawImg(IMG['ganja-front'],dx,ey+cell*0.18,gh,Math.sin(t/320)*0.06,true);
-  }else{
-    const p=Math.min(1,(t-solvedAt)/1100),im=ready(IMG['ganja-side'])?IMG['ganja-side']:IMG['ganja-front'];
-    if(p<1&&ready(im))drawImg(im,dx,ey,gh*(1-p),p*14,false);
-  }
+  const rider=(row,name,phase)=>{
+    const front=IMG[name+'-front'],side=ready(IMG[name+'-side'])?IMG[name+'-side']:front,y=row*cell+cell/2;
+    if(!ready(front))return;
+    const gh=fit(front);
+    if(!solved)drawImg(front,dx,y+cell*0.18,gh,Math.sin(t/320+phase)*0.06,true);
+    else{const p=Math.min(1,(t-solvedAt)/1100);if(p<1&&ready(side))drawImg(side,dx,y,fit(side)*(1-p),p*14,false)}
+  };
+  rider(er,'ganja',0);
+  if(er2>=0)rider(er2,'fly',1.3);
+  if(er3>=0)rider(er3,'maggot',2.6);
   ctx.restore();
 }
 
