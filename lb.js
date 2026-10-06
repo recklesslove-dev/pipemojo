@@ -40,6 +40,7 @@ const CSS=`
 .lb button{font:inherit;font-weight:800;font-size:.95rem;border:0;border-radius:9px;padding:10px 14px;cursor:pointer;background:#00e5ff;color:#000}
 .lb button.alt{background:transparent;color:#00e5ff;padding:4px 0;font-size:.85rem;text-decoration:underline;text-underline-offset:3px}
 .lb button:disabled{opacity:.5}
+.lb .me-line .switch{margin-left:6px;padding:0;font-size:.8rem;color:rgba(255,255,255,.55)}
 .lb .err{color:#ff7a70;font-size:.88rem;font-weight:700;margin:0 0 8px}
 .lb .code{border:1.5px solid #f5c842;border-radius:10px;padding:12px;margin:0 0 12px;background:rgba(245,200,66,.08)}
 .lb .code p{margin:0 0 8px;font-size:.88rem;line-height:1.4;color:rgba(255,255,255,.85)}
@@ -49,7 +50,7 @@ let cssDone=false;
 function addCss(){if(cssDone)return;cssDone=true;const s=document.createElement('style');s.textContent=CSS;document.head.appendChild(s)}
 
 function Board(el,o){
-  this.el=el;this.game=o.game;this.title=o.title||'Top 10';this.unit=o.unit||'';
+  this.el=el;this.game=o.game;this.onSignIn=o.onSignIn||null;this.title=o.title||'Top 10';this.unit=o.unit||'';
   this.top=null;this.pending=0;this.rank=0;this.mode='claim';this.code=null;this.err='';this.busy=false;
   el.addEventListener('click',e=>this.onClick(e));
   el.addEventListener('submit',e=>{e.preventDefault();this.onSubmit(e.target)});
@@ -65,7 +66,8 @@ Board.prototype.render=function(){
   }
   if(this.err)h+='<p class="err">'+esc(this.err)+'</p>';
   if(a){
-    h+='<p class="me-line">Playing as <b>'+esc(a.name)+'</b>'+(this.rank?', ranked #'+this.rank:'')+'</p>';
+    h+='<p class="me-line">Playing as <b>'+esc(a.name)+'</b>'+(this.rank?', ranked #'+this.rank:'')+
+       ' <button type="button" class="alt switch" data-act="switch">Switch player</button></p>';
   }else if(this.mode==='claim'){
     const p=this.pending;
     h+='<form data-form="claim"><label for="lb-name">'+(p?'Post your '+esc(this.unit?this.unit+p:p)+' to the board':'Claim a leaderboard name')+'</label>'+
@@ -126,6 +128,7 @@ Board.prototype.onSubmit=async function(f){
       save({name:d.name,token:d.token});
     }
     this.busy=false;
+    if(this.onSignIn)try{this.onSignIn(load())}catch(e){}
     if(this.pending)await this.submit();else await this.refresh();
   }catch(e){
     this.busy=false;this.err=e.message;this.render();
@@ -138,11 +141,43 @@ Board.prototype.onClick=function(e){
   if(act==='recover'){this.mode='recover';this.err='';this.render()}
   else if(act==='claim'){this.mode='claim';this.err='';this.render()}
   else if(act==='saved'){this.code=null;this.render()}
+  else if(act==='switch'){
+    const a=load();if(!a)return;
+    if(!confirm('Switch off '+a.name+' on this device?\n\nYour name and scores stay on the board. You\'ll need '+a.name+'\'s recovery code to sign back in here.'))return;
+    fetch(API+'/signout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:a.token})}).catch(()=>{});
+    save(null);this.code=null;this.rank=0;this.err='';this.mode='claim';this.render();
+  }
   else if(act==='copy'){
     const c=this.code;
     if(navigator.clipboard&&c)navigator.clipboard.writeText(c).then(()=>{b.textContent='Copied'},()=>{b.textContent='Long-press the code to copy'});
   }
 };
 
-window.PMLB={mount:(el,o)=>{addCss();return new Board(el,o)}};
+/* ---------- cloud saves (progress follows your name across devices) ---------- */
+const queued={},timers={};
+function sendSave(game,keepalive){
+  const a=load(),obj=queued[game];if(!a||!obj)return;
+  delete queued[game];
+  try{
+    fetch(API+'/save',{method:'POST',keepalive:!!keepalive,headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({token:a.token,game,data:JSON.stringify(obj),savedAt:obj.savedAt||Date.now()})}).catch(()=>{});
+  }catch(e){}
+}
+function cloudSave(game,obj){
+  if(!load())return;
+  queued[game]=obj;clearTimeout(timers[game]);
+  timers[game]=setTimeout(()=>sendSave(game),1200);
+}
+async function cloudLoad(game){
+  const a=load();if(!a)return null;
+  try{
+    const d=await call('/load',{token:a.token,game});
+    return d&&d.data?JSON.parse(d.data):null;
+  }catch(e){return undefined} // undefined = couldn't reach, null = nothing saved
+}
+const flush=()=>{for(const g in queued){clearTimeout(timers[g]);sendSave(g,true)}};
+window.addEventListener('pagehide',flush);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush()});
+
+window.PMLB={mount:(el,o)=>{addCss();return new Board(el,o)},account:load,cloudSave,cloudLoad};
 })();

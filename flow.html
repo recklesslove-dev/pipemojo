@@ -191,7 +191,7 @@ const board=document.getElementById('board');
 const $=id=>document.getElementById(id);
 
 /* ---------- leaderboard (ranked by levels cleared) ---------- */
-const LB=window.PMLB?PMLB.mount($('lb'),{game:'flow',title:'Top 10, levels cleared',unit:'Lv '}):null;
+const LB=window.PMLB?PMLB.mount($('lb'),{game:'flow',title:'Top 10, levels cleared',unit:'Lv ',onSignIn:()=>syncAfterSignIn()}):null;
 if(LB)LB.refresh();
 
 /* ---------- character art ---------- */
@@ -260,16 +260,20 @@ try{best=parseInt(localStorage.getItem('pm-flow-best')||'1',10)||1}catch(e){}
 
 /* ---------- autosave ---------- */
 const SAVE='pm-flow-save';
+let cloudReady=false; // only write to the cloud once we've checked what's already there
 function saveGame(){
-  try{localStorage.setItem(SAVE,JSON.stringify({v:1,level,n,sol,cur,startCur,sr,er,moves,par,hints,solved}))}catch(e){}
+  const obj={v:1,level,n,sol,cur,startCur,sr,er,moves,par,hints,solved,savedAt:Date.now()};
+  try{localStorage.setItem(SAVE,JSON.stringify(obj))}catch(e){}
+  if(cloudReady&&window.PMLB)PMLB.cloudSave('flow',obj);
+}
+function validSave(s){
+  return !!(s&&s.v===1&&s.level>=1&&Array.isArray(s.cur)&&s.cur.length===s.n*s.n&&Array.isArray(s.sol)&&s.sol.length===s.n*s.n);
 }
 function loadSave(){
-  try{
-    const s=JSON.parse(localStorage.getItem(SAVE)||'null');
-    if(s&&s.v===1&&s.level>=1&&Array.isArray(s.cur)&&s.cur.length===s.n*s.n&&Array.isArray(s.sol)&&s.sol.length===s.n*s.n)return s;
-  }catch(e){}
+  try{const s=JSON.parse(localStorage.getItem(SAVE)||'null');if(validSave(s))return s}catch(e){}
   return null;
 }
+const saveLevel=s=>s.solved?s.level+1:s.level;
 function restore(s){
   if(s.solved){level=s.level+1;generate();return}
   level=s.level;applyZone(level);n=s.n;sol=s.sol;cur=s.cur;startCur=s.startCur||s.cur.slice();sr=s.sr;er=s.er;
@@ -575,16 +579,50 @@ $('newb').addEventListener('click',generate);
 $('restart').addEventListener('click',()=>{cur=startCur.slice();moves=0;solved=false;anims={};hintTile=-1;flow=computeFlow();$('win').hidden=true;updateStats();saveGame()});
 window.addEventListener('resize',resize);
 
-const saved=loadSave();
-if(saved&&(saved.level>1||saved.moves>0||saved.solved)){
-  restore(saved);
-  $('resumeText').textContent='You were on level '+level+'. Pick up where you left off, or start a fresh climb.';
-  $('cont').textContent='Continue at level '+level;
+/* ---------- startup: local save, then cloud save if signed in ---------- */
+function askResume(text,contLabel,altLabel,onCont,onAlt){
+  $('resumeText').textContent=text;
+  $('cont').textContent=contLabel;$('fresh').textContent=altLabel;
+  $('cont').onclick=()=>{$('resume').hidden=true;onCont&&onCont()};
+  $('fresh').onclick=()=>{$('resume').hidden=true;onAlt&&onAlt()};
   $('resume').hidden=false;
-  $('cont').addEventListener('click',()=>{$('resume').hidden=true});
-  $('fresh').addEventListener('click',()=>{level=1;generate();$('resume').hidden=true});
-}else{
-  generate();
+}
+function offerLocal(s){
+  restore(s);
+  askResume('You were on level '+level+'. Pick up where you left off, or start a fresh climb.',
+    'Continue at level '+level,'New run from level 1',null,()=>{level=1;generate()});
+}
+const local=loadSave();
+if(local&&(local.level>1||local.moves>0||local.solved))offerLocal(local);else generate();
+
+if(window.PMLB&&PMLB.account()){
+  PMLB.cloudLoad('flow').then(cloud=>{
+    if(cloud===undefined)return; // couldn't reach the cloud; stay device-only this visit
+    if(validSave(cloud)&&(!local||(cloud.savedAt||0)>(local.savedAt||0))){
+      restore(cloud);
+      askResume('Picked up your run from your other device: level '+level+'.',
+        'Continue at level '+level,'New run from level 1',null,()=>{level=1;generate()});
+      cloudReady=true;
+    }else{
+      cloudReady=true;
+      if(local)saveGame(); // this device is ahead, so share it
+    }
+  });
+}
+
+function syncAfterSignIn(){
+  cloudReady=false;
+  PMLB.cloudLoad('flow').then(cloud=>{
+    if(cloud===undefined)return;
+    if(validSave(cloud)&&saveLevel(cloud)!==level){
+      const there=saveLevel(cloud),here=level;
+      board.scrollIntoView({behavior:'smooth',block:'center'});
+      askResume('Found your saved run at level '+there+' from another device. This device is on level '+here+'.',
+        'Continue at level '+there,'Keep this run (level '+here+')',
+        ()=>{restore(cloud);cloudReady=true;saveGame()},
+        ()=>{cloudReady=true;saveGame()});
+    }else{cloudReady=true;saveGame()}
+  });
 }
 requestAnimationFrame(loop);
 })();
