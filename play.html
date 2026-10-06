@@ -63,6 +63,22 @@ h1{font-family:var(--title);font-weight:400;font-size:clamp(2.8rem,12vw,4rem);li
 .go{position:absolute;right:16px;top:16px;font-weight:800;font-size:.8rem;padding:5px 10px;border-radius:999px}
 .whack .go{background:var(--red);color:#fff}
 .flow .go{background:var(--cyan);color:#000}
+.top3{list-style:none;margin-top:10px;display:grid;gap:3px;font-size:.85rem;font-weight:700}
+.top3:empty{display:none}
+.top3 li{display:flex;gap:8px;color:rgba(255,255,255,.8)}
+.top3 .r{width:1.2em;color:rgba(255,255,255,.4)}
+.top3 li:first-child .r{color:var(--gold)}
+.top3 .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top3 .s{font-variant-numeric:tabular-nums}
+.whack .top3 .s{color:#ff7a70}
+.flow .top3 .s{color:var(--cyan)}
+.board{display:flex;align-items:center;gap:14px;margin-top:16px;padding:16px 18px;border-radius:14px;
+  background:linear-gradient(90deg,rgba(245,200,66,.14),rgba(245,200,66,.04));border:2px solid rgba(245,200,66,.45)}
+.board > span:first-child{font-size:1.8rem}
+.board b{display:block;font-family:var(--title);font-weight:400;font-size:1.8rem;line-height:1;color:var(--gold)}
+.board small{display:block;color:rgba(255,255,255,.65);font-size:.88rem;margin-top:3px}
+.board .arrow{margin-left:auto;font-size:1.8rem;color:var(--gold)}
+.board:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 footer{text-align:center;color:rgba(255,255,255,.3);font-size:.8rem;margin-top:34px}
 @media (prefers-reduced-motion:reduce){.game{transition:none}}
 </style>
@@ -94,6 +110,7 @@ footer{text-align:center;color:rgba(255,255,255,.3);font-size:.8rem;margin-top:3
         <h2>Whack-a-Pipe</h2>
         <p>Pipes keep rising. Tap them before they cross the red line.</p>
         <span class="best" id="whackBest"></span>
+        <ol class="top3" id="top-whack" aria-label="Whack-a-Pipe top 3"></ol>
       </div>
       <span class="go">Play</span>
     </a>
@@ -110,10 +127,15 @@ footer{text-align:center;color:rgba(255,255,255,.3);font-size:.8rem;margin-top:3
         <h2>Flow</h2>
         <p>Turn the pipes to run water from Mojo's valve to the drain.</p>
         <span class="best" id="flowBest"></span>
+        <ol class="top3" id="top-flow" aria-label="Flow top 3"></ol>
       </div>
       <span class="go">Play</span>
     </a>
   </div>
+
+  <a class="board" href="/leaderboard">
+    <span>🏆</span><span><b>Full leaderboard</b><small>Top 10 in both games. Think you can beat Pipe Mojo?</small></span><span class="arrow">›</span>
+  </a>
 
   <footer>pipemojo.com</footer>
 </main>
@@ -124,6 +146,19 @@ try{
   var f=parseInt(localStorage.getItem('pm-flow-best')||'1',10);
   if(f>1)document.getElementById('flowBest').textContent='Furthest: level '+f;
 }catch(e){}
+(function(){
+  var API='https://pipemojo-leaderboard.fvidaurri.workers.dev';
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function load(game,unit){
+    fetch(API+'/top?game='+game).then(function(r){return r.json()}).then(function(d){
+      var top=(d.top||[]).slice(0,3);if(!top.length)return;
+      document.getElementById('top-'+game).innerHTML=top.map(function(x,i){
+        return '<li><span class="r">'+(i+1)+'</span><span class="n">'+esc(x.name)+'</span><span class="s">'+unit+x.best+'</span></li>';
+      }).join('');
+    }).catch(function(){});
+  }
+  load('whack','');load('flow','Lv ');
+})();
 </script>
 </body>
 </html>

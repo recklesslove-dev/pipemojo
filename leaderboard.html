@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#060606">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Mojo Board">
+<meta name="description" content="Pipe Mojo leaderboard: top Whack-a-Pipe scores and Flow levels. Think you can beat Pipe Mojo?">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>Leaderboard | Pipe Mojo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#060606; --deep:#12100e; --cyan:#00e5ff; --red:#e8281e; --gold:#f5c842; --purple:#5b1aaa;
+  --title:'Pirata One',Georgia,serif; --body:'Nunito',system-ui,-apple-system,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  min-height:100vh;color:#fff;font-family:var(--body);
+  background:
+    radial-gradient(ellipse 90% 45% at 50% 12%, rgba(91,26,170,.34) 0%, transparent 70%),
+    linear-gradient(180deg,#0c0610 0%,var(--black) 55%);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+a{color:inherit;text-decoration:none}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:900px;margin:0 auto;
+  padding:14px max(18px,env(safe-area-inset-left)) 0 max(18px,env(safe-area-inset-right))}
+.top a{font-weight:800;font-size:.9rem;color:rgba(255,255,255,.65)}
+.top .home{display:flex;align-items:center;gap:8px}
+.top .home img{height:36px;width:auto}
+main{max-width:900px;margin:0 auto;padding:0 18px 40px}
+.hero{text-align:center;margin:22px 0 26px}
+.hero img{width:110px;height:auto;filter:drop-shadow(0 0 22px rgba(0,229,255,.25)) drop-shadow(0 0 40px rgba(91,26,170,.5))}
+h1{font-family:var(--title);font-weight:400;font-size:clamp(3rem,13vw,4.4rem);line-height:.95;color:var(--gold);
+  text-shadow:0 0 26px rgba(245,200,66,.3);margin-top:6px}
+.hero p{color:rgba(255,255,255,.65);margin-top:8px}
+.boards{display:grid;gap:18px}
+@media (min-width:720px){.boards{grid-template-columns:1fr 1fr}}
+.card{background:var(--deep);border:2px solid rgba(255,255,255,.08);border-radius:14px;padding:18px}
+.card.whack{border-color:rgba(232,40,30,.45)}
+.card.flow{border-color:rgba(0,229,255,.4)}
+.card header{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
+.card h2{font-family:var(--title);font-weight:400;font-size:2.1rem;line-height:1}
+.whack h2{color:#ff5a4f}
+.flow h2{color:var(--cyan)}
+.card header span{font-size:.8rem;font-weight:700;color:rgba(255,255,255,.5)}
+ol{list-style:none;border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden}
+li{display:flex;align-items:center;gap:12px;padding:9px 14px;font-weight:700;background:rgba(255,255,255,.03)}
+li:nth-child(odd){background:rgba(255,255,255,.06)}
+li .r{width:1.8em;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums}
+li .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+li .s{font-variant-numeric:tabular-nums}
+.whack li .s{color:#ff7a70}
+.flow li .s{color:var(--cyan)}
+li:nth-child(1) .r{color:var(--gold)}
+li:nth-child(1){font-size:1.08rem}
+li.me{box-shadow:inset 3px 0 0 var(--gold);background:rgba(245,200,66,.12)}
+li.msg{color:rgba(255,255,255,.55);font-weight:600}
+.play{display:block;text-align:center;margin-top:14px;font-weight:800;padding:13px;border-radius:10px}
+.whack .play{background:var(--red);color:#fff}
+.flow .play{background:var(--cyan);color:#000}
+.you{text-align:center;color:rgba(255,255,255,.6);margin-top:22px;font-size:.92rem}
+.you b{color:#fff}
+.top a:focus-visible,.play:focus-visible{outline:3px solid var(--gold);outline-offset:3px;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="top">
+  <a href="/" class="home"><img src="/logo.png" alt="">Home</a>
+  <a href="/play">All games ›</a>
+</div>
+<main>
+  <section class="hero">
+    <img src="/mojo.png" alt="Pipe Mojo">
+    <h1>Leaderboard</h1>
+    <p>Think you can beat Pipe Mojo?</p>
+  </section>
+
+  <div class="boards">
+    <section class="card whack" aria-labelledby="wh">
+      <header><h2 id="wh">Whack-a-Pipe</h2><span>Top score</span></header>
+      <ol id="list-whack"><li class="msg">Loading…</li></ol>
+      <a class="play" href="/whack">Play Whack-a-Pipe</a>
+    </section>
+    <section class="card flow" aria-labelledby="fl">
+      <header><h2 id="fl">Flow</h2><span>Levels cleared</span></header>
+      <ol id="list-flow"><li class="msg">Loading…</li></ol>
+      <a class="play" href="/flow">Play Flow</a>
+    </section>
+  </div>
+
+  <p class="you" id="you"></p>
+</main>
+<script>
+(function(){
+const API='https://pipemojo-leaderboard.fvidaurri.workers.dev';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let me='';
+try{const a=JSON.parse(localStorage.getItem('pm-lb')||'null');if(a&&a.name){me=a.name;document.getElementById('you').innerHTML='You\'re playing as <b>'+esc(a.name)+'</b>. Your rows are highlighted.'}}catch(e){}
+const key=s=>String(s).toLowerCase().replace(/ /g,'');
+async function load(game,unit){
+  const ol=document.getElementById('list-'+game);
+  try{
+    const r=await fetch(API+'/top?game='+game);const d=await r.json();
+    const top=d.top||[];
+    if(!top.length){ol.innerHTML='<li class="msg">No scores yet. Be the first.</li>';return}
+    ol.innerHTML=top.map((x,i)=>'<li'+(me&&key(x.name)===key(me)?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+esc(x.name)+'</span><span class="s">'+unit+x.best+'</span></li>').join('');
+  }catch(e){ol.innerHTML='<li class="msg">Couldn\'t load the board. Try again in a bit.</li>'}
+}
+load('whack','');load('flow','Lv ');
+})();
+</script>
+</body>
+</html>
