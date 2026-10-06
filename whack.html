@@ -108,7 +108,7 @@ let W=0,H=0,dpr=1,LANES=4,laneW=0,pipeW=0,dangerY=0;
 let pipes=[],bursts=[],flash=0,vflash=0,score=0,lives=3,best=0,running=false,spawnT=0,last=0,streak=0;
 let heat=0,sinceVoodoo=0; // heat drives the pace; the voodoo pipe cools it down
 let mojoHitAt=-9999,mojoMissAt=-9999,ganjaHitAt=-9999,ganjaMissAt=-9999;
-let quip='',quipAt=-9999;
+let quip='',quipAt=-9999,gpop='',gpopAt=-9999,gpopBad=false;
 try{best=parseInt(localStorage.getItem('pm-whack-best')||'0',10)||0}catch(e){}
 $('best').textContent=best;
 
@@ -276,8 +276,24 @@ function drawCrew(t){
     if(sinceHit<0.28){const p=sinceHit/0.28;ang+=-0.22*Math.sin(p*Math.PI);lift=6*Math.sin(p*Math.PI)}
     if(sinceMiss<0.45){ox=Math.sin(sinceMiss*60)*6*(1-sinceMiss/0.45)}
     drawSprite(IMG['mojo-34'],W*0.15,floor-lift,h,ang,ox);
+    // Mojo's speech bubble
+    const age=(t-quipAt)/1000;
+    if(quip&&age<1.1){
+      const a=age<0.9?1:1-(age-0.9)/0.2;
+      ctx.font='800 14px Nunito, system-ui, sans-serif';
+      const tw=ctx.measureText(quip).width,bw=tw+18,bh=26;
+      let bx=W*0.15+h*0.24,by=Math.max(6,floor-h*0.98);
+      if(bx+bw>W*0.68)bx=W*0.68-bw;
+      ctx.globalAlpha=a;
+      ctx.fillStyle='#f2ece2';
+      bubble(bx,by,bw,bh,8);ctx.fill();
+      ctx.beginPath();ctx.moveTo(bx+10,by+bh);ctx.lineTo(bx-2,by+bh+8);ctx.lineTo(bx+22,by+bh);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#120a1a';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(quip,bx+bw/2,by+bh/2+1);
+      ctx.globalAlpha=1;ctx.textBaseline='alphabetic';
+    }
   }
-  // Ganja: hops on hits, flinches on misses
+  // Ganja: hops on hits, flinches on misses, and pops symbols instead of talking
   if(ready(IMG['ganja-front'])){
     const h=Math.min((dangerY-10)*0.72,96);
     const sinceHit=(t-ganjaHitAt)/1000,sinceMiss=(t-ganjaMissAt)/1000;
@@ -285,20 +301,15 @@ function drawCrew(t){
     if(sinceHit<0.3)hop=12*Math.sin((sinceHit/0.3)*Math.PI);
     if(sinceMiss<0.45){ox=Math.sin(sinceMiss*70)*5*(1-sinceMiss/0.45);ang+=0.12*(1-sinceMiss/0.45)}
     drawSprite(IMG['ganja-front'],W*0.86,floor-hop,h,ang,ox);
-    // speech bubble
-    const age=(t-quipAt)/1000;
-    if(quip&&age<1.1){
-      const a=age<0.9?1:1-(age-0.9)/0.2;
-      ctx.font='800 14px Nunito, system-ui, sans-serif';
-      const tw=ctx.measureText(quip).width,bw=tw+18,bh=26;
-      let bx=W*0.86-bw-h*0.2,by=Math.max(6,floor-h*0.95);
-      if(bx<W*0.3)bx=W*0.3;
+    const age=(t-gpopAt)/1000;
+    if(gpop&&age<0.8){
+      const a=age<0.55?1:1-(age-0.55)/0.25;
+      const px=Math.min(W-24,W*0.86+h*0.22),py=Math.max(18,floor-h-6-hop-age*18);
       ctx.globalAlpha=a;
-      ctx.fillStyle='#f2ece2';
-      bubble(bx,by,bw,bh,8);ctx.fill();
-      ctx.beginPath();ctx.moveTo(bx+bw-10,by+bh);ctx.lineTo(bx+bw+2,by+bh+8);ctx.lineTo(bx+bw-22,by+bh);ctx.closePath();ctx.fill();
-      ctx.fillStyle='#120a1a';ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillText(quip,bx+bw/2,by+bh/2+1);
+      ctx.font='900 '+(20+Math.min(age,0.15)*40)+'px Nunito, system-ui, sans-serif';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.lineWidth=4;ctx.strokeStyle='#120a1a';ctx.strokeText(gpop,px,py);
+      ctx.fillStyle=gpopBad?'#ff5a4f':'#f5c842';ctx.fillText(gpop,px,py);
       ctx.globalAlpha=1;ctx.textBaseline='alphabetic';
     }
   }
@@ -310,9 +321,12 @@ function bubble(x,y,w,h,r){
   ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
   ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
 }
-const HIT_QUIPS=['Yeah mon!','Get it!','Clean!','Mojo!','Whack it!'];
-const MISS_QUIPS=['Aye!','Watch it!','Noooo!','Focus!'];
-function say(list,t){quip=list[Math.floor(Math.random()*list.length)];quipAt=t}
+const HIT_QUIPS=['Yes!','Nice!','Who dat!','Clean!','Get it!'];
+const MISS_QUIPS=['Watch it!','Noooo!','Focus!','Aye!'];
+const STREAK_QUIPS=['On fire!','Ten straight!','Unstoppable!'];
+const pick=list=>list[Math.floor(Math.random()*list.length)];
+function say(list,t){quip=pick(list);quipAt=t}                 // Mojo talks
+function pop(list,t,bad){gpop=pick(list);gpopAt=t;gpopBad=!!bad} // Ganja reacts
 
 function drawBursts(dt){
   for(let i=bursts.length-1;i>=0;i--){
@@ -357,7 +371,7 @@ function frame(t){
 
 function loseLife(t){
   lives--;flash=1;streak=0;drawLives();
-  mojoMissAt=t;ganjaMissAt=t;say(MISS_QUIPS,t);
+  mojoMissAt=t;ganjaMissAt=t;say(MISS_QUIPS,t);pop(['#@%!','?!'],t,true);
   if(lives<=0){gameOver();return}
   Snd.miss();
 }
@@ -378,13 +392,13 @@ function voodooBlast(t){
   heat=Math.floor(heat*0.4);
   spawnT=1.4;vflash=1;
   $('score').textContent=score;
-  mojoHitAt=t;ganjaHitAt=t;quip='Voodoo!';quipAt=t;
+  mojoHitAt=t;ganjaHitAt=t;quip='Voodoo!';quipAt=t;pop(['!!!'],t);
   Snd.voodoo();
 }
 
 function start(){
   Snd.unlock();Snd.start();
-  pipes=[];bursts=[];score=0;lives=3;flash=0;vflash=0;spawnT=0.5;running=true;streak=0;quip='';heat=0;sinceVoodoo=0;
+  pipes=[];bursts=[];score=0;lives=3;flash=0;vflash=0;spawnT=0.5;running=true;streak=0;quip='';gpop='';heat=0;sinceVoodoo=0;
   $('score').textContent=0;drawLives();
   $('start').hidden=true;$('over').hidden=true;
 }
@@ -400,8 +414,11 @@ cv.addEventListener('pointerdown',e=>{
       if(p.voodoo){voodooBlast(t);return}
       pipes.splice(i,1);score++;streak++;heat++;sinceVoodoo++;$('score').textContent=score;burst(p.x,p.y);
       Snd.whack(streak);mojoHitAt=t;ganjaHitAt=t;
-      if(streak%10===0){say(['On fire!','Ten straight!','Unstoppable!'],t);Snd.cheer()}
-      else if(Math.random()<0.18)say(HIT_QUIPS,t);
+      if(streak%10===0){say(STREAK_QUIPS,t);pop(['!!!'],t);Snd.cheer()}
+      else{
+        if(Math.random()<0.18)say(HIT_QUIPS,t);
+        if(Math.random()<0.22)pop(['!','!!'],t);
+      }
       return;
     }
   }
