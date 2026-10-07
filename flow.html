@@ -361,6 +361,7 @@ function loadSave(k){
   return null;
 }
 const saveLevel=s=>s.solved?s.level+1:s.level;
+const trivial=s=>!s||(s.level===1&&!s.moves&&!s.solved); // an untouched level-1 board isn't real progress
 function restore(s){
   if(s.solved){level=s.level+1;generate();return}
   level=s.level;applyZone(level);n=s.n;sol=s.sol;cur=s.cur;startCur=s.startCur||s.cur.slice();sr=s.sr;er=s.er;
@@ -778,14 +779,21 @@ if(local&&(local.level>1||local.moves>0||local.solved))offerLocal(local);else ge
 if(acct()){
   PMLB.cloudLoad('flow').then(cloud=>{
     if(cloud===undefined)return; // couldn't reach the cloud; stay device-only this visit
-    if(validSave(cloud)&&(!local||(cloud.savedAt||0)>(local.savedAt||0))){
+    if(!validSave(cloud)){cloudReady=true;if(local&&!trivial(local))saveGame();return}
+    if(trivial(local)||(saveLevel(cloud)===saveLevel(local)&&(cloud.savedAt||0)>(local.savedAt||0))){
       restore(cloud);
       askResume('Picked up your run from your other device: level '+level+'.',
         'Continue at level '+level,'New run from level 1',null,()=>{level=1;generate()});
       cloudReady=true;
+    }else if(saveLevel(cloud)!==saveLevel(local)){ // two different runs: let the player pick, never overwrite silently
+      const a=saveLevel(cloud),b=saveLevel(local);
+      askResume('Your synced run is at level '+a+'. This device saved level '+b+'.',
+        'Continue at level '+a,'Use level '+b,
+        ()=>{restore(cloud);cloudReady=true;saveGame()},
+        ()=>{cloudReady=true;saveGame()});
     }else{
       cloudReady=true;
-      if(local)saveGame(); // this device is ahead, so share it
+      saveGame(); // same level, this device is newer, so share it
     }
   });
 }
@@ -808,9 +816,21 @@ if(window.PMLB)PMLB.onChange((type,a)=>{
   const mine=loadSave(slotFor(a));
   PMLB.cloudLoad('flow').then(cloud=>{
     const reachable=cloud!==undefined;
-    let best=mine;
-    if(reachable&&validSave(cloud)&&(!best||(cloud.savedAt||0)>(best.savedAt||0)))best=cloud;
+    let best=trivial(mine)?null:mine,conflict=null;
+    if(reachable&&validSave(cloud)&&!trivial(cloud)){
+      if(!best)best=cloud;
+      else if(saveLevel(cloud)===saveLevel(best))best=(cloud.savedAt||0)>(best.savedAt||0)?cloud:best;
+      else conflict=cloud;
+    }
     const go=()=>{if(reachable)cloudReady=true};
+    if(conflict){
+      const a1=saveLevel(conflict),b1=saveLevel(best),local1=best;toBoard();
+      askResume('Your synced run is at level '+a1+'. This device saved level '+b1+'.',
+        'Continue at level '+a1,'Use level '+b1,
+        ()=>{owner=key;go();restore(conflict);saveGame()},
+        ()=>{owner=key;go();restore(local1);saveGame()});
+      return;
+    }
     if(wasGuest&&hadProgress){
       if(best&&saveLevel(best)!==level){
         const there=saveLevel(best),here=level;toBoard();
