@@ -158,7 +158,7 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
   <p class="hint">Each tap turns a pipe a quarter turn. Glowing water means it's flowing through that pipe, and pulsing drips show where it's leaking out. Dead-end pipes don't matter — only the run to the drain.</p>
 
   <section class="lb-slot" id="lb" aria-label="Leaderboard"></section>
-  <p class="ver">Flow v1.10</p>
+  <p class="ver">Flow v1.13</p>
 </main>
 
 <script src="/lb.js"></script>
@@ -177,21 +177,21 @@ const ZONES=[
    water:'#00e5ff',waterLight:'#c8f9ff',rgb:'0,229,255',tile:'#1a1224',tileWet:'#122029',
    bg:'radial-gradient(ellipse 90% 50% at 20% 10%, rgba(91,26,170,.28) 0%, transparent 60%),radial-gradient(ellipse 70% 40% at 90% 90%, rgba(0,229,255,.07) 0%, transparent 60%),#060606',
    blurb:''},
-  {name:'The Bayou',from:25,hints:2,accent:'#8fd14f',
+  {name:'The Bayou',from:25,hints:2,accent:'#8fd14f',vines:0.08,
    copper:'#8a5a36',copperDark:'#5a3a22',hl:'rgba(220,170,120,.3)',cap:'#6e4628',outline:'#0a0c06',
    water:'#7fbf3f',waterLight:'#dcf7b0',rgb:'127,191,63',tile:'#131a11',tileWet:'#1b2a14',
    bg:'radial-gradient(ellipse 90% 55% at 30% 15%, rgba(80,130,40,.30) 0%, transparent 60%),radial-gradient(ellipse 80% 40% at 80% 95%, rgba(140,180,90,.12) 0%, transparent 60%),#070906',
-   blurb:'Rusty iron and swamp water from here on. Hints drop to 2 per level.'},
-  {name:'The Graveyard',from:50,hints:1,accent:'#9fe8ff',
+   blurb:'Swamp vines tie some pipes together. Turn one and its partner turns too. Hints drop to 2 per level.'},
+  {name:'The Graveyard',from:50,hints:1,accent:'#9fe8ff',ghost:0.14,
    copper:'#d8d0c0',copperDark:'#968c7a',hl:'rgba(255,255,255,.5)',cap:'#b8ae9c',outline:'#0a0a10',
    water:'#7fdcff',waterLight:'#effbff',rgb:'127,220,255',tile:'#14141c',tileWet:'#16202c',
    bg:'radial-gradient(ellipse 100% 55% at 50% 0%, rgba(150,170,200,.18) 0%, transparent 65%),radial-gradient(ellipse 70% 40% at 15% 95%, rgba(127,220,255,.08) 0%, transparent 60%),#07070b',
-   blurb:'Bone pipes, ghost water. One hint per level now.'},
-  {name:'Voodoo Gold',from:75,hints:0,accent:'#f5c842',
+   blurb:'Ghost pipes hide in the fog until water reaches the pipe next to them. One hint per level now.'},
+  {name:'Voodoo Gold',from:75,hints:0,accent:'#f5c842',cursed:0.12,
    copper:'#d9a73a',copperDark:'#8f6a1e',hl:'rgba(255,240,190,.5)',cap:'#b8892a',outline:'#0b0710',
    water:'#b45cff',waterLight:'#ecd4ff',rgb:'180,92,255',tile:'#1a1026',tileWet:'#25123c',
    bg:'radial-gradient(ellipse 90% 55% at 25% 10%, rgba(120,40,220,.42) 0%, transparent 62%),radial-gradient(ellipse 70% 45% at 85% 90%, rgba(245,200,66,.12) 0%, transparent 60%),#08040d',
-   blurb:'Gold pipes running potion. No more hints. You\'re on your own.'},
+   blurb:'Pipes stuck with a voodoo pin are cursed: they turn backwards. No more hints. You\'re on your own.'},
   {name:'Hellfire',from:100,hints:0,accent:'#ff6a2a',
    copper:'#2e2729',copperDark:'#150f11',hl:'rgba(255,120,70,.28)',cap:'#3d3234',outline:'#5a1a0c',
    water:'#ff5a1f',waterLight:'#ffd27a',rgb:'255,90,31',tile:'#1b0c0a',tileWet:'#2c120b',
@@ -201,7 +201,7 @@ const ZONES=[
    copper:'#cfe9f5',copperDark:'#8fbcd2',hl:'rgba(255,255,255,.65)',cap:'#a9d6ea',outline:'#06101a',
    water:'#1560d4',waterLight:'#7fc4ff',rgb:'21,96,212',tile:'#0e1822',tileWet:'#132a44',
    bg:'radial-gradient(ellipse 100% 55% at 50% 0%, rgba(170,225,255,.22) 0%, transparent 62%),radial-gradient(ellipse 70% 40% at 80% 95%, rgba(120,190,255,.12) 0%, transparent 60%),#05080d',
-   blurb:'Iced-over fittings take an extra tap to thaw before they\'ll turn.'},
+   blurb:'Ice blocks the flow. Water backs up against a frozen pipe until you tap to melt it, then it rushes on through.'},
   {name:'Mardi Gras',from:150,hints:0,accent:'#39d353',double:true,
    copper:'#7a3fc2',copperDark:'#f5c842',hl:'rgba(230,200,255,.4)',cap:'#5e2c9a',outline:'#0b0710',
    water:'#39d353',waterLight:'#c8ffd0',rgb:'57,211,83',tile:'#160d22',tileWet:'#122614',
@@ -286,6 +286,7 @@ const Snd={
   },
   clunk(){this.tone(170,0.1,'square',0.07,85);this.tone(95,0.12,'sine',0.25,60);this.noise(0.05,2400,900,0.12)},
   bloop(k){const f=260+Math.min(k,14)*35;this.tone(f,0.14,'sine',0.2,f*2.1)},
+  splash(){this.noise(0.45,3000,500,0.22,0.05,0.8);this.tone(520,0.25,'sine',0.1,1100,0.05)},
   thud(){this.tone(90,0.12,'square',0.1,60);this.noise(0.05,600,300,0.12)},
   crack(){this.noise(0.12,5000,2200,0.22,0,2);this.tone(1800,0.06,'triangle',0.08,900);this.noise(0.18,2600,900,0.12,0.05,1.5)},
   hint(){this.tone(880,0.14,'triangle',0.14);this.tone(1320,0.22,'triangle',0.11,null,0.11)},
@@ -328,6 +329,7 @@ document.addEventListener('pointerdown',()=>Snd.unlock(),{once:false,passive:tru
 })();
 
 /* ---------- game state ---------- */
+let meltAt={},vine=[],cursed=[],ghost=[],seen=[];
 let level=1,n,sol,cur,startCur,sr,er,er2=-1,er3=-1,frozen=[],startFrozen=[],locked=[],bumpTile=-1,bumpAt=0,moves=0,par=0,anims={},solved=false,solvedAt=0,flow=null,path=[],hints=3,hintTile=-1,hintAt=0;
 let Wd=0,Hd=0,cell=0,gut=0,padTop=0;
 let best=1;
@@ -345,7 +347,7 @@ let lastObj=null,dirty=false;
 function saveGame(important){ // every move saves on this device; the cloud copy updates on level changes and when you leave
   const a=acct();
   if(nameKey(a&&a.name)!==owner)return; // never save one player's board into another's slot
-  const obj={v:1,level,n,sol,cur,startCur,sr,er,er2,er3,frozen,startFrozen,locked,moves,par,hints,solved,savedAt:Date.now()};
+  const obj={v:1,level,n,sol,cur,startCur,sr,er,er2,er3,frozen,startFrozen,locked,vine,cursed,ghost,seen,moves,par,hints,solved,savedAt:Date.now()};
   try{localStorage.setItem(slotFor(a),JSON.stringify(obj))}catch(e){}
   lastObj=obj;
   if(!(a&&cloudReady))return;
@@ -370,15 +372,17 @@ function restore(s){
   const z0=()=>new Array(n*n).fill(0);
   er2=typeof s.er2==='number'?s.er2:-1;er3=typeof s.er3==='number'?s.er3:-1;frozen=Array.isArray(s.frozen)?s.frozen:z0();
   startFrozen=Array.isArray(s.startFrozen)?s.startFrozen:frozen.slice();locked=Array.isArray(s.locked)?s.locked:z0();
+  vine=Array.isArray(s.vine)?s.vine:new Array(n*n).fill(-1);cursed=Array.isArray(s.cursed)?s.cursed:z0();
+  ghost=Array.isArray(s.ghost)?s.ghost:z0();seen=Array.isArray(s.seen)?s.seen:z0();
   moves=s.moves||0;par=s.par||0;hints=typeof s.hints==='number'?Math.min(s.hints,Z.hints):Z.hints;
   hintTile=-1;solved=false;anims={};path=solutionPath();flow=computeFlow();
   $('win').hidden=true;updateStats();resize();
 }
 
 function computeFlow(){
-  const f=new Uint8Array(n*n);
+  const f=new Uint8Array(n*n),iceHit=new Uint8Array(n*n);
   const s=sr*n;let count=0;
-  if(cur[s]&W){
+  if(cur[s]&W&&!frozen[s]){
     const q=[s];f[s]=1;count=1;
     while(q.length){
       const i=q.shift(),x=i%n,y=(i/n)|0;
@@ -387,13 +391,15 @@ function computeFlow(){
         const nx=x+d.dx,ny=y+d.dy;
         if(nx<0||ny<0||nx>=n||ny>=n)continue;
         const j=ny*n+nx;
+        if(frozen[j]){iceHit[j]=1;continue} // ice stops the water until it's melted
         if(f[j]||!(cur[j]&d.o))continue;
         f[j]=1;count++;q.push(j);
       }
     }
   }
   const e=er*n+n-1,okE=i=>!!(f[i]&&(cur[i]&E));
-  return {f,count,ok:okE(e)&&(er2<0||okE(er2*n+n-1))&&(er3<0||okE(er3*n+n-1))};
+  if(frozen[s]&&(cur[s]&W))iceHit[s]=1;
+  return {f,iceHit,count,ok:okE(e)&&(er2<0||okE(er2*n+n-1))&&(er3<0||okE(er3*n+n-1))};
 }
 
 function drainFull(row){const i=row*n+n-1;return !!(flow&&flow.f[i]&&(cur[i]&E))}
@@ -424,6 +430,7 @@ function pathTo(t){
 }
 
 function generateTutorial(){
+  vine=new Array(9).fill(-1);cursed=new Array(9).fill(0);ghost=new Array(9).fill(0);seen=new Array(9).fill(0);
   n=3;sr=1;er=1;er2=-1;er3=-1;
   const deco=[N|E,E|S,S|W,W|N,N,S];
   sol=new Array(9).fill(0).map(()=>deco[rnd(deco.length)]);
@@ -471,23 +478,60 @@ function addTwists(){
     for(const i of a.concat(b))frozen[i]=1;
   }
 }
+const kFor=(i,m)=>{for(let k=0;k<4;k++)if(rotK(m,cursed[i]?3*k:k)===sol[i])return k;return 0}; // taps a piece needs
+function addRelaxedTwists(){
+  vine=new Array(n*n).fill(-1);cursed=new Array(n*n).fill(0);ghost=new Array(n*n).fill(0);seen=new Array(n*n).fill(0);
+  const free=i=>!locked[i]&&!frozen[i];
+  if(Z.vines){ // swamp vines: two neighbours turn together, so their needed turns are matched to stay solvable
+    const want=Math.round(n*n*Z.vines),order=[...Array(n*n).keys()].sort(()=>Math.random()-0.5);let made=0;
+    for(const a of order){
+      if(made>=want)break;
+      if(vine[a]>=0||!free(a))continue;
+      const x=a%n,y=(a/n)|0,nb=[];
+      if(x+1<n)nb.push(a+1);if(y+1<n)nb.push(a+n);
+      const b=nb.filter(j=>vine[j]<0&&free(j))[rnd(2)]??nb.find(j=>vine[j]<0&&free(j));
+      if(b===undefined)continue;
+      const ka=kFor(a,cur[a]);if(!ka)continue;
+      cur[b]=rotK(sol[b],(4-ka)%4);vine[a]=b;vine[b]=a;made++;
+    }
+  }
+  if(Z.cursed){ // cursed pins: these turn counter-clockwise
+    const pool=[...Array(n*n).keys()].filter(i=>!locked[i]&&vine[i]<0);
+    for(let k=Math.round(n*n*Z.cursed);k>0&&pool.length;k--)cursed[pool.splice(rnd(pool.length),1)[0]]=1;
+  }
+  if(Z.ghost){ // ghost pipes: hidden in the fog until water gets close
+    const pool=[...Array(n*n).keys()].filter(i=>i!==sr*n&&i!==er*n+n-1);
+    for(let k=Math.round(n*n*Z.ghost);k>0&&pool.length;k--)ghost[pool.splice(rnd(pool.length),1)[0]]=1;
+  }
+}
+function revealGhosts(){
+  if(!flow||!ghost.length)return;
+  for(let i=0;i<n*n;i++){if(!flow.f[i])continue;const x=i%n,y=(i/n)|0;
+    seen[i]=1;if(x>0)seen[i-1]=1;if(x<n-1)seen[i+1]=1;if(y>0)seen[i-n]=1;if(y<n-1)seen[i+n]=1}
+}
 function generate(){
   applyZone(level);
   hints=Z.hints;hintTile=-1;bumpTile=-1;er2=-1;er3=-1;
   if(level===1)generateTutorial();else generateRandom();
   path=solutionPath();
   addTwists();
-  if(computeFlow().ok){const i=path.find(k=>!locked[k]);if(i!==undefined)cur[i]=rot(cur[i])} // never start solved
+  addRelaxedTwists();
+  if(computeFlow().ok){const i=path.find(k=>!locked[k]&&vine[k]<0);if(i!==undefined)cur[i]=rot(cur[i])} // never start solved
   startCur=cur.slice();startFrozen=frozen.slice();
-  par=0;
-  for(const i of path){if(locked[i])continue;for(let k=0;k<4;k++){if(rotK(cur[i],k)===sol[i]){par+=k+(k&&frozen[i]?1:0);break}}}
-  moves=0;solved=false;anims={};
+  par=0;const counted=new Set();
+  for(const i of path){
+    if(locked[i]||counted.has(i))continue;
+    counted.add(i);if(vine[i]>=0)counted.add(vine[i]); // vined pairs turn together, so one set of taps covers both
+    par+=kFor(i,cur[i])+(frozen[i]?1:0)+(vine[i]>=0&&frozen[vine[i]]?1:0);
+  }
+  moves=0;solved=false;anims={};meltAt={};
   flow=computeFlow();
   $('win').hidden=true;
   updateStats();resize();saveGame();
 }
 
 function updateStats(){
+  revealGhosts();
   $('lvl').textContent=level;$('taps').textContent=moves;$('par').textContent=par;$('best').textContent=best;
   $('hint').textContent=Z.hints?`Hint (${hints})`:'No hints';$('hint').disabled=hints<=0||solved;
   const ds=$('drainStat');ds.hidden=er2<0;
@@ -509,6 +553,7 @@ function leaks(){
         if(d.b===E&&x===n-1&&(y===er||y===er2||y===er3))continue;
         out.push([i,d]);continue;
       }
+      if(frozen[ny*n+nx])continue;
       if(!(cur[ny*n+nx]&d.o))out.push([i,d]);
     }
   }
@@ -609,6 +654,14 @@ function drawIce(px,py,i){
   ctx.moveTo(px+cell*0.45,py+cell*0.45);ctx.lineTo(px+cell*0.75,py+cell*(0.35+s*0.04));ctx.stroke();
   ctx.fillStyle='rgba(255,255,255,.55)';ctx.fillRect(px+cell*0.12,py+cell*0.1,cell*0.22,cell*0.06);
 }
+function drawPin(px,py){ // voodoo pin: this pipe is cursed and turns backwards
+  const x1=px+cell*0.7,y1=py+cell*0.3,x2=px+cell*0.88,y2=py+cell*0.12;
+  ctx.strokeStyle='#d9d4cc';ctx.lineWidth=Math.max(1.5,cell*0.035);ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.lineCap='butt';
+  ctx.fillStyle='#120a1a';ctx.beginPath();ctx.arc(x2,y2,cell*0.085,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#e8281e';ctx.beginPath();ctx.arc(x2,y2,cell*0.065,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.6)';ctx.beginPath();ctx.arc(x2-cell*0.02,y2-cell*0.02,cell*0.02,0,Math.PI*2);ctx.fill();
+}
 function drawBolts(px,py){
   const r=Math.max(2.5,cell*0.07),o=cell*0.15;
   for(const [bx,by] of [[o,o],[cell-o,o],[o,cell-o],[cell-o,cell-o]]){
@@ -631,11 +684,41 @@ function draw(t){
     const i=y*n+x,px=gut+x*cell,py=y*cell;
     ctx.fillStyle=flow.f[i]?C.tileWet:C.tile;
     ctx.fillRect(px+1.5,py+1.5,cell-3,cell-3);
-    let a=0;const an=anims[i];
-    if(an){const p=Math.min(1,(t-an)/140);a=-Math.PI/2*(1-(1-(1-p)*(1-p)));if(p>=1)delete anims[i]}
-    drawPipe(px+cell/2,py+cell/2,cur[i],a,flow.f[i],t);
+    let a=0;const an=anims[i];const dir=an<0?-1:1;
+    if(an){const p=Math.min(1,(t-Math.abs(an))/140);a=-dir*Math.PI/2*(1-(1-(1-p)*(1-p)));if(p>=1)delete anims[i]}
+    const hidden=ghost[i]&&!seen[i]&&!solved;
+    if(hidden){ // ghost pipe: just a faint shape in the fog
+      ctx.globalAlpha=0.13;drawPipe(px+cell/2,py+cell/2,cur[i],a,false,t);ctx.globalAlpha=1;
+      ctx.fillStyle='rgba(200,210,230,.07)';ctx.fillRect(px+1.5,py+1.5,cell-3,cell-3);
+    }else{
+      drawPipe(px+cell/2,py+cell/2,cur[i],a,flow.f[i],t);ctx.globalAlpha=1;
+    }
+    if(cursed[i]&&!hidden)drawPin(px,py);
     if(locked[i])drawBolts(px,py);
-    if(frozen[i])drawIce(px,py,i);
+    if(frozen[i]){
+      drawIce(px,py,i);
+      if(flow.iceHit&&flow.iceHit[i]&&!solved){
+        const pulse=0.5+0.5*Math.sin(t/200);
+        ctx.strokeStyle=`rgba(${C.rgb},${0.45+0.45*pulse})`;ctx.lineWidth=Math.max(2.5,cell*0.07);
+        ctx.strokeRect(px+3,py+3,cell-6,cell-6);
+      }
+    }
+    const ma=meltAt[i];
+    if(ma){const p=(t-ma)/450;if(p>=1)delete meltAt[i];else{
+      ctx.strokeStyle=`rgba(255,255,255,${0.8*(1-p)})`;ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(px+cell/2,py+cell/2,cell*(0.2+0.5*p),0,Math.PI*2);ctx.stroke()}}
+  }
+  for(let i=0;i<n*n;i++){ // swamp vines tying pairs together
+    const j=vine[i];if(j<=i)continue;
+    const ax=gut+(i%n)*cell+cell/2,ay=((i/n)|0)*cell+cell/2,bx=gut+(j%n)*cell+cell/2,by=((j/n)|0)*cell+cell/2;
+    const mx=(ax+bx)/2+(by-ay)*0.18,my=(ay+by)/2+(ax-bx)*0.18;
+    ctx.strokeStyle='#2f6b1f';ctx.lineWidth=Math.max(3,cell*0.09);ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(ax,ay);ctx.quadraticCurveTo(mx,my,bx,by);ctx.stroke();
+    ctx.strokeStyle='#6fbf3f';ctx.lineWidth=Math.max(1.5,cell*0.04);ctx.stroke();
+    ctx.fillStyle='#6fbf3f';
+    for(const q of [0.3,0.7]){const lx=(1-q)*(1-q)*ax+2*(1-q)*q*mx+q*q*bx,ly=(1-q)*(1-q)*ay+2*(1-q)*q*my+q*q*by;
+      ctx.beginPath();ctx.ellipse(lx,ly,cell*0.09,cell*0.045,q*3,0,Math.PI*2);ctx.fill()}
+    ctx.lineCap='butt';
   }
   if(bumpTile>=0){
     const age=t-bumpAt;
@@ -716,8 +799,15 @@ cv.addEventListener('pointerdown',e=>{
   if(x<0||y<0||x>=n||y>=n)return;
   const i=y*n+x,before=flow.count;
   if(locked[i]){bumpTile=i;bumpAt=performance.now();Snd.thud();return}
-  if(frozen[i]){frozen[i]=0;moves++;updateStats();Snd.crack();saveGame(false);return}
-  cur[i]=rot(cur[i]);anims[i]=performance.now();
+  if(frozen[i]){
+    frozen[i]=0;moves++;meltAt[i]=performance.now();Snd.crack();
+    flow=computeFlow();updateStats();
+    if(flow.ok){win();saveGame();return}
+    if(flow.count>before){Snd.splash();Snd.bloop(flow.count)}
+    saveGame(false);return;
+  }
+  const turn=j=>{const now=performance.now();if(cursed[j]){cur[j]=rotK(cur[j],3);anims[j]=-now}else{cur[j]=rot(cur[j]);anims[j]=now}};
+  turn(i);if(vine[i]>=0)turn(vine[i]);
   moves++;flow=computeFlow();updateStats();
   Snd.clunk();
   if(flow.ok){win();saveGame();return}
@@ -731,8 +821,9 @@ function win(){
   if(level+1>best){best=level+1;try{localStorage.setItem('pm-flow-best',String(best))}catch(e){}}
   updateStats();
   const used=Z.hints-hints;
+  const riders=er3>=0?'Ganja, Zydeco and Beignet are going for a ride.':er2>=0?'Ganja and Zydeco are going for a ride.':'Ganja\'s going for a ride.';
   const note=(moves<=par?' Right on par — clean run.':'')+(used?` Used ${used} hint${used>1?'s':''}.`:'');
-  $('winText').textContent=`Level ${level} cleared in ${moves} taps. Par was ${par}.${note} Ganja's going for a ride.`;
+  $('winText').textContent=`Level ${level} cleared in ${moves} taps. Par was ${par}.${note} ${riders}`;
   if(LB){
     LB.post(level);
     let signedIn=false;try{signedIn=!!localStorage.getItem('pm-lb')}catch(e){}
@@ -754,7 +845,7 @@ $('next').addEventListener('click',()=>{
 });
 $('zoneGo').addEventListener('click',()=>{$('zoneUp').hidden=true});
 $('newb').addEventListener('click',generate);
-$('restart').addEventListener('click',()=>{cur=startCur.slice();frozen=startFrozen.slice();bumpTile=-1;moves=0;solved=false;anims={};hintTile=-1;flow=computeFlow();$('win').hidden=true;updateStats();saveGame(false)});
+$('restart').addEventListener('click',()=>{cur=startCur.slice();frozen=startFrozen.slice();seen=new Array(n*n).fill(0);bumpTile=-1;moves=0;solved=false;anims={};hintTile=-1;flow=computeFlow();$('win').hidden=true;updateStats();saveGame(false)});
 window.addEventListener('resize',resize);
 
 /* ---------- startup: local save, then cloud save if signed in ---------- */
