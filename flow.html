@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Flow | Pipe Mojo</title>
 <meta name="theme-color" content="#060606">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mojo Flow">
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" as="image" href="/assets/ganja-front.png">
@@ -34,6 +38,8 @@ body{margin:0;min-height:100%;color:var(--ink);
 .wrap{max-width:600px;margin:0 auto;padding:12px max(8px,env(safe-area-inset-right,0px)) 28px max(8px,env(safe-area-inset-left,0px))}
 @media (min-width:700px){.wrap{max-width:900px}}
 .toprow{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.topbtns{display:flex;gap:8px}
+.topbtns [hidden]{display:none}
 .back{font-weight:800;font-size:.9rem;color:var(--muted);text-decoration:none;padding:6px 0}
 .sound{background:transparent;border:1.5px solid rgba(0,229,255,.35);color:var(--cyan);
   font-weight:800;font-size:.85rem;padding:6px 12px;border-radius:8px}
@@ -93,7 +99,10 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
 <main class="wrap">
   <div class="toprow">
     <a class="back" href="/play">‹ Games</a>
-    <button class="sound" id="sound" aria-pressed="true">Sound on</button>
+    <div class="topbtns">
+      <button class="sound" id="fs" hidden>Full screen</button>
+      <button class="sound" id="sound" aria-pressed="true">Sound on</button>
+    </div>
   </div>
   <header class="top">
     <img src="/assets/mojo-front.png" alt="" width="638" height="1100">
@@ -298,6 +307,23 @@ $('sound').addEventListener('click',()=>{
   if(Snd.on)Snd.clunk();
 });
 document.addEventListener('pointerdown',()=>Snd.unlock(),{once:false,passive:true});
+
+/* ---------- full screen (iPad, Android, desktop; iPhone Safari doesn't allow it, so the button stays hidden there) ---------- */
+(function(){
+  const el=document.documentElement,b=$('fs');
+  const can=!!(document.fullscreenEnabled||document.webkitFullscreenEnabled);
+  const standalone=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
+  if(!can||standalone)return;
+  const isFs=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+  const sync=()=>{b.textContent=isFs()?'Exit full screen':'Full screen';setTimeout(resize,150)};
+  b.hidden=false;
+  b.addEventListener('click',()=>{
+    if(isFs())(document.exitFullscreen||document.webkitExitFullscreen).call(document);
+    else{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(r&&r.catch)r.catch(()=>{})}
+  });
+  document.addEventListener('fullscreenchange',sync);
+  document.addEventListener('webkitfullscreenchange',sync);
+})();
 
 /* ---------- game state ---------- */
 let level=1,n,sol,cur,startCur,sr,er,er2=-1,er3=-1,frozen=[],startFrozen=[],locked=[],bumpTile=-1,bumpAt=0,moves=0,par=0,anims={},solved=false,solvedAt=0,flow=null,path=[],hints=3,hintTile=-1,hintAt=0;
