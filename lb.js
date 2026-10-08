@@ -34,6 +34,7 @@ const CSS=`
 .lb li .r{width:1.6em;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums}
 .lb li .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lb li .s{font-variant-numeric:tabular-nums;color:#00e5ff}
+.lb .fl{font-size:.78rem;font-weight:800;color:#ffb347;margin-left:4px;white-space:nowrap}
 .lb li.me{background:rgba(0,229,255,.14);box-shadow:inset 3px 0 0 #00e5ff}
 .lb li:first-child .r{color:#f5c842}
 .lb .empty{padding:12px;color:rgba(255,255,255,.55);font-size:.9rem}
@@ -96,7 +97,7 @@ Board.prototype.render=function(){
   else{
     h+='<ol>'+this.top.map((r,i)=>{
       const mine=me&&r.name.toLowerCase().replace(/ /g,'')===me;
-      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+esc(r.name)+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
+      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+esc(r.name)+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
     }).join('')+'</ol>';
   }
   h+='</div>';
@@ -111,8 +112,8 @@ Board.prototype.startRun=function(){ // ticket for this round, so the server can
   this.run=null;const me=this;
   call('/start',{game:this.game}).then(d=>{me.run=d.run}).catch(()=>{});
 };
-Board.prototype.post=function(score){
-  score=Math.floor(score)||0;
+Board.prototype.post=function(score,extra){
+  score=Math.floor(score)||0;this.extra=extra||null;
   this.pendingRun=this.run;this.run=null;
   if(score<1){this.refresh();return}
   this.pending=score;this.err='';
@@ -121,7 +122,7 @@ Board.prototype.post=function(score){
 Board.prototype.submit=async function(){
   const a=load();if(!a||!this.pending){this.refresh();return}
   try{
-    const d=await call('/score',{token:a.token,game:this.game,score:this.pending,run:this.pendingRun});
+    const d=await call('/score',Object.assign({token:a.token,game:this.game,score:this.pending,run:this.pendingRun},this.extra||{}));
     this.pending=0;this.pendingRun=null;this.rank=d.rank||0;this.top=d.top||[];this.err='';
   }catch(e){
     if(e.status===401){save(null);this.mode='recover';}

@@ -62,6 +62,7 @@ li:nth-child(1) .r{color:var(--gold)}
 li:nth-child(1){font-size:1.08rem}
 li.me{box-shadow:inset 3px 0 0 var(--gold);background:rgba(245,200,66,.12)}
 li.msg{color:rgba(255,255,255,.55);font-weight:600}
+.fl{font-size:.8rem;font-weight:800;color:#ffb347;margin-left:4px;white-space:nowrap}
 .play{display:block;text-align:center;margin-top:14px;font-weight:800;padding:13px;border-radius:10px}
 .whack .play{background:var(--red);color:#fff}
 .flow .play{background:var(--cyan);color:#000}
@@ -120,6 +121,8 @@ li.msg{color:rgba(255,255,255,.55);font-weight:600}
       <p>Not right now. You can tap <b>Switch player</b> and claim a new name, but your old scores stay under the old one.</p></details>
     <details><summary>Why didn't my score post?</summary>
       <p>You need to be signed in to a name, and you need a connection. Whack-a-Pipe scores are also checked against how long the round actually lasted, so fake scores get turned away.</p></details>
+    <details><summary>What's the 🔥 next to a name?</summary>
+      <p>That's the player's best Flow par streak: the most levels in a row they've cleared on par or better. It's their best ever, so it stays even after a streak ends.</p></details>
     <details><summary>Does Flow save my progress?</summary>
       <p>Yes. Every move saves on your device. If you're signed in, your run also saves to your name each time you clear a level or leave the game, so you can pick it up on another device.</p></details>
   </section>
@@ -137,7 +140,7 @@ async function load(game,unit){
     const r=await fetch(API+'/top?game='+game);const d=await r.json();
     const top=d.top||[];
     if(!top.length){ol.innerHTML='<li class="msg">No scores yet. Be the first.</li>';return}
-    ol.innerHTML=top.map((x,i)=>'<li'+(me&&key(x.name)===key(me)?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+esc(x.name)+'</span><span class="s">'+unit+x.best+'</span></li>').join('');
+    ol.innerHTML=top.map((x,i)=>'<li'+(me&&key(x.name)===key(me)?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+esc(x.name)+(x.streak>=2?' <span class="fl" title="Best par streak">🔥'+x.streak+'</span>':'')+'</span><span class="s">'+unit+x.best+'</span></li>').join('');
   }catch(e){ol.innerHTML='<li class="msg">Couldn\'t load the board. Try again in a bit.</li>'}
 }
 load('whack','');load('flow','Lv ');

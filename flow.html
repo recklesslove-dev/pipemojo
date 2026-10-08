@@ -175,7 +175,7 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
   <p class="hint">Each tap turns a pipe a quarter turn. Glowing water means it's flowing through that pipe, and pulsing drips show where it's leaking out. Dead-end pipes don't matter — only the run to the drain.</p>
 
   <section class="lb-slot" id="lb" aria-label="Leaderboard"></section>
-  <p class="ver">Flow v1.14</p>
+  <p class="ver">Flow v1.15</p>
 </main>
 
 <script src="/lb.js"></script>
@@ -359,7 +359,7 @@ document.addEventListener('pointerdown',()=>Snd.unlock(),{once:false,passive:tru
 })();
 
 /* ---------- game state ---------- */
-let meltAt={},vine=[],cursed=[],ghost=[],seen=[],parStreak=0;
+let meltAt={},vine=[],cursed=[],ghost=[],seen=[],parStreak=0,bestStreak=0;
 let level=1,n,sol,cur,startCur,sr,er,er2=-1,er3=-1,frozen=[],startFrozen=[],locked=[],bumpTile=-1,bumpAt=0,moves=0,par=0,anims={},solved=false,solvedAt=0,flow=null,path=[],hints=3,hintTile=-1,hintAt=0;
 let Wd=0,Hd=0,cell=0,gut=0,padTop=0;
 let best=1;
@@ -377,7 +377,7 @@ let lastObj=null,dirty=false;
 function saveGame(important){ // every move saves on this device; the cloud copy updates on level changes and when you leave
   const a=acct();
   if(nameKey(a&&a.name)!==owner)return; // never save one player's board into another's slot
-  const obj={v:1,level,n,sol,cur,startCur,sr,er,er2,er3,frozen,startFrozen,locked,vine,cursed,ghost,seen,parStreak,moves,par,hints,solved,savedAt:Date.now()};
+  const obj={v:1,level,n,sol,cur,startCur,sr,er,er2,er3,frozen,startFrozen,locked,vine,cursed,ghost,seen,parStreak,bestStreak,moves,par,hints,solved,savedAt:Date.now()};
   try{localStorage.setItem(slotFor(a),JSON.stringify(obj))}catch(e){}
   lastObj=obj;
   if(!(a&&cloudReady))return;
@@ -403,7 +403,7 @@ function restore(s){
   er2=typeof s.er2==='number'?s.er2:-1;er3=typeof s.er3==='number'?s.er3:-1;frozen=Array.isArray(s.frozen)?s.frozen:z0();
   startFrozen=Array.isArray(s.startFrozen)?s.startFrozen:frozen.slice();locked=Array.isArray(s.locked)?s.locked:z0();
   vine=Array.isArray(s.vine)?s.vine:new Array(n*n).fill(-1);cursed=Array.isArray(s.cursed)?s.cursed:z0();
-  ghost=Array.isArray(s.ghost)?s.ghost:z0();seen=Array.isArray(s.seen)?s.seen:z0();parStreak=s.parStreak||0;
+  ghost=Array.isArray(s.ghost)?s.ghost:z0();seen=Array.isArray(s.seen)?s.seen:z0();parStreak=s.parStreak||0;bestStreak=Math.max(s.bestStreak||0,parStreak);
   moves=s.moves||0;par=s.par||0;hints=typeof s.hints==='number'?Math.min(s.hints,Z.hints):Z.hints;
   hintTile=-1;solved=false;anims={};path=solutionPath();flow=computeFlow();
   $('win').hidden=true;updateStats();resize();
@@ -862,11 +862,12 @@ function win(){
   const used=Z.hints-hints;
   const riders=er3>=0?'Ganja, Zydeco and Beignet are going for a ride.':er2>=0?'Ganja and Zydeco are going for a ride.':'Ganja\'s going for a ride.';
   if(moves<=par){parStreak++;celebrate(moves<par)}else parStreak=0;
+  bestStreak=Math.max(bestStreak,parStreak);
   updateStats();
   const note=(moves<par?` ${par-moves} under par!`:moves===par?' Right on par — clean run.':'')+(parStreak>=2?` Par streak: ${parStreak}.`:'')+(used?` Used ${used} hint${used>1?'s':''}.`:'');
   $('winText').textContent=`Level ${level} cleared in ${moves} taps. Par was ${par}.${note} ${riders}`;
   if(LB){
-    LB.post(level);
+    LB.post(level,{streak:bestStreak});
     let signedIn=false;try{signedIn=!!localStorage.getItem('pm-lb')}catch(e){}
     $('boardNote').textContent=signedIn?'Posted to the leaderboard below.':'Scroll down to put your name on the leaderboard.';
   }
