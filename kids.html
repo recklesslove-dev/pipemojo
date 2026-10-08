@@ -194,10 +194,27 @@ const CREW=['ganja','fly','maggot'];
 const STICKER_ART=['ganja','fly','maggot','mojo'];
 
 /* ---------- voice ----------
-   For now the iPad's built-in voice reads these lines.
-   Later: record each line as an mp3 named after its key (for example kids/voice/elbow.mp3),
-   upload the folder, and set RECORDED=true. The game plays the recordings instead. */
-const RECORDED=false;
+   Real recorded clips live in /assets/ (count-, cheer-, squeal-, instr- files). Any line without a clip yet falls back to the iPad's voice.
+   To add more: drop the mp3 in /assets/ and add its name below. */
+const CLIP_BASE='/assets/';
+const CLIPS={
+  yay:['cheer-yay','cheer-you-did-it'], sticker:['cheer-sticker'],
+  hi:['instr-pick-game'], popStart:['instr-pop-bubbles'], flowStart:['instr-turn-pipes'], flowWin:['instr-water-ganja'],
+  elbow:['pipe-elbow'], straight:['pipe-straight'], tee:['pipe-tee']
+};
+for(let i=1;i<=20;i++)CLIPS['n'+i]=['count-'+String(i).padStart(2,'0')];
+const SQUEALS=['squeal-woohoo','squeal-giggle','squeal-wheee'];
+const BUF={};let clipsLoading=false,voiceSrc=[];
+function loadClips(){
+  if(clipsLoading||!Snd.ac)return;clipsLoading=true;
+  const names=new Set(SQUEALS);for(const k in CLIPS)CLIPS[k].forEach(n=>names.add(n));
+  names.forEach(n=>fetch(CLIP_BASE+n+'.mp3').then(r=>r.ok?r.arrayBuffer():Promise.reject())
+    .then(a=>new Promise((res,rej)=>Snd.ac.decodeAudioData(a,res,rej))).then(b=>{BUF[n]=b}).catch(()=>{}));
+}
+function playBuf(name,at,vol){
+  const c=Snd.ac,src=c.createBufferSource(),g=c.createGain();src.buffer=BUF[name];g.gain.value=vol||1;
+  src.connect(g);g.connect(Snd.m);src.start(at);return src;
+}
 const LINES={
   hi:'Pick a game!',
   popStart:'Pop the bubbles!',
@@ -218,14 +235,16 @@ function chooseVoice(){
   voice=en.find(v=>/en-US/i.test(v.lang))||en[0]||null;
 }
 if(window.speechSynthesis){chooseVoice();speechSynthesis.onvoiceschanged=chooseVoice}
-let audioEl=null;
 function say(key,cut){
-  const text=LINES[key];if(!text)return;
-  if(RECORDED){
-    if(cut&&audioEl)audioEl.pause();
-    audioEl=new Audio('kids/voice/'+key+'.mp3');audioEl.play().catch(()=>speak(text,cut));return;
+  const text=LINES[key];
+  const clip=CLIPS[key];
+  if(clip&&Snd.ac&&clip.every(n=>BUF[n])){ // real recording
+    if(cut){voiceSrc.forEach(x=>{try{x.stop()}catch(e){}});voiceSrc=[];if(window.speechSynthesis)speechSynthesis.cancel()}
+    let t=Snd.ac.currentTime+.02;
+    for(const n of clip){voiceSrc.push(playBuf(n,t,1.6));t+=BUF[n].duration+.05}
+    return;
   }
-  speak(text,cut);
+  if(text)speak(text,cut); // no clip yet: iPad voice
 }
 function speak(text,cut){
   if(!window.speechSynthesis)return;
@@ -268,6 +287,8 @@ const Snd={
   woohoo(hi){const b=hi?640:520;this.slideV(b*1.25,b,.2,0,'triangle',.22);this.slideV(b*1.1,b*2.2,.42,.22,'triangle',.24)},
   buzz(){this.slideV(260,330,.35,0,'sawtooth',.05)},
   squeal(who){
+    const real=SQUEALS.filter(n=>BUF[n]);
+    if(real.length&&this.ac){playBuf(pick(real),this.ac.currentTime+.01,1.5);if(who==='fly')this.buzz();return}
     const hi=who==='maggot';
     Math.random()<.5?this.wee(hi):this.woohoo(hi);
     if(who==='fly')this.buzz();
@@ -280,7 +301,7 @@ const Snd={
 };
 let unlocked=false;
 function unlockAll(){
-  Snd.unlock();
+  Snd.unlock();loadClips();
   if(!unlocked&&window.speechSynthesis){unlocked=true;const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}
 }
 document.addEventListener('pointerdown',unlockAll,{passive:true});
@@ -581,7 +602,7 @@ function confetti(){
 }
 
 drawShelf();
-window.__kids={Pop,Flow,show,celebrate};
+window.__kids={Pop,Flow,show,celebrate,BUF};
 })();
 </script>
 </body>
