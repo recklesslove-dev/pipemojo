@@ -256,6 +256,22 @@ const Snd={
     g.gain.value=v||.3;s.connect(bp);bp.connect(g);g.connect(this.m);s.start(t);
   },
   pop(k){const f=380+Math.min(k,20)*28;this.tone(f,.12,'sine',.35,f*2.4);this.noise(.06,3000,.25)},
+  // cute "wheee" / "woohoo" squeals for the characters (made in code, no voice)
+  slideV(f1,f2,d,delay,type,v){
+    if(!this.ac)return;const c=this.ac,t=c.currentTime+(delay||0),o=c.createOscillator(),g=c.createGain(),l=c.createOscillator(),lg=c.createGain();
+    o.type=type||'triangle';o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+d);
+    l.frequency.value=11;lg.gain.value=f1*.05;l.connect(lg);lg.connect(o.frequency); // a little wobble so it sounds alive
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v||.22,t+.04);g.gain.setValueAtTime(v||.22,t+d*.7);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g);g.connect(this.m);o.start(t);l.start(t);o.stop(t+d+.05);l.stop(t+d+.05);
+  },
+  wee(hi){const b=hi?720:560;this.slideV(b,b*2.6,.55,0,'triangle',.24)},
+  woohoo(hi){const b=hi?640:520;this.slideV(b*1.25,b,.2,0,'triangle',.22);this.slideV(b*1.1,b*2.2,.42,.22,'triangle',.24)},
+  buzz(){this.slideV(260,330,.35,0,'sawtooth',.05)},
+  squeal(who){
+    const hi=who==='maggot';
+    Math.random()<.5?this.wee(hi):this.woohoo(hi);
+    if(who==='fly')this.buzz();
+  },
   giggle(){[0,1,2,3].forEach(i=>this.tone(900+(i%2)*260,.09,'triangle',.12,null,.12+i*.09))},
   clunk(){this.tone(220,.09,'square',.06,110);this.tone(120,.12,'sine',.3,70)},
   boop(){this.tone(300,.08,'sine',.12,260)},
@@ -355,7 +371,7 @@ const Pop=(function(){
       for(let k=0;k<10;k++){const a=k/10*6.28;bits.push({x:b.x,y:b.y,vx:Math.cos(a)*rand(120,260),vy:Math.sin(a)*rand(120,260),life:1})}
       bits.push({ring:true,x:b.x,y:b.y,r:b.r,life:1});
       say('n'+popped,true);
-      if(b.who){critters.push({who:b.who,x:b.x,y:b.y,vy:-260,vx:rand(-60,60),spin:0,t:0,h:b.r*1.9});Snd.giggle();say(b.who)}
+      if(b.who){critters.push({who:b.who,x:b.x,y:b.y,vy:-260,vx:rand(-60,60),spin:0,t:0,h:b.r*1.9});Snd.squeal(b.who)}
       if(popped>=GOAL){done=true;setTimeout(()=>celebrate('pop'),900)}
       return;
     }
