@@ -93,6 +93,21 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
   .win img{width:56px}
 }
 .lb-slot .lb{max-width:none;margin:0}
+.parfx{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:4;border-radius:14px}
+.parfx[hidden]{display:none}
+.parfx .emb{width:min(52%,250px);aspect-ratio:1;filter:drop-shadow(0 0 22px var(--zone,#00e5ff)) drop-shadow(0 8px 16px rgba(0,0,0,.6))}
+.parfx .emb svg{width:100%;height:100%;display:block}
+.parfx .ptxt{font-family:"Pirata One",Georgia,serif;font-size:clamp(2.4rem,9vw,3.6rem);line-height:1;margin-top:6px;color:var(--zone,#00e5ff);
+  text-shadow:0 0 18px var(--zone,#00e5ff),0 3px 0 #000,0 0 3px #000}
+.parfx.under .ptxt{color:#f5c842;font-size:clamp(2.8rem,11vw,4.2rem);text-shadow:0 0 24px #f5c842,0 3px 0 #000,0 0 3px #000}
+.parfx.under::before{content:'';position:absolute;left:50%;top:45%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;
+  border:6px solid #f5c842;box-shadow:0 0 30px #f5c842;animation:parRing 1.1s ease-out forwards}
+.parfx.go .emb{animation:embPop 1.3s cubic-bezier(.2,1.4,.4,1) forwards}
+.parfx.go .ptxt{animation:txtPop 1.3s ease-out forwards}
+@keyframes embPop{0%{transform:scale(.2) rotate(-25deg);opacity:0}22%{transform:scale(1.15) rotate(6deg);opacity:1}40%{transform:scale(1) rotate(0)}82%{transform:scale(1);opacity:1}100%{transform:scale(1.3);opacity:0}}
+@keyframes txtPop{0%,15%{transform:translateY(20px) scale(.6);opacity:0}35%{transform:translateY(0) scale(1.08);opacity:1}82%{transform:scale(1);opacity:1}100%{opacity:0}}
+@keyframes parRing{0%{transform:scale(1);opacity:1}100%{transform:scale(12);opacity:0}}
+@media (prefers-reduced-motion:reduce){.parfx.go .emb,.parfx.go .ptxt{animation:none}.parfx.under::before{display:none}}
 .ver{margin:22px 0 0;text-align:center;font-size:.72rem;color:rgba(255,255,255,.28);letter-spacing:.5px}
 </style>
 </head>
@@ -119,11 +134,13 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
     <div><span class="k">Taps</span><span class="v" id="taps">0</span></div>
     <div><span class="k">Par</span><span class="v" id="par">0</span></div>
     <div><span class="k">Best level</span><span class="v" id="best">1</span></div>
+    <div id="streakStat" hidden><span class="k">Par streak</span><span class="v" id="streak">0</span></div>
     <div id="drainStat" hidden><span class="k">Drains</span><span class="v" id="drains">0/2</span></div>
   </div>
 
   <div class="board" id="board">
     <canvas id="game" aria-label="Pipe puzzle board"></canvas>
+    <div class="parfx" id="parFx" hidden aria-live="polite"><div class="emb" id="parEmb"></div><div class="ptxt" id="parTxt"></div></div>
     <div class="win" id="win" hidden>
       <img src="/assets/mojo-34.png" alt="" width="716" height="1102">
       <h2>Flow's moving</h2>
@@ -158,7 +175,7 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
   <p class="hint">Each tap turns a pipe a quarter turn. Glowing water means it's flowing through that pipe, and pulsing drips show where it's leaking out. Dead-end pipes don't matter — only the run to the drain.</p>
 
   <section class="lb-slot" id="lb" aria-label="Leaderboard"></section>
-  <p class="ver">Flow v1.13</p>
+  <p class="ver">Flow v1.14</p>
 </main>
 
 <script src="/lb.js"></script>
@@ -172,47 +189,47 @@ const rnd=k=>Math.floor(Math.random()*k);
 
 /* ---------- zones: every 25 levels the pipes, water and backdrop change ---------- */
 const ZONES=[
-  {name:'The Basement',from:1,hints:3,accent:'#c97a3d',
+  {name:'The Basement',emblem:'wrench',from:1,hints:3,accent:'#c97a3d',
    copper:'#c97a3d',copperDark:'#8f4f22',hl:'rgba(255,214,170,.35)',cap:'#a8622f',outline:'#0b0710',
    water:'#00e5ff',waterLight:'#c8f9ff',rgb:'0,229,255',tile:'#1a1224',tileWet:'#122029',
    bg:'radial-gradient(ellipse 90% 50% at 20% 10%, rgba(91,26,170,.28) 0%, transparent 60%),radial-gradient(ellipse 70% 40% at 90% 90%, rgba(0,229,255,.07) 0%, transparent 60%),#060606',
    blurb:''},
-  {name:'The Bayou',from:25,hints:2,accent:'#8fd14f',vines:0.08,
+  {name:'The Bayou',emblem:'gator',from:25,hints:2,accent:'#8fd14f',vines:0.08,
    copper:'#8a5a36',copperDark:'#5a3a22',hl:'rgba(220,170,120,.3)',cap:'#6e4628',outline:'#0a0c06',
    water:'#7fbf3f',waterLight:'#dcf7b0',rgb:'127,191,63',tile:'#131a11',tileWet:'#1b2a14',
    bg:'radial-gradient(ellipse 90% 55% at 30% 15%, rgba(80,130,40,.30) 0%, transparent 60%),radial-gradient(ellipse 80% 40% at 80% 95%, rgba(140,180,90,.12) 0%, transparent 60%),#070906',
    blurb:'Swamp vines tie some pipes together. Turn one and its partner turns too. Hints drop to 2 per level.'},
-  {name:'The Graveyard',from:50,hints:1,accent:'#9fe8ff',ghost:0.14,
+  {name:'The Graveyard',emblem:'skull',from:50,hints:1,accent:'#9fe8ff',ghost:0.14,
    copper:'#d8d0c0',copperDark:'#968c7a',hl:'rgba(255,255,255,.5)',cap:'#b8ae9c',outline:'#0a0a10',
    water:'#7fdcff',waterLight:'#effbff',rgb:'127,220,255',tile:'#14141c',tileWet:'#16202c',
    bg:'radial-gradient(ellipse 100% 55% at 50% 0%, rgba(150,170,200,.18) 0%, transparent 65%),radial-gradient(ellipse 70% 40% at 15% 95%, rgba(127,220,255,.08) 0%, transparent 60%),#07070b',
    blurb:'Ghost pipes hide in the fog until water reaches the pipe next to them. One hint per level now.'},
-  {name:'Voodoo Gold',from:75,hints:0,accent:'#f5c842',cursed:0.12,
+  {name:'Voodoo Gold',emblem:'doll',from:75,hints:0,accent:'#f5c842',cursed:0.12,
    copper:'#d9a73a',copperDark:'#8f6a1e',hl:'rgba(255,240,190,.5)',cap:'#b8892a',outline:'#0b0710',
    water:'#b45cff',waterLight:'#ecd4ff',rgb:'180,92,255',tile:'#1a1026',tileWet:'#25123c',
    bg:'radial-gradient(ellipse 90% 55% at 25% 10%, rgba(120,40,220,.42) 0%, transparent 62%),radial-gradient(ellipse 70% 45% at 85% 90%, rgba(245,200,66,.12) 0%, transparent 60%),#08040d',
    blurb:'Pipes stuck with a voodoo pin are cursed: they turn backwards. No more hints. You\'re on your own.'},
-  {name:'Hellfire',from:100,hints:0,accent:'#ff6a2a',
+  {name:'Hellfire',emblem:'flameskull',from:100,hints:0,accent:'#ff6a2a',
    copper:'#2e2729',copperDark:'#150f11',hl:'rgba(255,120,70,.28)',cap:'#3d3234',outline:'#5a1a0c',
    water:'#ff5a1f',waterLight:'#ffd27a',rgb:'255,90,31',tile:'#1b0c0a',tileWet:'#2c120b',
    bg:'radial-gradient(ellipse 90% 55% at 50% 100%, rgba(230,60,20,.32) 0%, transparent 62%),radial-gradient(ellipse 70% 40% at 20% 0%, rgba(120,10,10,.30) 0%, transparent 60%),#0a0303',
    blurb:'Cast iron and lava. Bragging rights start here.'},
-  {name:'Frozen Pipes',from:125,hints:0,accent:'#bdefff',frozen:0.12,
+  {name:'Frozen Pipes',emblem:'snowflake',from:125,hints:0,accent:'#bdefff',frozen:0.12,
    copper:'#cfe9f5',copperDark:'#8fbcd2',hl:'rgba(255,255,255,.65)',cap:'#a9d6ea',outline:'#06101a',
    water:'#1560d4',waterLight:'#7fc4ff',rgb:'21,96,212',tile:'#0e1822',tileWet:'#132a44',
    bg:'radial-gradient(ellipse 100% 55% at 50% 0%, rgba(170,225,255,.22) 0%, transparent 62%),radial-gradient(ellipse 70% 40% at 80% 95%, rgba(120,190,255,.12) 0%, transparent 60%),#05080d',
    blurb:'Ice blocks the flow. Water backs up against a frozen pipe until you tap to melt it, then it rushes on through.'},
-  {name:'Mardi Gras',from:150,hints:0,accent:'#39d353',double:true,
+  {name:'Mardi Gras',emblem:'mask',from:150,hints:0,accent:'#39d353',double:true,
    copper:'#7a3fc2',copperDark:'#f5c842',hl:'rgba(230,200,255,.4)',cap:'#5e2c9a',outline:'#0b0710',
    water:'#39d353',waterLight:'#c8ffd0',rgb:'57,211,83',tile:'#160d22',tileWet:'#122614',
    bg:'radial-gradient(ellipse 80% 50% at 15% 10%, rgba(122,63,194,.38) 0%, transparent 60%),radial-gradient(ellipse 70% 45% at 85% 20%, rgba(245,200,66,.16) 0%, transparent 60%),radial-gradient(ellipse 80% 45% at 50% 100%, rgba(57,211,83,.16) 0%, transparent 60%),#07040b',
    blurb:'Zydeco the fly just showed up with a second drain. Fill Ganja\'s and Zydeco\'s to clear the level. The Drains counter shows how many are flowing.'},
-  {name:'The Sewer Kingdom',from:175,hints:0,accent:'#a6ff00',locked:0.14,
+  {name:'The Sewer Kingdom',emblem:'manhole',from:175,hints:0,accent:'#a6ff00',locked:0.14,
    copper:'#5f5f4a',copperDark:'#3a3a2c',hl:'rgba(210,210,160,.25)',cap:'#4a4a3a',outline:'#050603',
    water:'#a6ff00',waterLight:'#eaffb0',rgb:'166,255,0',tile:'#10120c',tileWet:'#1a2410',
    bg:'radial-gradient(ellipse 90% 55% at 50% 100%, rgba(140,220,0,.22) 0%, transparent 62%),radial-gradient(ellipse 70% 40% at 20% 0%, rgba(60,70,30,.35) 0%, transparent 60%),#050604',
    blurb:'Bolted pipes won\'t budge. Work around them.'},
-  {name:'Mojo\'s Domain',from:200,hints:0,accent:'#ffe27a',frozen:0.08,locked:0.1,double:true,
+  {name:'Mojo\'s Domain',emblem:'tophat',from:200,hints:0,accent:'#ffe27a',frozen:0.08,locked:0.1,double:true,
    copper:'#f2ead8',copperDark:'#f5c842',hl:'rgba(255,255,255,.7)',cap:'#e6d8b8',outline:'#2a1a3a',
    water:'#ff9a1a',waterLight:'#ffe7b0',rgb:'255,154,26',tile:'#120d1c',tileWet:'#2a1f14',
    bg:'radial-gradient(ellipse 90% 55% at 50% 20%, rgba(120,40,220,.40) 0%, transparent 62%),radial-gradient(ellipse 70% 45% at 50% 100%, rgba(255,226,122,.18) 0%, transparent 60%),#07040c',
@@ -228,6 +245,17 @@ function zoneFor(l){
     blurb:stars>=2?'Beignet the maggot crawled up a third drain. Ganja, Zydeco and Beignet are all waiting. Fill every one.'
                   :'Back around with every twist turned on: frozen, bolted, two drains.'});
 }
+const EMBLEMS={
+  wrench:'<g transform="rotate(-38 100 100)"><rect x="86" y="72" width="28" height="118" rx="10" fill="#c0392b" stroke="#120a1a" stroke-width="5"/><rect x="92" y="80" width="6" height="100" rx="3" fill="#e8705f"/><rect x="74" y="18" width="52" height="62" rx="8" fill="#9aa3ad" stroke="#120a1a" stroke-width="5"/><rect x="62" y="16" width="44" height="24" rx="5" fill="#c8cfd6" stroke="#120a1a" stroke-width="5"/><rect x="104" y="44" width="34" height="18" rx="4" fill="#9aa3ad" stroke="#120a1a" stroke-width="5"/><g stroke="#5d6670" stroke-width="3"><line x1="66" y1="34" x2="104" y2="34"/><line x1="108" y1="50" x2="134" y2="50"/></g><circle cx="100" cy="174" r="7" fill="#120a1a"/></g>',
+  gator:'<path d="M18 112 Q24 70 88 70 L176 88 Q192 96 180 108 L96 116 Q40 128 18 112Z" fill="#5a8f3a" stroke="#1d3a12" stroke-width="5"/><path d="M28 120 Q60 152 100 130 L178 116 Q186 124 176 132 L96 150 Q44 164 28 120Z" fill="#4b7a30" stroke="#1d3a12" stroke-width="5"/><polyline points="70,114 78,124 86,112 94,122 102,110 110,120 118,108 126,118 134,106 142,116 150,104 158,113 166,102" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><circle cx="66" cy="78" r="16" fill="#f5c842" stroke="#1d3a12" stroke-width="5"/><ellipse cx="68" cy="78" rx="4" ry="11" fill="#120a1a"/><circle cx="172" cy="92" r="4" fill="#1d3a12"/><g fill="#7fb04f"><circle cx="100" cy="82" r="5"/><circle cx="122" cy="86" r="4"/><circle cx="142" cy="90" r="4"/></g>',
+  skull:'<path d="M100 22 C52 22 32 58 36 96 C38 118 54 128 62 136 L62 164 L138 164 L138 136 C146 128 162 118 164 96 C168 58 148 22 100 22Z" fill="#efe9dc" stroke="#120a1a" stroke-width="6"/><ellipse cx="74" cy="96" rx="18" ry="21" fill="#120a1a"/><ellipse cx="126" cy="96" rx="18" ry="21" fill="#120a1a"/><circle cx="78" cy="98" r="5" fill="#9fe8ff"/><circle cx="130" cy="98" r="5" fill="#9fe8ff"/><path d="M100 116 L90 134 L110 134Z" fill="#120a1a"/><g stroke="#120a1a" stroke-width="5"><line x1="62" y1="148" x2="138" y2="148"/><line x1="80" y1="138" x2="80" y2="164"/><line x1="100" y1="138" x2="100" y2="164"/><line x1="120" y1="138" x2="120" y2="164"/></g>',
+  doll:'<circle cx="100" cy="66" r="44" fill="#c9a874" stroke="#120a1a" stroke-width="6"/><path d="M62 110 Q100 100 138 110 L150 176 Q100 190 50 176Z" fill="#b8955f" stroke="#120a1a" stroke-width="6"/><g stroke="#120a1a" stroke-width="6" stroke-linecap="round"><line x1="72" y1="52" x2="88" y2="68"/><line x1="88" y1="52" x2="72" y2="68"/><line x1="112" y1="52" x2="128" y2="68"/><line x1="128" y1="52" x2="112" y2="68"/><path d="M76 88 Q100 102 124 88" fill="none"/></g><g stroke="#120a1a" stroke-width="3"><line x1="82" y1="86" x2="80" y2="96"/><line x1="94" y1="90" x2="93" y2="100"/><line x1="106" y1="90" x2="107" y2="100"/><line x1="118" y1="86" x2="120" y2="96"/><line x1="100" y1="22" x2="100" y2="182" stroke-dasharray="7 6"/></g><g stroke="#d9d4cc" stroke-width="4" stroke-linecap="round"><line x1="140" y1="40" x2="116" y2="70"/><line x1="58" y1="132" x2="86" y2="142"/><line x1="152" y1="124" x2="122" y2="146"/></g><g fill="#e8281e" stroke="#120a1a" stroke-width="3"><circle cx="142" cy="37" r="9"/><circle cx="55" cy="131" r="9"/><circle cx="155" cy="121" r="9"/></g>',
+  flameskull:'<path d="M100 8 C120 40 150 30 150 64 C170 50 172 84 166 104 L34 104 C28 84 30 50 50 64 C50 30 80 40 100 8Z" fill="#ff6a2a" stroke="#7a1d0c" stroke-width="5"/><path d="M100 30 C112 52 132 48 130 72 C142 66 144 88 140 104 L60 104 C56 88 58 66 70 72 C68 48 88 52 100 30Z" fill="#ffd27a"/><path d="M100 52 C60 52 44 80 47 110 C49 128 61 136 68 142 L68 168 L132 168 L132 142 C139 136 151 128 153 110 C156 80 140 52 100 52Z" fill="#2e2729" stroke="#120a1a" stroke-width="6"/><ellipse cx="80" cy="110" rx="15" ry="17" fill="#ff5a1f"/><ellipse cx="120" cy="110" rx="15" ry="17" fill="#ff5a1f"/><circle cx="80" cy="112" r="6" fill="#ffd27a"/><circle cx="120" cy="112" r="6" fill="#ffd27a"/><path d="M100 126 L92 140 L108 140Z" fill="#ff5a1f"/><g stroke="#ff5a1f" stroke-width="4"><line x1="68" y1="154" x2="132" y2="154"/><line x1="84" y1="146" x2="84" y2="168"/><line x1="100" y1="146" x2="100" y2="168"/><line x1="116" y1="146" x2="116" y2="168"/></g>',
+  snowflake:'<g stroke="#e8f8ff" stroke-width="10" stroke-linecap="round" fill="none"><g id="arm"><line x1="100" y1="100" x2="100" y2="18"/><polyline points="80,38 100,56 120,38"/><polyline points="84,66 100,80 116,66"/></g><use href="#arm" transform="rotate(60 100 100)"/><use href="#arm" transform="rotate(120 100 100)"/><use href="#arm" transform="rotate(180 100 100)"/><use href="#arm" transform="rotate(240 100 100)"/><use href="#arm" transform="rotate(300 100 100)"/></g><g stroke="#4aa8e8" stroke-width="3" stroke-linecap="round" fill="none"><line x1="100" y1="100" x2="100" y2="22"/><line x1="100" y1="100" x2="100" y2="178"/><line x1="100" y1="100" x2="32" y2="61"/><line x1="100" y1="100" x2="168" y2="61"/><line x1="100" y1="100" x2="32" y2="139"/><line x1="100" y1="100" x2="168" y2="139"/></g><circle cx="100" cy="100" r="12" fill="#e8f8ff" stroke="#4aa8e8" stroke-width="4"/>',
+  mask:'<path d="M54 72 Q40 20 70 30 Q66 54 78 70Z" fill="#39d353" stroke="#120a1a" stroke-width="4"/><path d="M80 66 Q84 8 104 22 Q96 46 96 66Z" fill="#f5c842" stroke="#120a1a" stroke-width="4"/><path d="M104 66 Q122 6 138 26 Q122 44 116 68Z" fill="#7a3fc2" stroke="#120a1a" stroke-width="4"/><path d="M16 96 Q30 64 100 76 Q170 64 184 96 Q178 136 140 138 Q116 138 100 120 Q84 138 60 138 Q22 136 16 96Z" fill="#7a3fc2" stroke="#120a1a" stroke-width="6"/><path d="M24 98 Q36 74 100 84 Q164 74 176 98" fill="none" stroke="#f5c842" stroke-width="5"/><ellipse cx="62" cy="104" rx="20" ry="13" fill="#120a1a"/><ellipse cx="138" cy="104" rx="20" ry="13" fill="#120a1a"/><g fill="#f5c842"><circle cx="40" cy="122" r="4"/><circle cx="160" cy="122" r="4"/><circle cx="100" cy="106" r="5"/></g><g fill="none" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 11"><path d="M30 150 Q100 196 170 150" stroke="#39d353"/><path d="M42 160 Q100 204 158 160" stroke="#f5c842"/></g>',
+  manhole:'<circle cx="100" cy="100" r="80" fill="#4a4a3a" stroke="#120a1a" stroke-width="7"/><circle cx="100" cy="100" r="66" fill="#5f5f4a" stroke="#2a2a20" stroke-width="5"/><g fill="#3a3a2c"><rect x="54" y="62" width="14" height="14" rx="3"/><rect x="78" y="62" width="14" height="14" rx="3"/><rect x="102" y="62" width="14" height="14" rx="3"/><rect x="126" y="62" width="14" height="14" rx="3"/><rect x="54" y="124" width="14" height="14" rx="3"/><rect x="78" y="124" width="14" height="14" rx="3"/><rect x="102" y="124" width="14" height="14" rx="3"/><rect x="126" y="124" width="14" height="14" rx="3"/></g><rect x="40" y="86" width="120" height="28" rx="6" fill="#2a2a20"/><text x="100" y="107" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="20" fill="#a6ff00">SEWER</text><circle cx="100" cy="100" r="80" fill="none" stroke="#a6ff00" stroke-width="3" opacity=".6"/>',
+  tophat:'<ellipse cx="100" cy="160" rx="86" ry="22" fill="#1c1820" stroke="#000" stroke-width="5"/><path d="M50 158 L56 46 Q100 32 144 46 L150 158Z" fill="#2a2430" stroke="#000" stroke-width="5"/><path d="M66 150 L70 54 Q78 50 86 50 L82 150Z" fill="#3e3646"/><path d="M53 122 L147 122 L149 150 L51 150Z" fill="#b8281e" stroke="#000" stroke-width="4"/><path d="M140 126 Q176 70 188 24 Q170 60 150 84 Q166 50 170 30 Q150 70 136 118Z" fill="#e8dcc4" stroke="#6b5e48" stroke-width="3"/><g stroke="#6b5e48" stroke-width="2"><line x1="146" y1="104" x2="168" y2="70"/><line x1="150" y1="92" x2="176" y2="50"/></g><ellipse cx="100" cy="46" rx="44" ry="10" fill="#3e3646" stroke="#000" stroke-width="4"/>'
+};
 const C={red:'#e8281e'};
 let zoneNow=-1,Z=zoneFor(1);
 function applyZone(l){
@@ -286,6 +314,8 @@ const Snd={
   },
   clunk(){this.tone(170,0.1,'square',0.07,85);this.tone(95,0.12,'sine',0.25,60);this.noise(0.05,2400,900,0.12)},
   bloop(k){const f=260+Math.min(k,14)*35;this.tone(f,0.14,'sine',0.2,f*2.1)},
+  par(){[523,659,784,1047].forEach((f,i)=>this.tone(f,0.22,'triangle',0.14,null,i*0.08))},
+  underPar(){[523,659,784,1047,1319].forEach((f,i)=>this.tone(f,0.3,'triangle',0.15,null,i*0.07));this.tone(1568,0.8,'sine',0.12,2093,0.38);this.noise(0.6,6000,2500,0.12,0.35,1.5)},
   splash(){this.noise(0.45,3000,500,0.22,0.05,0.8);this.tone(520,0.25,'sine',0.1,1100,0.05)},
   thud(){this.tone(90,0.12,'square',0.1,60);this.noise(0.05,600,300,0.12)},
   crack(){this.noise(0.12,5000,2200,0.22,0,2);this.tone(1800,0.06,'triangle',0.08,900);this.noise(0.18,2600,900,0.12,0.05,1.5)},
@@ -329,7 +359,7 @@ document.addEventListener('pointerdown',()=>Snd.unlock(),{once:false,passive:tru
 })();
 
 /* ---------- game state ---------- */
-let meltAt={},vine=[],cursed=[],ghost=[],seen=[];
+let meltAt={},vine=[],cursed=[],ghost=[],seen=[],parStreak=0;
 let level=1,n,sol,cur,startCur,sr,er,er2=-1,er3=-1,frozen=[],startFrozen=[],locked=[],bumpTile=-1,bumpAt=0,moves=0,par=0,anims={},solved=false,solvedAt=0,flow=null,path=[],hints=3,hintTile=-1,hintAt=0;
 let Wd=0,Hd=0,cell=0,gut=0,padTop=0;
 let best=1;
@@ -347,7 +377,7 @@ let lastObj=null,dirty=false;
 function saveGame(important){ // every move saves on this device; the cloud copy updates on level changes and when you leave
   const a=acct();
   if(nameKey(a&&a.name)!==owner)return; // never save one player's board into another's slot
-  const obj={v:1,level,n,sol,cur,startCur,sr,er,er2,er3,frozen,startFrozen,locked,vine,cursed,ghost,seen,moves,par,hints,solved,savedAt:Date.now()};
+  const obj={v:1,level,n,sol,cur,startCur,sr,er,er2,er3,frozen,startFrozen,locked,vine,cursed,ghost,seen,parStreak,moves,par,hints,solved,savedAt:Date.now()};
   try{localStorage.setItem(slotFor(a),JSON.stringify(obj))}catch(e){}
   lastObj=obj;
   if(!(a&&cloudReady))return;
@@ -373,7 +403,7 @@ function restore(s){
   er2=typeof s.er2==='number'?s.er2:-1;er3=typeof s.er3==='number'?s.er3:-1;frozen=Array.isArray(s.frozen)?s.frozen:z0();
   startFrozen=Array.isArray(s.startFrozen)?s.startFrozen:frozen.slice();locked=Array.isArray(s.locked)?s.locked:z0();
   vine=Array.isArray(s.vine)?s.vine:new Array(n*n).fill(-1);cursed=Array.isArray(s.cursed)?s.cursed:z0();
-  ghost=Array.isArray(s.ghost)?s.ghost:z0();seen=Array.isArray(s.seen)?s.seen:z0();
+  ghost=Array.isArray(s.ghost)?s.ghost:z0();seen=Array.isArray(s.seen)?s.seen:z0();parStreak=s.parStreak||0;
   moves=s.moves||0;par=s.par||0;hints=typeof s.hints==='number'?Math.min(s.hints,Z.hints):Z.hints;
   hintTile=-1;solved=false;anims={};path=solutionPath();flow=computeFlow();
   $('win').hidden=true;updateStats();resize();
@@ -535,6 +565,7 @@ function updateStats(){
   $('lvl').textContent=level;$('taps').textContent=moves;$('par').textContent=par;$('best').textContent=best;
   $('hint').textContent=Z.hints?`Hint (${hints})`:'No hints';$('hint').disabled=hints<=0||solved;
   const ds=$('drainStat');ds.hidden=er2<0;
+  $('streakStat').hidden=parStreak<2;$('streak').textContent='🔥 '+parStreak;
   $('sub').textContent='Tap pipes to turn them. Run Mojo\'s water from the valve to '+
     (er3>=0?'Ganja\'s, Zydeco\'s and Beignet\'s drains.':er2>=0?'Ganja\'s and Zydeco\'s drains.':'Ganja\'s drain.');
   if(er2>=0&&flow){const k=drainsFilled(),t=drainCount();$('drains').textContent=k+'/'+t;$('drains').classList.toggle('done',k===t)}
@@ -815,6 +846,14 @@ cv.addEventListener('pointerdown',e=>{
   if(flow.count>before)Snd.bloop(flow.count);
 });
 
+function celebrate(under){ // big themed emblem when you make par, a gold burst when you beat it
+  const fx=$('parFx');
+  $('parEmb').innerHTML='<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">'+(EMBLEMS[Z.emblem]||EMBLEMS.wrench)+'</svg>';
+  $('parTxt').textContent=under?'UNDER PAR!':'ON PAR!';
+  fx.className='parfx'+(under?' under':'');fx.hidden=false;void fx.offsetWidth;fx.classList.add('go');
+  under?Snd.underPar():Snd.par();
+  setTimeout(()=>{fx.hidden=true;fx.className='parfx'},1350);
+}
 function win(){
   solved=true;solvedAt=performance.now();
   Snd.win();
@@ -822,7 +861,9 @@ function win(){
   updateStats();
   const used=Z.hints-hints;
   const riders=er3>=0?'Ganja, Zydeco and Beignet are going for a ride.':er2>=0?'Ganja and Zydeco are going for a ride.':'Ganja\'s going for a ride.';
-  const note=(moves<=par?' Right on par — clean run.':'')+(used?` Used ${used} hint${used>1?'s':''}.`:'');
+  if(moves<=par){parStreak++;celebrate(moves<par)}else parStreak=0;
+  updateStats();
+  const note=(moves<par?` ${par-moves} under par!`:moves===par?' Right on par — clean run.':'')+(parStreak>=2?` Par streak: ${parStreak}.`:'')+(used?` Used ${used} hint${used>1?'s':''}.`:'');
   $('winText').textContent=`Level ${level} cleared in ${moves} taps. Par was ${par}.${note} ${riders}`;
   if(LB){
     LB.post(level);
