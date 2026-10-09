@@ -32,9 +32,11 @@ body{
 a{color:inherit;text-decoration:none}
 .bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;max-width:560px;width:100%;margin:0 auto}
 .left{display:flex;align-items:center;gap:10px}
-.back{font-weight:800;font-size:.9rem;color:rgba(255,255,255,.65);padding:6px 0}
+.back{font-weight:800;font-size:.9rem;color:rgba(255,255,255,.65);padding:6px 0;white-space:nowrap}
 .sound{font:inherit;font-weight:800;font-size:.78rem;background:transparent;color:var(--cyan);
-  border:1.5px solid rgba(0,229,255,.35);border-radius:8px;padding:5px 9px;cursor:pointer}
+  border:1.5px solid rgba(0,229,255,.35);border-radius:8px;padding:5px 9px;cursor:pointer;white-space:nowrap}
+#pause{padding:5px 11px;min-width:40px;display:inline-flex;align-items:center;justify-content:center;align-self:stretch}
+.left{gap:8px!important}
 .stats{display:flex;gap:14px;align-items:baseline}
 .stat{text-align:right}
 .stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.1}
@@ -73,6 +75,7 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
   <div class="left">
     <a class="back" href="/play">‹ Games</a>
     <button class="sound" id="sound" aria-pressed="true">Sound on</button>
+    <button class="sound" id="pause" hidden aria-pressed="false" aria-label="Pause"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="2" y="1" width="3.6" height="12" rx="1"/><rect x="8.4" y="1" width="3.6" height="12" rx="1"/></svg></button>
   </div>
   <div class="stats">
     <div class="lives" id="lives" aria-label="Lives"></div>
@@ -90,6 +93,12 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
     <p>Pipes are rising. Tap each one before it crosses the red line. Let three through and you're cursed. Hit a glowing <strong>voodoo pipe</strong> to wipe the board and slow things down.</p>
     <div class="btns"><button class="primary" id="go">Start</button></div>
     <p class="who" id="who"></p>
+  </div>
+
+  <div class="overlay" id="paused" hidden>
+    <h1>Paused</h1>
+    <p>Mojo's holding the pipes. Take your time.</p>
+    <div class="btns"><button class="primary" id="resume">Resume</button></div>
   </div>
 
   <div class="overlay" id="over" hidden>
@@ -110,6 +119,7 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
 const cv=document.getElementById('c'),ctx=cv.getContext('2d'),stage=document.getElementById('stage');
 const $=id=>document.getElementById(id);
 let W=0,H=0,dpr=1,LANES=4,laneW=0,pipeW=0,dangerY=0;
+let paused=false;
 let pipes=[],bursts=[],flash=0,vflash=0,score=0,lives=3,best=0,running=false,spawnT=0,last=0,streak=0;
 let heat=0,sinceVoodoo=0,voodoosUsed=0; // heat drives the pace; the voodoo pipe cools it down, a little less each time
 /* zones every 100 points, like Flow: the pipes and backdrop change as you climb */
@@ -383,7 +393,7 @@ function frame(t){
   ctx.clearRect(0,0,W,H);
   drawDanger(t);
   drawCrew(t);
-  if(running){
+  if(running&&!paused){
     spawnT-=dt;
     if(spawnT<=0){spawn();spawnT=spawnGap()}
     for(let i=pipes.length-1;i>=0;i--){
@@ -406,7 +416,7 @@ function loseLife(t){
 }
 
 function gameOver(){
-  running=false;Snd.over();
+  running=false;paused=false;$('paused').hidden=true;$('pause').hidden=true;Snd.over();
   const isBest=score>best;
   if(isBest){best=score;try{localStorage.setItem('pm-whack-best',String(best))}catch(e){};$('best').textContent=best}
   $('overText').innerHTML='You whacked <strong>'+score+'</strong> pipe'+(score===1?'':'s')+'.'+(isBest&&score>0?' New best.':' Best is '+best+'.');
@@ -435,11 +445,12 @@ function start(){
   pipes=[];bursts=[];score=0;lives=3;flash=0;vflash=0;spawnT=0.5;running=true;streak=0;quip='';gpop='';heat=0;sinceVoodoo=0;voodoosUsed=0;setZone(0);
   $('score').textContent=0;drawLives();
   $('start').hidden=true;$('over').hidden=true;
+  paused=false;$('paused').hidden=true;$('pause').hidden=false;$('pause').innerHTML=PAUSE_ICON;$('pause').setAttribute('aria-label','Pause');
   if(LB)LB.startRun();
 }
 
 cv.addEventListener('pointerdown',e=>{
-  if(!running)return;
+  if(!running||paused)return;
   e.preventDefault();
   const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,pad=14;
   for(let i=pipes.length-1;i>=0;i--){
@@ -460,9 +471,19 @@ cv.addEventListener('pointerdown',e=>{
     }
   }
 });
+const PAUSE_ICON='<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="2" y="1" width="3.6" height="12" rx="1"/><rect x="8.4" y="1" width="3.6" height="12" rx="1"/></svg>',PLAY_ICON='<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.2v11.6a.6.6 0 0 0 .9.5l9.2-5.8a.6.6 0 0 0 0-1L3.9.7a.6.6 0 0 0-.9.5z"/></svg>';
+function setPause(on){
+  if(on&&!running)return;
+  paused=on;$('paused').hidden=!on;
+  const b=$('pause');b.innerHTML=on?PLAY_ICON:PAUSE_ICON;b.setAttribute('aria-label',on?'Resume':'Pause');b.setAttribute('aria-pressed',String(on));
+  if(!on)last=performance.now();
+  if(!on)$('pause').blur();else setTimeout(()=>$('resume').focus(),50);
+}
+$('pause').addEventListener('click',()=>setPause(!paused));
+$('resume').addEventListener('click',()=>setPause(false));
 $('go').addEventListener('click',start);
 $('again').addEventListener('click',start);
-document.addEventListener('visibilitychange',()=>{last=performance.now()});
+document.addEventListener('visibilitychange',()=>{last=performance.now();if(document.hidden&&running&&!paused)setPause(true)}); // leaving the app pauses the round
 
 requestAnimationFrame(t=>{last=t;frame(t)});
 })();
