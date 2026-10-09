@@ -108,6 +108,58 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
 @keyframes txtPop{0%,15%{transform:translateY(20px) scale(.6);opacity:0}35%{transform:translateY(0) scale(1.08);opacity:1}82%{transform:scale(1);opacity:1}100%{opacity:0}}
 @keyframes parRing{0%{transform:scale(1);opacity:1}100%{transform:scale(12);opacity:0}}
 @media (prefers-reduced-motion:reduce){.parfx.go .emb,.parfx.go .ptxt{animation:none}.parfx.under::before{display:none}}
+.reveal{background:radial-gradient(circle at 50% 38%,rgba(255,226,122,.28) 0%,rgba(6,6,6,.92) 62%)!important}
+.reveal .kicker{margin:0;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-size:.8rem;color:var(--gold)}
+.reveal{justify-content:flex-start!important}
+.reveal>:first-child{margin-top:auto!important}.reveal>:last-child{margin-bottom:auto!important}
+.reveal img{width:auto!important;height:min(20vh,140px);filter:drop-shadow(0 0 26px var(--zone,#f5c842)) drop-shadow(0 10px 14px rgba(0,0,0,.6))!important;animation:revIn .9s cubic-bezier(.2,1.5,.4,1)}
+.reveal p{font-size:.92rem;margin:4px 0 12px!important}
+.reveal .board-note:empty{display:none}
+.reveal h2{color:var(--gold)!important;font-size:2.6rem!important;text-shadow:0 0 24px rgba(245,200,66,.5)!important}
+@keyframes revIn{0%{transform:translateY(-60px) scale(.3) rotate(-20deg);opacity:0}100%{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.reveal img{animation:none}}
+.trophies{margin-top:18px}
+.trophies h3{display:flex;align-items:baseline;justify-content:space-between;font-family:"Pirata One",Georgia,serif;font-weight:400;font-size:1.6rem;color:var(--gold);margin:0 0 8px}
+.trophies h3 span{font-family:Nunito,system-ui,sans-serif;font-size:.85rem;font-weight:800;color:var(--muted)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.trophy{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:8px 4px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--ink);font-weight:700}
+.trophy .badge{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#3a2a52,#160d22);border:3px solid var(--gold);overflow:hidden;font-size:1.05rem;font-weight:800;color:#ffb347}
+.trophy .badge svg{width:84%;height:84%}
+.trophy .badge img{height:46px;width:auto;max-width:90%;object-fit:contain}
+.trophy .badge.txt{font-size:1.15rem}
+.trophy .badge.star{font-size:2rem;color:var(--gold)}
+.trophy b{font-size:.78rem;line-height:1.15}
+.trophy small{font-size:.66rem;color:var(--muted);font-weight:600;line-height:1.2}
+.trophy.locked .badge{filter:grayscale(1) brightness(.6);opacity:.4;border-color:#555}
+.trophy.locked b{color:var(--muted)}
+.trophy.replay{cursor:pointer}
+.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translate(-50%,-140%);z-index:20;background:#f5c842;color:#1a1004;font-weight:800;
+  padding:10px 18px;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.2,1.4,.4,1);white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+.toast.on{transform:translate(-50%,0)}
+.bossfx{position:fixed;inset:0;z-index:30;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.bossfx[hidden]{display:none}
+.bossfx video{position:absolute;inset:0;width:100%;height:100%}
+#bossBg{object-fit:cover;filter:blur(26px) brightness(.45);transform:scale(1.2)}
+#bossV{object-fit:contain}
+.bossfx .stamp{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-7deg) scale(3);opacity:0;pointer-events:none;
+  font-family:"Pirata One",Georgia,serif;font-size:clamp(3.4rem,15vw,7rem);line-height:1;white-space:nowrap;color:#ffd447;
+  text-shadow:0 0 30px #ff3b2f,0 6px 0 #6b0d06,0 0 4px #000;-webkit-text-stroke:2px #3a0603}
+.bossfx .stamp.on{animation:stamp .45s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes stamp{to{transform:translate(-50%,-50%) rotate(-7deg) scale(1);opacity:1}}
+.bossfx .skip{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:calc(14px + env(safe-area-inset-right,0px));z-index:2;
+  background:rgba(0,0,0,.55);color:#fff;border:1.5px solid rgba(255,255,255,.4);font-size:.95rem;padding:9px 16px}
+.bossfx .bfb{position:relative;text-align:center;padding:20px;color:#fff}
+.bossfx .bfb[hidden]{display:none}
+.bossfx .bfb img{height:min(42vh,320px);width:auto;filter:drop-shadow(0 0 30px #ff3b2f)}
+.bossfx .bfb p{font-weight:800;font-size:1.3rem;margin:12px 0 0}
+.replaybar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 0;padding:10px 12px;border-radius:12px;
+  background:rgba(255,59,47,.14);border:1.5px solid rgba(255,59,47,.5);font-weight:800;font-size:.9rem}
+.replaybar[hidden]{display:none}
+.replaybar button{padding:8px 12px;font-size:.88rem;background:#ff3b2f;color:#fff}
+.trophy .badge{position:relative}
+.trophy .crown{position:absolute;top:-4px;right:-2px;font-size:1.05rem}
+.trophy.fight .badge{border-color:#ff3b2f;box-shadow:0 0 12px rgba(255,59,47,.6)}
+.trophy.fight small{color:#ff8a7f}
 .ver{margin:22px 0 0;text-align:center;font-size:.72rem;color:rgba(255,255,255,.28);letter-spacing:.5px}
 </style>
 </head>
@@ -129,6 +181,7 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
   </header>
 
   <p class="zone" id="zone"></p>
+  <div class="replaybar" id="replayBar" hidden><span>Boss replay · your run is saved</span><button type="button" id="replayExit">Back to my run</button></div>
   <div class="stats" aria-live="polite">
     <div><span class="k">Level</span><span class="v" id="lvl">1</span></div>
     <div><span class="k">Taps</span><span class="v" id="taps">0</span></div>
@@ -155,6 +208,14 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
       <p id="zoneText"></p>
       <button class="go" id="zoneGo"></button>
     </div>
+    <div class="win reveal" id="reveal" hidden>
+      <p class="kicker">New friend unlocked</p>
+      <img id="revImg" src="" alt="">
+      <h2 id="revName"></h2>
+      <p id="revText"></p>
+      <button class="go" id="revGo">Let's go</button>
+      <p class="board-note" id="revZone"></p>
+    </div>
     <div class="win" id="resume" hidden>
       <img src="/assets/mojo-front.png" alt="" width="638" height="1100">
       <h2>Welcome back</h2>
@@ -174,10 +235,19 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
   </div>
   <p class="hint">Each tap turns a pipe a quarter turn. Glowing water means it's flowing through that pipe, and pulsing drips show where it's leaking out. Dead-end pipes don't matter — only the run to the drain.</p>
 
+  <section class="trophies" aria-label="Trophy case"><h3>Trophy case <span id="tcount"></span></h3><div class="tgrid" id="tgrid"></div></section>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <section class="lb-slot" id="lb" aria-label="Leaderboard"></section>
-  <p class="ver">Flow v1.15</p>
+  <p class="ver">Flow v1.17</p>
 </main>
 
+<div class="bossfx" id="bossFx" hidden aria-label="Boss level">
+  <video id="bossBg" muted playsinline preload="none" aria-hidden="true"></video>
+  <video id="bossV" playsinline preload="none"></video>
+  <div class="bfb" id="bossFb" hidden><img src="/assets/mojo-front.png" alt="Pipe Mojo"><p>"Think you can handle this kind of pressure?"</p></div>
+  <div class="stamp" id="bossStamp">BOSS LEVEL</div>
+  <button type="button" class="skip" id="bossSkip">Skip</button>
+</div>
 <script src="/lb.js"></script>
 <script>
 (function(){
@@ -270,6 +340,50 @@ function applyZone(l){
   const el=document.getElementById('zone');if(el)el.textContent='Zone: '+z.name+(next===PRESTIGE_AT?' (prestige starts at level '+next+')':' (next zone at level '+next+')');
 }
 
+/* ---------- boss levels: every 100 levels, Mojo's Challenge ---------- */
+const isBoss=l=>l>=100&&l%100===0;
+let bossOn=false;
+function bossZone(l){
+  const base=zoneFor(l);
+  return Object.assign({},base,{name:'Mojo\'s Challenge',emblem:'tophat',accent:'#ff3b2f',hints:0,
+    frozen:.08,locked:.08,vines:.06,ghost:.1,cursed:.08,double:true,triple:!!base.triple,
+    copper:'#e0b040',copperDark:'#8a5a10',hl:'rgba(255,240,180,.55)',cap:'#c99a2e',outline:'#2a0606',
+    water:'#ff3b2f',waterLight:'#ffc2b8',rgb:'255,59,47',tile:'#1e0a0c',tileWet:'#3a0f10',
+    bg:'radial-gradient(ellipse 90% 55% at 50% 100%, rgba(255,40,20,.38) 0%, transparent 62%),radial-gradient(ellipse 80% 45% at 50% 0%, rgba(224,176,64,.18) 0%, transparent 60%),#0c0202'});
+}
+function setLook(){ // the zone's colors, or the boss's gold-and-red on boss levels
+  applyZone(level);
+  if(isBoss(level)){
+    const z=Z=bossZone(level);bossOn=true;Object.assign(C,z);
+    document.body.style.background=z.bg;document.body.style.backgroundAttachment='fixed';
+    document.documentElement.style.setProperty('--zone',z.accent);
+    const b=document.getElementById('board');if(b)b.style.borderColor='rgba(255,59,47,.45)';
+    const el=document.getElementById('zone');if(el)el.textContent='Boss level '+level+': Mojo\'s Challenge';
+  }else if(bossOn){bossOn=false;zoneNow=-1;applyZone(level)}
+}
+const BOSS_SRC='/assets/mojo-boss.mp4';
+function loadBossVideo(){const v=document.getElementById('bossV'),bg=document.getElementById('bossBg');
+  if(v.getAttribute('src')!==BOSS_SRC){v.preload='auto';bg.preload='auto';v.src=BOSS_SRC;bg.src=BOSS_SRC}}
+function playBossIntro(done){
+  const fx=$('bossFx'),v=$('bossV'),bg=$('bossBg'),st=$('bossStamp'),fb=$('bossFb');
+  let finished=false,tm=0;
+  const finish=()=>{if(finished)return;finished=true;clearTimeout(tm);try{v.pause();bg.pause()}catch(e){}
+    fx.hidden=true;st.classList.remove('on');done&&done()};
+  const fallback=()=>{if(finished)return;v.hidden=true;bg.hidden=true;fb.hidden=false;clearTimeout(tm);Snd.zone();
+    tm=setTimeout(()=>st.classList.add('on'),900);setTimeout(()=>{if(!finished)tm=setTimeout(finish,2200)},900)};
+  st.classList.remove('on');fb.hidden=true;v.hidden=false;bg.hidden=false;fx.hidden=false;
+  loadBossVideo();
+  try{v.currentTime=0;bg.currentTime=0}catch(e){}
+  v.muted=!Snd.on;
+  v.onended=()=>setTimeout(finish,1000);
+  v.onerror=fallback;
+  tm=setTimeout(()=>st.classList.add('on'),4300); // "BOSS LEVEL" slams in on the steam burst
+  const p=v.play();bg.play().catch(()=>{});
+  if(p&&p.catch)p.catch(fallback);
+  $('bossSkip').onclick=finish;
+  fx.onclick=e=>{if(e.target===fx||e.target===v)finish()};
+}
+
 const cv=document.getElementById('game'), ctx=cv.getContext('2d');
 const board=document.getElementById('board');
 const $=id=>document.getElementById(id);
@@ -359,7 +473,8 @@ document.addEventListener('pointerdown',()=>Snd.unlock(),{once:false,passive:tru
 })();
 
 /* ---------- game state ---------- */
-let meltAt={},vine=[],cursed=[],ghost=[],seen=[],parStreak=0,bestStreak=0;
+let replay=false,replayBackup=null;
+let meltAt={},vine=[],cursed=[],ghost=[],seen=[],parStreak=0,bestStreak=0,trophies=[],underCount=0;
 let level=1,n,sol,cur,startCur,sr,er,er2=-1,er3=-1,frozen=[],startFrozen=[],locked=[],bumpTile=-1,bumpAt=0,moves=0,par=0,anims={},solved=false,solvedAt=0,flow=null,path=[],hints=3,hintTile=-1,hintAt=0;
 let Wd=0,Hd=0,cell=0,gut=0,padTop=0;
 let best=1;
@@ -375,9 +490,10 @@ let cloudReady=false; // only write to the cloud once we've checked what's alrea
 let owner='';         // whose run is on the board ('' = guest)
 let lastObj=null,dirty=false;
 function saveGame(important){ // every move saves on this device; the cloud copy updates on level changes and when you leave
+  if(replay)return; // boss replays never touch the real run
   const a=acct();
   if(nameKey(a&&a.name)!==owner)return; // never save one player's board into another's slot
-  const obj={v:1,level,n,sol,cur,startCur,sr,er,er2,er3,frozen,startFrozen,locked,vine,cursed,ghost,seen,parStreak,bestStreak,moves,par,hints,solved,savedAt:Date.now()};
+  const obj={v:1,level,n,sol,cur,startCur,sr,er,er2,er3,frozen,startFrozen,locked,vine,cursed,ghost,seen,parStreak,bestStreak,trophies,underCount,moves,par,hints,solved,savedAt:Date.now()};
   try{localStorage.setItem(slotFor(a),JSON.stringify(obj))}catch(e){}
   lastObj=obj;
   if(!(a&&cloudReady))return;
@@ -397,16 +513,18 @@ function loadSave(k){
 const saveLevel=s=>s.solved?s.level+1:s.level;
 const trivial=s=>!s||(s.level===1&&!s.moves&&!s.solved); // an untouched level-1 board isn't real progress
 function restore(s){
-  if(s.solved){level=s.level+1;generate();return}
-  level=s.level;applyZone(level);n=s.n;sol=s.sol;cur=s.cur;startCur=s.startCur||s.cur.slice();sr=s.sr;er=s.er;
+  parStreak=s.parStreak||0;bestStreak=Math.max(s.bestStreak||0,parStreak);
+  trophies=Array.isArray(s.trophies)?s.trophies.slice():[];underCount=s.underCount||0;
+  if(s.solved){level=s.level+1;generate();checkTrophies(true);return}
+  level=s.level;setLook();n=s.n;sol=s.sol;cur=s.cur;startCur=s.startCur||s.cur.slice();sr=s.sr;er=s.er;
   const z0=()=>new Array(n*n).fill(0);
   er2=typeof s.er2==='number'?s.er2:-1;er3=typeof s.er3==='number'?s.er3:-1;frozen=Array.isArray(s.frozen)?s.frozen:z0();
   startFrozen=Array.isArray(s.startFrozen)?s.startFrozen:frozen.slice();locked=Array.isArray(s.locked)?s.locked:z0();
   vine=Array.isArray(s.vine)?s.vine:new Array(n*n).fill(-1);cursed=Array.isArray(s.cursed)?s.cursed:z0();
-  ghost=Array.isArray(s.ghost)?s.ghost:z0();seen=Array.isArray(s.seen)?s.seen:z0();parStreak=s.parStreak||0;bestStreak=Math.max(s.bestStreak||0,parStreak);
+  ghost=Array.isArray(s.ghost)?s.ghost:z0();seen=Array.isArray(s.seen)?s.seen:z0();
   moves=s.moves||0;par=s.par||0;hints=typeof s.hints==='number'?Math.min(s.hints,Z.hints):Z.hints;
   hintTile=-1;solved=false;anims={};path=solutionPath();flow=computeFlow();
-  $('win').hidden=true;updateStats();resize();
+  $('win').hidden=true;updateStats();resize();checkTrophies(true);
 }
 
 function computeFlow(){
@@ -540,7 +658,8 @@ function revealGhosts(){
     seen[i]=1;if(x>0)seen[i-1]=1;if(x<n-1)seen[i+1]=1;if(y>0)seen[i-n]=1;if(y<n-1)seen[i+n]=1}
 }
 function generate(){
-  applyZone(level);
+  setLook();
+  if(level%100>=97)loadBossVideo(); // get the boss video ready a few levels early
   hints=Z.hints;hintTile=-1;bumpTile=-1;er2=-1;er3=-1;
   if(level===1)generateTutorial();else generateRandom();
   path=solutionPath();
@@ -846,6 +965,107 @@ cv.addEventListener('pointerdown',e=>{
   if(flow.count>before)Snd.bloop(flow.count);
 });
 
+/* ---------- new friends: a big reveal the first time each character shows up ---------- */
+const REVEALS={
+  150:{img:'fly-front',name:'Zydeco',text:'The fly. Fastest wings on the bayou, hums while he works, and he just claimed the second drain. Fill his drain too, or he\'ll never stop buzzing about it.'},
+  450:{img:'maggot-front',name:'Beignet',text:'The maggot. Soft, sweet and pale as powdered sugar, and he\'s waited 450 levels for this. The third drain is his now. Don\'t leave him dry.'}
+};
+function showReveal(lv,replay){
+  const r=REVEALS[lv];if(!r)return false;
+  $('revImg').src='/assets/'+r.img+'.png';$('revImg').alt=r.name;
+  $('revName').textContent=r.name;$('revText').textContent=r.text;
+  $('revZone').textContent=replay?'':'Zone: '+Z.name;
+  $('revGo').textContent=replay?'Back to it':'Let\'s go';
+  const el=$('reveal');el.hidden=false;
+  const img=$('revImg');img.style.animation='none';void img.offsetWidth;img.style.animation='';
+  Snd.zone();setTimeout(()=>$('revGo').focus(),300);
+  if(replay)board.scrollIntoView({behavior:'smooth',block:'center'});
+  return true;
+}
+$('revGo').addEventListener('click',()=>{$('reveal').hidden=true});
+
+/* ---------- trophy case ---------- */
+const svgBadge=k=>'<svg viewBox="0 0 200 200">'+EMBLEMS[k]+'</svg>';
+const imgBadge=k=>'<img src="/assets/'+k+'.png" alt="">';
+const lvlT=(n,id,name,art)=>({id,name,desc:'Reach level '+n,art,ok:x=>x.level>=n,reveal:REVEALS[n]?n:0});
+const TROPHIES=[
+  lvlT(25,'l25','Bayou Bound',svgBadge('gator')),
+  lvlT(50,'l50','Grave Digger',svgBadge('skull')),
+  lvlT(75,'l75','Voodoo Touched',svgBadge('doll')),
+  lvlT(100,'l100','Hellfire Survivor',svgBadge('flameskull')),
+  lvlT(125,'l125','Ice Breaker',svgBadge('snowflake')),
+  lvlT(150,'l150','Met Zydeco',imgBadge('fly-front')),
+  lvlT(175,'l175','Sewer Royalty',svgBadge('manhole')),
+  lvlT(200,'l200','Mojo\'s Domain',svgBadge('tophat')),
+  lvlT(225,'l225','Prestige','★'),
+  lvlT(450,'l450','Met Beignet',imgBadge('maggot-front')),
+  {id:'s5',name:'On a Roll',desc:'Par streak of 5',art:'🔥5',ok:x=>x.streak>=5},
+  {id:'s10',name:'Hot Hand',desc:'Par streak of 10',art:'🔥10',ok:x=>x.streak>=10},
+  {id:'s25',name:'Untouchable',desc:'Par streak of 25',art:'🔥25',ok:x=>x.streak>=25},
+  {id:'u1',name:'Under Par',desc:'Beat par once',art:svgBadge('wrench'),ok:x=>x.under>=1},
+  {id:'u25',name:'Pipe Wizard',desc:'Beat par 25 times',art:svgBadge('mask'),ok:x=>x.under>=25}
+];
+let toastQ=[],toastOn=false;
+function toast(msg){toastQ.push(msg);if(!toastOn)nextToast()}
+function nextToast(){
+  const m=toastQ.shift();if(!m){toastOn=false;return}
+  toastOn=true;const t=$('toast');t.textContent=m;t.classList.add('on');
+  setTimeout(()=>{t.classList.remove('on');setTimeout(nextToast,400)},2600);
+}
+function checkTrophies(silent){
+  const x={level,streak:Math.max(bestStreak,parStreak),under:underCount};
+  for(const t of TROPHIES){
+    if(trophies.includes(t.id)||!t.ok(x))continue;
+    trophies.push(t.id);
+    if(!silent){toast('🏆 Trophy unlocked: '+t.name);Snd.par()}
+  }
+  renderTrophies();
+}
+function renderTrophies(){
+  $('tcount').textContent=trophies.length+' / '+TROPHIES.length;
+  $('tgrid').innerHTML=TROPHIES.map(t=>{
+    const got=trophies.includes(t.id),rep=got&&t.reveal;
+    return '<button type="button" class="trophy'+(got?'':' locked')+(rep?' replay':'')+'"'+(rep?' data-rev="'+t.reveal+'"':' tabindex="-1"')+
+      ' aria-label="'+t.name+(got?', unlocked':', locked')+'"><span class="badge'+(t.art==='★'?' star':t.art.charAt(0)==='<'?'':' txt')+'">'+t.art+'</span><b>'+t.name+'</b><small>'+(rep?'Tap to replay':t.desc)+'</small></button>';
+  }).join('')+bossTiles();
+}
+function bossTiles(){ // one tile per boss you've reached, plus the next one
+  const runLevel=replay&&replayBackup?saveLevel(replayBackup):level;
+  let h='';
+  for(let L=100;L<=Math.max(100,Math.floor(runLevel/100)*100+100);L+=100){
+    const beat=trophies.includes('b'+L),crown=trophies.includes('b'+L+'c'),passed=L<runLevel;
+    const cls=beat?'':passed?' fight':' locked';
+    const sub=crown?'Crowned! Tap to replay':beat?'Beaten · tap for the crown':passed?'Tap to fight Mojo':L===runLevel?'You\'re here':'Reach level '+L;
+    h+='<button type="button" class="trophy'+cls+'"'+(passed?' data-boss="'+L+'"':' tabindex="-1"')+' aria-label="Boss '+L+'"><span class="badge">'+svgBadge('tophat')+
+      (crown?'<span class="crown">👑</span>':'')+'</span><b>Boss '+L+'</b><small>'+sub+'</small></button>';
+  }
+  return h;
+}
+$('tgrid').addEventListener('click',e=>{const b=e.target.closest('[data-rev]');if(b){showReveal(+b.dataset.rev,true);return}
+  const f=e.target.closest('[data-boss]');if(f)startReplay(+f.dataset.boss)});
+
+function startReplay(L){
+  if(replay)return;
+  replayBackup=JSON.parse(JSON.stringify({v:1,level,n,sol,cur,startCur,sr,er,er2,er3,frozen,startFrozen,locked,vine,cursed,ghost,seen,parStreak,bestStreak,trophies,underCount,moves,par,hints,solved,savedAt:Date.now()}));
+  replay=true;$('replayBar').hidden=false;$('win').hidden=true;
+  level=L;generate();
+  board.scrollIntoView({behavior:'smooth',block:'center'});
+  playBossIntro(null);
+}
+function exitReplay(){
+  if(!replay)return;
+  const keep=trophies.slice();replay=false;$('replayBar').hidden=true;
+  restore(replayBackup);replayBackup=null;
+  for(const t of keep)if(!trophies.includes(t))trophies.push(t);
+  renderTrophies();$('next').textContent='Next level';saveGame();
+}
+$('replayExit').addEventListener('click',exitReplay);
+function awardBoss(L,under){
+  if(!trophies.includes('b'+L)){trophies.push('b'+L);toast('🏆 Boss '+L+' beaten!');Snd.underPar()}
+  if(under&&!trophies.includes('b'+L+'c')){trophies.push('b'+L+'c');toast('👑 Boss '+L+' crown: beaten under par!')}
+  renderTrophies();
+}
+
 function celebrate(under){ // big themed emblem when you make par, a gold burst when you beat it
   const fx=$('parFx');
   $('parEmb').innerHTML='<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">'+(EMBLEMS[Z.emblem]||EMBLEMS.wrench)+'</svg>';
@@ -857,16 +1077,22 @@ function celebrate(under){ // big themed emblem when you make par, a gold burst 
 function win(){
   solved=true;solvedAt=performance.now();
   Snd.win();
-  if(level+1>best){best=level+1;try{localStorage.setItem('pm-flow-best',String(best))}catch(e){}}
+  if(!replay&&level+1>best){best=level+1;try{localStorage.setItem('pm-flow-best',String(best))}catch(e){}}
   updateStats();
   const used=Z.hints-hints;
   const riders=er3>=0?'Ganja, Zydeco and Beignet are going for a ride.':er2>=0?'Ganja and Zydeco are going for a ride.':'Ganja\'s going for a ride.';
   if(moves<=par){parStreak++;celebrate(moves<par)}else parStreak=0;
+  if(moves<par)underCount++;
   bestStreak=Math.max(bestStreak,parStreak);
+  setTimeout(()=>checkTrophies(false),1400);
   updateStats();
   const note=(moves<par?` ${par-moves} under par!`:moves===par?' Right on par — clean run.':'')+(parStreak>=2?` Par streak: ${parStreak}.`:'')+(used?` Used ${used} hint${used>1?'s':''}.`:'');
-  $('winText').textContent=`Level ${level} cleared in ${moves} taps. Par was ${par}.${note} ${riders}`;
-  if(LB){
+  const bossLine=isBoss(level)?' Mojo storms off grumbling. Boss beaten!':'';
+  if(isBoss(level))setTimeout(()=>awardBoss(level,moves<par),1500);
+  $('winText').textContent=`Level ${level} cleared in ${moves} taps. Par was ${par}.${note} ${riders}${bossLine}`;
+  $('next').textContent=replay?'Back to my run':'Next level';
+  if(replay){$('boardNote').textContent='Replays don\'t change your run or the leaderboard.'}
+  else if(LB){
     LB.post(level,{streak:bestStreak});
     let signedIn=false;try{signedIn=!!localStorage.getItem('pm-lb')}catch(e){}
     $('boardNote').textContent=signedIn?'Posted to the leaderboard below.':'Scroll down to put your name on the leaderboard.';
@@ -876,14 +1102,19 @@ function win(){
 
 $('hint').addEventListener('click',useHint);
 $('next').addEventListener('click',()=>{
-  const before=period(level);level++;generate();
-  if(period(level)>before){
-    const z=Z;
+  if(replay){exitReplay();return}
+  const before=period(level);level++;generate();checkTrophies(false);
+  const zoneMsg=()=>{
+  if(period(level)>before&&showReveal(level,false)){}
+  else if(period(level)>before){
+    const z=zoneFor(level);
     $('zoneName').textContent=z.name;$('zoneText').textContent=z.blurb;
     $('zoneGo').textContent='Enter '+z.name;
     $('zoneUp').hidden=false;Snd.zone();
     setTimeout(()=>$('zoneGo').focus(),300);
   }
+  };
+  if(isBoss(level))playBossIntro(zoneMsg);else zoneMsg();
 });
 $('zoneGo').addEventListener('click',()=>{$('zoneUp').hidden=true});
 $('newb').addEventListener('click',generate);
@@ -936,7 +1167,7 @@ if(acct()){
 /* switching players swaps runs */
 const toBoard=()=>board.scrollIntoView({behavior:'smooth',block:'center'});
 if(window.PMLB)PMLB.onChange((type,a)=>{
-  cloudReady=false;
+  cloudReady=false;if(replay){replay=false;replayBackup=null;$('replayBar').hidden=true}trophies=[];underCount=0;renderTrophies();
   if(type==='signout'||!a){
     owner='';
     const g=loadSave(SAVE);
@@ -972,8 +1203,8 @@ if(window.PMLB)PMLB.onChange((type,a)=>{
         askResume('Found '+a.name+'\'s saved run at level '+there+'. This device is on level '+here+'.',
           'Continue at level '+there,'Keep this run (level '+here+')',
           ()=>{owner=key;go();restore(best);saveGame()},
-          ()=>{owner=key;go();saveGame()});
-      }else{owner=key;go();saveGame()}
+          ()=>{owner=key;go();checkTrophies(true);saveGame()});
+      }else{owner=key;go();checkTrophies(true);saveGame()}
     }else if(best){
       owner=key;go();restore(best);toBoard();
       askResume('Welcome back, '+a.name+'. You were on level '+level+'.',
@@ -983,6 +1214,7 @@ if(window.PMLB)PMLB.onChange((type,a)=>{
     }
   });
 });
+renderTrophies();
 requestAnimationFrame(loop);
 })();
 </script>
