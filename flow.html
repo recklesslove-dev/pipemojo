@@ -64,6 +64,16 @@ h1 span{color:var(--cyan);text-shadow:0 0 18px rgba(0,229,255,.45)}
 .win h2{font-family:"Pirata One",Georgia,serif;font-weight:400;font-size:2.7rem;margin:0;color:var(--cyan);
   text-shadow:0 0 22px rgba(0,229,255,.4)}
 .win p{margin:8px 0 18px;max-width:30ch;line-height:1.45;color:var(--ink)}
+.zonerow{display:flex;align-items:center;gap:8px;margin:12px 0 0}
+.zonerow .zone{margin:0}
+.rankmini{flex:none;width:40px;height:40px;display:none}
+.rankmini.on{display:block}
+.rankmini svg{width:100%;height:100%}
+.promo .ins{width:min(52vw,210px);aspect-ratio:1;margin:4px 0}
+.promo .ins svg{width:100%;height:100%}
+.promo h2{color:var(--gold)!important}
+.promo .ins .newstar{animation:pin .7s .35s cubic-bezier(.2,1.6,.4,1) both;transform-box:fill-box;transform-origin:center}
+@keyframes pin{from{transform:scale(3) rotate(-60deg);opacity:0}to{transform:none;opacity:1}}
 .zone{margin:12px 0 0;font-weight:800;font-size:.85rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--zone,#c97a3d)}
 .zone-up .kicker{margin:0;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-size:.8rem;color:var(--gold)}
 .zone-up h2{color:var(--zone,#00e5ff)!important;text-shadow:0 0 24px var(--zone,#00e5ff)!important;font-size:3rem!important}
@@ -168,6 +178,7 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
   <div class="toprow">
     <a class="back" href="/play">‹ Games</a>
     <div class="topbtns">
+      <a class="sound" href="/locker" style="text-decoration:none">Locker</a>
       <button class="sound" id="fs" hidden>Full screen</button>
       <button class="sound" id="sound" aria-pressed="true">Sound on</button>
     </div>
@@ -180,7 +191,7 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
     </div>
   </header>
 
-  <p class="zone" id="zone"></p>
+  <div class="zonerow"><span class="rankmini" id="rankMini" title="Your rank"></span><p class="zone" id="zone"></p></div>
   <div class="replaybar" id="replayBar" hidden><span>Boss replay · your run is saved</span><button type="button" id="replayExit">Back to my run</button></div>
   <div class="stats" aria-live="polite">
     <div><span class="k">Level</span><span class="v" id="lvl">1</span></div>
@@ -216,6 +227,13 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
       <button class="go" id="revGo">Let's go</button>
       <p class="board-note" id="revZone"></p>
     </div>
+    <div class="win promo" id="promo" hidden>
+      <p class="kicker" style="margin:0;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-size:.8rem;color:var(--gold)">Promoted</p>
+      <div class="ins" id="promoIns"></div>
+      <h2 id="promoName"></h2>
+      <p id="promoText"></p>
+      <button class="go" id="promoGo">Carry on</button>
+    </div>
     <div class="win" id="resume" hidden>
       <img src="/assets/mojo-front.png" alt="" width="638" height="1100">
       <h2>Welcome back</h2>
@@ -238,7 +256,7 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
   <section class="trophies" aria-label="Trophy case"><h3>Trophy case <span id="tcount"></span></h3><div class="tgrid" id="tgrid"></div></section>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <section class="lb-slot" id="lb" aria-label="Leaderboard"></section>
-  <p class="ver">Flow v1.17</p>
+  <p class="ver">Flow v1.18</p>
 </main>
 
 <div class="bossfx" id="bossFx" hidden aria-label="Boss level">
@@ -311,7 +329,7 @@ function zoneFor(l){
   if(l<PRESTIGE_AT)return Object.assign({},ZONES[Math.min(ZONES.length-1,period(l))]);
   const k=Math.floor((l-PRESTIGE_AT)/25),base=ZONES[k%ZONES.length],stars=1+Math.floor(k/ZONES.length);
   return Object.assign({},base,{
-    name:base.name+' '+'★'.repeat(stars),hints:0,frozen:0.08,locked:0.1,double:true,triple:stars>=2,
+    name:base.name+' · Prestige',hints:0,frozen:0.08,locked:0.1,double:true,triple:stars>=2,
     blurb:stars>=2?'Beignet the maggot crawled up a third drain. Ganja, Zydeco and Beignet are all waiting. Fill every one.'
                   :'Back around with every twist turned on: frozen, bolted, two drains.'});
 }
@@ -331,7 +349,7 @@ let zoneNow=-1,Z=zoneFor(1);
 function applyZone(l){
   const zi=period(l);if(zi===zoneNow)return;
   zoneNow=zi;const z=Z=zoneFor(l);
-  Object.assign(C,z);
+  Object.assign(C,z);{const sk=SKINS[equippedSkin()];if(sk)Object.assign(C,sk)}
   document.body.style.background=z.bg;document.body.style.backgroundAttachment='fixed';
   document.documentElement.style.setProperty('--zone',z.accent);
   document.querySelector('meta[name="theme-color"]').setAttribute('content','#060606');
@@ -339,6 +357,59 @@ function applyZone(l){
   const next=(zi+1)*25;
   const el=document.getElementById('zone');if(el)el.textContent='Zone: '+z.name+(next===PRESTIGE_AT?' (prestige starts at level '+next+')':' (next zone at level '+next+')');
 }
+
+/* ---------- rank: a star for every boss beaten (every 100 levels) ---------- */
+const TIERS=[
+  {name:'Bronze', light:'#f3c08a', mid:'#c4813f', dark:'#6e3f17', edge:'#3b1f08'},
+  {name:'Silver', light:'#ffffff', mid:'#c9ced6', dark:'#6b7280', edge:'#2b2f36'},
+  {name:'Gold',   light:'#fff1a8', mid:'#e9b93a', dark:'#8a5f10', edge:'#3d2804'},
+  {name:'Diamond',light:'#ffffff', mid:'#9fe8ff', dark:'#3aa7d6', edge:'#0b3550', diamond:true}
+];
+function starPath(cx,cy,R,r){let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r:R;d+=(i?'L':'M')+(cx+rr*Math.cos(a)).toFixed(1)+' '+(cy+rr*Math.sin(a)).toFixed(1)}return d+'Z'}
+function bevelStar(cx,cy,R,t){
+  const r=R*.42;let g='';
+  for(let i=0;i<10;i++){const a1=-Math.PI/2+i*Math.PI/5,a2=-Math.PI/2+(i+1)*Math.PI/5,r1=i%2?r:R,r2=(i+1)%2?r:R;
+    const fill=i%2?t.dark:t.light,f2=(i>=3&&i<=6)?(i%2?t.dark:t.mid):fill;
+    g+='<path d="M'+cx+' '+cy+'L'+(cx+r1*Math.cos(a1)).toFixed(1)+' '+(cy+r1*Math.sin(a1)).toFixed(1)+'L'+(cx+r2*Math.cos(a2)).toFixed(1)+' '+(cy+r2*Math.sin(a2)).toFixed(1)+'Z" fill="'+f2+'"/>'}
+  g+='<path d="'+starPath(cx,cy,R,r)+'" fill="none" stroke="'+t.edge+'" stroke-width="'+(R*.06).toFixed(1)+'" stroke-linejoin="round"/>';
+  if(t.diamond)g+='<circle cx="'+(cx-R*.18).toFixed(1)+'" cy="'+(cy-R*.35).toFixed(1)+'" r="'+(R*.07).toFixed(1)+'" fill="#fff"/>';
+  return g;
+}
+function insignia(stars,forceTier,pop){
+  const tier=forceTier!=null?forceTier:Math.min(3,Math.floor(Math.max(0,stars-1)/5));
+  const count=forceTier!=null?5:stars<=0?0:stars>20?5:((stars-1)%5)+1,t=TIERS[tier];
+  const pos=[[100,52],[150,88],[131,146],[69,146],[50,88]];let s='';
+  for(let i=0;i<5;i++){const [x,y]=pos[i];
+    s+=i<count?(pop&&i===count-1&&stars<=20?'<g class="newstar">'+bevelStar(x,y,34,t)+'</g>':bevelStar(x,y,34,t)):'<path d="'+starPath(x,y,34,14.3)+'" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" stroke-dasharray="3 3"/>'}
+  if(stars>20&&forceTier==null)s+='<circle cx="100" cy="105" r="21" fill="#0b1f2e" stroke="'+t.mid+'" stroke-width="3"/><text x="100" y="113" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="22" fill="#fff">'+stars+'</text>';
+  return '<svg viewBox="0 0 200 200">'+s+'</svg>';
+}
+const starsAt=l=>Math.max(0,Math.floor((l-1)/100)); // stars earned by the time you're playing level l
+function rankName(st){if(!st)return 'No rank yet';const t=TIERS[Math.min(3,Math.floor((st-1)/5))].name;return st>20?t+' '+st:t+' · '+(((st-1)%5)+1)+' star'+(((st-1)%5)?'s':'')}
+function drawRank(){const st=starsAt(replay&&replayBackup?saveLevel(replayBackup):level),el=document.getElementById('rankMini');if(!el)return;
+  el.classList.toggle('on',st>0);el.innerHTML=st?insignia(st):'';el.title='Rank: '+rankName(st)}
+function showPromotion(st){
+  $('promoIns').innerHTML=insignia(st,null,true);$('promoName').textContent=rankName(st);
+  const lines=['Mojo pins a new star on you.','Another star for the collar.','Earned it. Barely.'];
+  $('promoText').textContent=(st%5===0&&st<=20?'Full '+TIERS[Math.min(3,Math.floor((st-1)/5))].name+' cluster! ':'')+lines[st%lines.length];
+  $('promo').hidden=false;Snd.underPar();setTimeout(()=>$('promoGo').focus(),300);
+}
+const SKINS={ // pipe looks you equip in the Locker: body, coupling, highlight, cap, outline
+  copper:null,
+  pvc:{copper:'#ecebe6',copperDark:'#7a3fc2',hl:'rgba(255,255,255,.8)',cap:'#d6d4cc',outline:'#2a2533'},
+  pex:{copper:'#d6322a',copperDark:'#2a6fd6',hl:'rgba(255,170,160,.6)',cap:'#a8231c',outline:'#1a0606'},
+  castiron:{copper:'#2e2729',copperDark:'#150f11',hl:'rgba(140,125,128,.45)',cap:'#3d3234',outline:'#000'},
+  galvanized:{copper:'#9aa2a6',copperDark:'#5f676b',hl:'rgba(240,244,246,.6)',cap:'#7d868a',outline:'#1c2022'},
+  chrome:{copper:'#dfe6ee',copperDark:'#7d8896',hl:'rgba(255,255,255,.95)',cap:'#b8c2cc',outline:'#1b2028'},
+  bossgold:{copper:'#e0b040',copperDark:'#ff3b2f',hl:'rgba(255,240,180,.6)',cap:'#c99a2e',outline:'#2a0606'},
+  mardigras:{copper:'#7a3fc2',copperDark:'#39d353',hl:'rgba(230,200,255,.5)',cap:'#f5c842',outline:'#0b0710'},
+  glow:{copper:'#2a3a2a',copperDark:'#7dff4a',hl:'rgba(182,255,122,.8)',cap:'#3a5a3a',outline:'#000'},
+  bronze:{copper:'#c4813f',copperDark:'#6e3f17',hl:'rgba(243,192,138,.6)',cap:'#a86a30',outline:'#2a1405'},
+  silver:{copper:'#c9ced6',copperDark:'#6b7280',hl:'rgba(255,255,255,.85)',cap:'#a9aeb6',outline:'#1b1d22'},
+  gold:{copper:'#e9b93a',copperDark:'#8a5f10',hl:'rgba(255,241,168,.75)',cap:'#c99a2e',outline:'#2a1a04'},
+  diamond:{copper:'#9fe8ff',copperDark:'#3aa7d6',hl:'rgba(255,255,255,.95)',cap:'#7fd3f0',outline:'#0b3550'}
+};
+const equippedSkin=()=>{try{return localStorage.getItem('pm-skin')||'copper'}catch(e){return 'copper'}};
 
 /* ---------- boss levels: every 100 levels, Mojo's Challenge ---------- */
 const isBoss=l=>l>=100&&l%100===0;
@@ -353,13 +424,15 @@ function bossZone(l){
 }
 function setLook(){ // the zone's colors, or the boss's gold-and-red on boss levels
   applyZone(level);
+  const sk=SKINS[equippedSkin()];if(sk&&!isBoss(level))Object.assign(C,sk);
   if(isBoss(level)){
     const z=Z=bossZone(level);bossOn=true;Object.assign(C,z);
     document.body.style.background=z.bg;document.body.style.backgroundAttachment='fixed';
     document.documentElement.style.setProperty('--zone',z.accent);
     const b=document.getElementById('board');if(b)b.style.borderColor='rgba(255,59,47,.45)';
     const el=document.getElementById('zone');if(el)el.textContent='Boss level '+level+': Mojo\'s Challenge';
-  }else if(bossOn){bossOn=false;zoneNow=-1;applyZone(level)}
+  }else if(bossOn){bossOn=false;zoneNow=-1;applyZone(level);if(sk)Object.assign(C,sk)}
+  drawRank();
 }
 const BOSS_SRC='/assets/mojo-boss.mp4';
 function loadBossVideo(){const v=document.getElementById('bossV'),bg=document.getElementById('bossBg');
@@ -1089,6 +1162,7 @@ function win(){
   const note=(moves<par?` ${par-moves} under par!`:moves===par?' Right on par — clean run.':'')+(parStreak>=2?` Par streak: ${parStreak}.`:'')+(used?` Used ${used} hint${used>1?'s':''}.`:'');
   const bossLine=isBoss(level)?' Mojo storms off grumbling. Boss beaten!':'';
   if(isBoss(level))setTimeout(()=>awardBoss(level,moves<par),1500);
+  if(isBoss(level)&&!replay)setTimeout(()=>showPromotion(level/100),1500);
   $('winText').textContent=`Level ${level} cleared in ${moves} taps. Par was ${par}.${note} ${riders}${bossLine}`;
   $('next').textContent=replay?'Back to my run':'Next level';
   if(replay){$('boardNote').textContent='Replays don\'t change your run or the leaderboard.'}
@@ -1117,6 +1191,7 @@ $('next').addEventListener('click',()=>{
   if(isBoss(level))playBossIntro(zoneMsg);else zoneMsg();
 });
 $('zoneGo').addEventListener('click',()=>{$('zoneUp').hidden=true});
+$('promoGo').addEventListener('click',()=>{$('promo').hidden=true;drawRank()});
 $('newb').addEventListener('click',generate);
 $('restart').addEventListener('click',()=>{cur=startCur.slice();frozen=startFrozen.slice();seen=new Array(n*n).fill(0);bumpTile=-1;moves=0;solved=false;anims={};hintTile=-1;flow=computeFlow();$('win').hidden=true;updateStats();saveGame(false)});
 window.addEventListener('resize',resize);

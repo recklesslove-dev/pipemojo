@@ -13,6 +13,32 @@ function switchPlayer(){
   fetch(API+'/signout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:a.token})}).catch(()=>{});
   save(null);emit('signout');return true;
 }
+/* rank insignia (Flow): a star for every 100 levels cleared */
+const TIERS=[
+  {name:'Bronze', light:'#f3c08a', mid:'#c4813f', dark:'#6e3f17', edge:'#3b1f08'},
+  {name:'Silver', light:'#ffffff', mid:'#c9ced6', dark:'#6b7280', edge:'#2b2f36'},
+  {name:'Gold',   light:'#fff1a8', mid:'#e9b93a', dark:'#8a5f10', edge:'#3d2804'},
+  {name:'Diamond',light:'#ffffff', mid:'#9fe8ff', dark:'#3aa7d6', edge:'#0b3550', diamond:true}
+];
+function starPath(cx,cy,R,r){let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r:R;d+=(i?'L':'M')+(cx+rr*Math.cos(a)).toFixed(1)+' '+(cy+rr*Math.sin(a)).toFixed(1)}return d+'Z'}
+function bevelStar(cx,cy,R,t){
+  const r=R*.42;let g='';
+  for(let i=0;i<10;i++){const a1=-Math.PI/2+i*Math.PI/5,a2=-Math.PI/2+(i+1)*Math.PI/5,r1=i%2?r:R,r2=(i+1)%2?r:R;
+    const fill=i%2?t.dark:t.light,f2=(i>=3&&i<=6)?(i%2?t.dark:t.mid):fill;
+    g+='<path d="M'+cx+' '+cy+'L'+(cx+r1*Math.cos(a1)).toFixed(1)+' '+(cy+r1*Math.sin(a1)).toFixed(1)+'L'+(cx+r2*Math.cos(a2)).toFixed(1)+' '+(cy+r2*Math.sin(a2)).toFixed(1)+'Z" fill="'+f2+'"/>'}
+  g+='<path d="'+starPath(cx,cy,R,r)+'" fill="none" stroke="'+t.edge+'" stroke-width="'+(R*.06).toFixed(1)+'" stroke-linejoin="round"/>';
+  if(t.diamond)g+='<circle cx="'+(cx-R*.18).toFixed(1)+'" cy="'+(cy-R*.35).toFixed(1)+'" r="'+(R*.07).toFixed(1)+'" fill="#fff"/>';
+  return g;
+}
+function insignia(stars,forceTier){
+  const tier=forceTier!=null?forceTier:Math.min(3,Math.floor(Math.max(0,stars-1)/5));
+  const count=forceTier!=null?5:stars<=0?0:stars>20?5:((stars-1)%5)+1,t=TIERS[tier];
+  const pos=[[100,52],[150,88],[131,146],[69,146],[50,88]];let s='';
+  for(let i=0;i<5;i++){const [x,y]=pos[i];
+    s+=i<count?bevelStar(x,y,34,t):'<path d="'+starPath(x,y,34,14.3)+'" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" stroke-dasharray="3 3"/>'}
+  if(stars>20&&forceTier==null)s+='<circle cx="100" cy="105" r="21" fill="#0b1f2e" stroke="'+t.mid+'" stroke-width="3"/><text x="100" y="113" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="22" fill="#fff">'+stars+'</text>';
+  return '<svg viewBox="0 0 200 200">'+s+'</svg>';
+}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 async function call(path,body){
@@ -34,6 +60,8 @@ const CSS=`
 .lb li .r{width:1.6em;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums}
 .lb li .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lb li .s{font-variant-numeric:tabular-nums;color:#00e5ff}
+.lb .ri{display:inline-block;width:20px;height:20px;vertical-align:-4px;margin-right:5px}
+.lb .ri svg{width:100%;height:100%}
 .lb .fl{font-size:.78rem;font-weight:800;color:#ffb347;margin-left:4px;white-space:nowrap}
 .lb li.me{background:rgba(0,229,255,.14);box-shadow:inset 3px 0 0 #00e5ff}
 .lb li:first-child .r{color:#f5c842}
@@ -97,7 +125,7 @@ Board.prototype.render=function(){
   else{
     h+='<ol>'+this.top.map((r,i)=>{
       const mine=me&&r.name.toLowerCase().replace(/ /g,'')===me;
-      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+esc(r.name)+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
+      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+(this.game==='flow'&&r.best>=100?'<span class="ri" title="Rank">'+insignia(Math.floor(r.best/100))+'</span>':'')+esc(r.name)+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
     }).join('')+'</ol>';
   }
   h+='</div>';
