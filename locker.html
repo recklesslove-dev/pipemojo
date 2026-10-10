@@ -156,7 +156,7 @@ a{color:inherit;text-decoration:none}
   <button class="pill" id="sound" aria-pressed="true">Sound on</button>
 </div>
 
-<p class="ver">Locker v1.2</p>
+<p class="ver">Locker v1.3</p>
 <section class="gear" id="gear" aria-label="Your gear" aria-hidden="true">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="gearTitle">
     <div class="sheetHead"><h2 id="gearTitle">Your gear</h2><button class="close" id="close">Close</button></div>
@@ -288,7 +288,8 @@ function nextLine(){ // sometimes a line about your progress, otherwise a random
   return lastLine=l;
 }
 let sayT=0;
-function say(text){const s=$('say');s.textContent=text;s.classList.add('on');clearTimeout(sayT);sayT=setTimeout(()=>s.classList.remove('on'),2200)}
+function say(text){const s=$('say');s.textContent=text;s.classList.add('on');clearTimeout(sayT);
+  sayT=setTimeout(()=>s.classList.remove('on'),Math.min(8000,Math.max(3500,1800+text.length*75)))} // longer lines stay up longer
 mojo.addEventListener('click',()=>{mojo.classList.remove('tilt','tap','hop');void mojo.offsetWidth;mojo.classList.add('hop');Snd.tap();
   say(nextLine());setTimeout(()=>mojo.classList.remove('hop'),800)});
 
