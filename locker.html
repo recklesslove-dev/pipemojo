@@ -94,6 +94,7 @@ a{color:inherit;text-decoration:none}
 .tabs button[aria-selected="true"]{background:var(--gold);color:#1a1004}
 .panel{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 16px 22px}
 .panel[hidden]{display:none}
+.sec{font-family:var(--title);font-weight:400;font-size:1.5rem;color:var(--gold);margin:10px 0 2px}
 .note{font-size:.88rem;color:var(--muted);line-height:1.45;margin:4px 0 12px}
 .rank{text-align:center}
 .rank .ins{width:min(62vw,270px);aspect-ratio:1;margin:0 auto}
@@ -156,7 +157,7 @@ a{color:inherit;text-decoration:none}
   <button class="pill" id="sound" aria-pressed="true">Sound on</button>
 </div>
 
-<p class="ver">Locker v1.3</p>
+<p class="ver">Locker v1.4</p>
 <section class="gear" id="gear" aria-label="Your gear" aria-hidden="true">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="gearTitle">
     <div class="sheetHead"><h2 id="gearTitle">Your gear</h2><button class="close" id="close">Close</button></div>
@@ -377,9 +378,33 @@ function renderRank(){
   $('p-rank').innerHTML='<div class="rank"><div class="ins">'+insignia(stars)+'</div><h3>'+label+'</h3>'+
     '<p class="sub">Flow level '+level+' · next star when you beat Boss '+next+'</p>'+
     '<div class="bar"><i style="width:'+Math.max(2,Math.min(100,pct))+'%"></i></div><p class="note">'+(next-level+1)+' levels to go. Every boss you beat pins another star.</p>'+
-    '<div class="ladder">'+TIERS.map((t,i)=>'<div class="'+(i===tier&&stars>0?'on':'')+'">'+insignia(5,i)+t.name+'<br>Lv '+(500*(i+1))+'</div>').join('')+'</div></div>';
+    '<div class="ladder">'+TIERS.map((t,i)=>'<div class="'+(i===tier&&stars>0?'on':'')+'">'+insignia(5,i)+t.name+'<br>Lv '+(500*(i+1))+'</div>').join('')+'</div>'+
+    '<h3 class="sec" style="margin-top:22px">Whack-a-Pipe</h3><div class="ins">'+chevrons(Math.floor(WBEST/100))+'</div><h3>'+chevName(Math.floor(WBEST/100))+'</h3>'+
+    '<p class="sub">Best score '+WBEST+' · next chevron at '+(Math.floor(WBEST/100)+1)*100+'</p></div>';
 }
 
+/* chevron rank (Whack-a-Pipe): a chevron for every 100 points of your best score */
+const CTIERS=[{name:'Bronze',light:'#f3c08a',mid:'#c4813f',dark:'#6e3f17',edge:'#3b1f08'},{name:'Silver',light:'#ffffff',mid:'#c9ced6',dark:'#6b7280',edge:'#2b2f36'},
+  {name:'Gold',light:'#fff1a8',mid:'#e9b93a',dark:'#8a5f10',edge:'#3d2804'},{name:'Diamond',light:'#ffffff',mid:'#9fe8ff',dark:'#3aa7d6',edge:'#0b3550'}];
+function chevrons(r){
+  const tier=Math.min(3,Math.floor(Math.max(0,r-1)/5)),count=r<=0?0:r>20?5:((r-1)%5)+1,t=CTIERS[tier];
+  let s='<defs><linearGradient id="cg'+tier+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+t.light+'"/><stop offset=".55" stop-color="'+t.mid+'"/><stop offset="1" stop-color="'+t.dark+'"/></linearGradient></defs>';
+  for(let i=0;i<5;i++){const y=150-i*28,d='M28 '+(y+38)+'L100 '+y+'L172 '+(y+38)+'L172 '+(y+58)+'L100 '+(y+20)+'L28 '+(y+58)+'Z';
+    s+=i<count?'<path d="'+d+'" fill="url(#cg'+tier+')" stroke="'+t.edge+'" stroke-width="4" stroke-linejoin="round"/>':'<path d="'+d+'" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" stroke-dasharray="4 4"/>'}
+  if(r>20)s+='<circle cx="100" cy="104" r="22" fill="#0b1f2e" stroke="'+t.mid+'" stroke-width="3"/><text x="100" y="112" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="22" fill="#fff">'+r+'</text>';
+  return '<svg viewBox="0 0 200 200">'+s+'</svg>';
+}
+function chevName(r){if(!r)return 'No rank yet';const t=CTIERS[Math.min(3,Math.floor((r-1)/5))].name;return r>20?t+' '+r:t+' · '+(((r-1)%5)+1)+' chevron'+(((r-1)%5)?'s':'')}
+const WACC=(()=>{try{const a=JSON.parse(localStorage.getItem('pm-lb')||'null');return a?String(a.name).toLowerCase().replace(/ /g,''):''}catch(e){return ''}})();
+const WBEST=(()=>{try{return +localStorage.getItem('pm-whack-best')||0}catch(e){return 0}})();
+const WTROS=(()=>{try{return JSON.parse(localStorage.getItem('pm-whack-tro:'+WACC)||'[]')}catch(e){return[]}})();
+const WTRO=[
+  {id:'z100',name:'Swamp Smasher',desc:'Score 100',art:svg('gator')},{id:'z200',name:'Bone Breaker',desc:'Score 200',art:svg('skull')},
+  {id:'z300',name:'Gold Digger',desc:'Score 300',art:svg('doll')},{id:'z400',name:'Fireproof',desc:'Score 400',art:svg('flameskull')},
+  {id:'clean',name:'Clean Hands',desc:'Score 100 without losing a life',art:'🧤'},{id:'streak50',name:'Hot Streak',desc:'50 whacks in a row',art:'🔥50'},
+  {id:'voodoo5',name:'Voodoo Master',desc:'5 voodoo pipes in one round',art:svg('doll')},{id:'comeback',name:'Comeback Kid',desc:'Score 200 after dropping to your last life',art:'💪'},
+  {id:'grinder',name:'Grinder',desc:'Play 100 rounds',art:svg('wrench')}
+];
 /* trophies: same case as Flow */
 const lvlT=(n,id,name,art)=>({id,name,desc:'Reach level '+n,art});
 const TROPHIES=[
@@ -398,7 +423,8 @@ function renderTrophies(){
     h+=tile(beat,svg('tophat'),'Boss '+L,crown?'Crowned':beat?'Beaten':L<level?'Fight it in Flow':'Reach level '+L,crown?'<span class="crown">👑</span>':'');
   }
   const got=trophies.filter(t=>!/^b/.test(t)).length;
-  $('p-trophies').innerHTML='<p class="note">'+got+' of '+TROPHIES.length+' trophies. Boss trophies and crowns are earned in Flow.</p><div class="grid">'+h+'</div>';
+  $('p-trophies').innerHTML='<h3 class="sec">Flow</h3><p class="note">'+got+' of '+TROPHIES.length+' trophies. Boss trophies and crowns are earned in Flow.</p><div class="grid">'+h+'</div>'+
+    '<h3 class="sec">Whack-a-Pipe</h3><p class="note">'+WTROS.length+' of '+WTRO.length+' trophies.</p><div class="grid">'+WTRO.map(t=>tile(WTROS.includes(t.id),t.art,t.name,t.desc)).join('')+'</div>';
 }
 
 /* pipe skins: shown now, equipping arrives with the next Flow update */

@@ -123,8 +123,8 @@ li.msg{color:rgba(255,255,255,.55);font-weight:600}
       <p>Not right now. You can tap <b>Switch player</b> and claim a new name, but your old scores stay under the old one.</p></details>
     <details><summary>Why didn't my score post?</summary>
       <p>You need to be signed in to a name, and you need a connection. Whack-a-Pipe scores are also checked against how long the round actually lasted, so fake scores get turned away.</p></details>
-    <details><summary>What are the stars next to a name?</summary>
-      <p>That's the player's Flow rank. Every boss beaten (every 100 levels) pins a star: five Bronze, then Silver, Gold and Diamond. A full Diamond cluster gets a number in the middle.</p></details>
+    <details><summary>What are the stars and chevrons next to a name?</summary>
+      <p>That's the player's rank. In Flow, every boss beaten (every 100 levels) pins a star. In Whack-a-Pipe, every 100 points of your best score earns a chevron. Five Bronze, then Silver, Gold and Diamond. A full Diamond set gets a number in the middle.</p></details>
     <details><summary>What's the 🔥 next to a name?</summary>
       <p>That's the player's best Flow par streak: the most levels in a row they've cleared on par or better. It's their best ever, so it stays even after a streak ends.</p></details>
     <details><summary>Does Flow save my progress?</summary>
@@ -159,6 +159,18 @@ function insignia(stars,forceTier){
   if(stars>20&&forceTier==null)s+='<circle cx="100" cy="105" r="21" fill="#0b1f2e" stroke="'+t.mid+'" stroke-width="3"/><text x="100" y="113" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="22" fill="#fff">'+stars+'</text>';
   return '<svg viewBox="0 0 200 200">'+s+'</svg>';
 }
+/* chevron rank (Whack-a-Pipe): a chevron for every 100 points of your best score */
+const CTIERS=[{name:'Bronze',light:'#f3c08a',mid:'#c4813f',dark:'#6e3f17',edge:'#3b1f08'},{name:'Silver',light:'#ffffff',mid:'#c9ced6',dark:'#6b7280',edge:'#2b2f36'},
+  {name:'Gold',light:'#fff1a8',mid:'#e9b93a',dark:'#8a5f10',edge:'#3d2804'},{name:'Diamond',light:'#ffffff',mid:'#9fe8ff',dark:'#3aa7d6',edge:'#0b3550'}];
+function chevrons(r){
+  const tier=Math.min(3,Math.floor(Math.max(0,r-1)/5)),count=r<=0?0:r>20?5:((r-1)%5)+1,t=CTIERS[tier];
+  let s='<defs><linearGradient id="cg'+tier+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+t.light+'"/><stop offset=".55" stop-color="'+t.mid+'"/><stop offset="1" stop-color="'+t.dark+'"/></linearGradient></defs>';
+  for(let i=0;i<5;i++){const y=150-i*28,d='M28 '+(y+38)+'L100 '+y+'L172 '+(y+38)+'L172 '+(y+58)+'L100 '+(y+20)+'L28 '+(y+58)+'Z';
+    s+=i<count?'<path d="'+d+'" fill="url(#cg'+tier+')" stroke="'+t.edge+'" stroke-width="4" stroke-linejoin="round"/>':'<path d="'+d+'" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" stroke-dasharray="4 4"/>'}
+  if(r>20)s+='<circle cx="100" cy="104" r="22" fill="#0b1f2e" stroke="'+t.mid+'" stroke-width="3"/><text x="100" y="112" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="22" fill="#fff">'+r+'</text>';
+  return '<svg viewBox="0 0 200 200">'+s+'</svg>';
+}
+function chevName(r){if(!r)return 'No rank yet';const t=CTIERS[Math.min(3,Math.floor((r-1)/5))].name;return r>20?t+' '+r:t+' · '+(((r-1)%5)+1)+' chevron'+(((r-1)%5)?'s':'')}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let me='';
 try{const a=JSON.parse(localStorage.getItem('pm-lb')||'null');if(a&&a.name){me=a.name;document.getElementById('you').innerHTML='You\'re playing as <b>'+esc(a.name)+'</b>. Your rows are highlighted.'}}catch(e){}
@@ -169,7 +181,7 @@ async function load(game,unit){
     const r=await fetch(API+'/top?game='+game);const d=await r.json();
     const top=d.top||[];
     if(!top.length){ol.innerHTML='<li class="msg">No scores yet. Be the first.</li>';return}
-    ol.innerHTML=top.map((x,i)=>'<li'+(me&&key(x.name)===key(me)?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+(game==='flow'&&x.best>=100?'<span class="ri" title="Rank">'+insignia(Math.floor(x.best/100))+'</span>':'')+esc(x.name)+(x.streak>=2?' <span class="fl" title="Best par streak">🔥'+x.streak+'</span>':'')+'</span><span class="s">'+unit+x.best+'</span></li>').join('');
+    ol.innerHTML=top.map((x,i)=>'<li'+(me&&key(x.name)===key(me)?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+(x.best>=100?'<span class="ri" title="Rank">'+(game==='flow'?insignia(Math.floor(x.best/100)):chevrons(Math.floor(x.best/100)))+'</span>':'')+esc(x.name)+(x.streak>=2?' <span class="fl" title="Best par streak">🔥'+x.streak+'</span>':'')+'</span><span class="s">'+unit+x.best+'</span></li>').join('');
   }catch(e){ol.innerHTML='<li class="msg">Couldn\'t load the board. Try again in a bit.</li>'}
 }
 load('whack','');load('flow','Lv ');

@@ -67,6 +67,19 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 button,.btn{font:inherit;font-weight:800;font-size:1rem;border:0;border-radius:10px;padding:13px 22px;cursor:pointer}
 .primary{background:var(--cyan);color:#000}
 .ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.22)}
+.rankbox{display:flex;align-items:center;gap:12px;margin:6px 0 2px;text-align:left}
+.rankbox[hidden]{display:none}
+.rankbox .ch{width:64px;height:64px;flex:none}
+.rankbox .ch svg{width:100%;height:100%}
+.rankbox b{display:block;font-size:1.05rem}
+.rankbox span{font-size:.85rem;color:rgba(255,255,255,.65)}
+.rankbox .promo{color:var(--gold);font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:.75rem}
+.newtro{font-size:.9rem;color:var(--gold);font-weight:800;margin:6px 0 0}
+.newtro[hidden]{display:none}
+.toast{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translate(-50%,-150%);z-index:20;background:#f5c842;color:#1a1004;font-weight:800;
+  padding:9px 16px;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.2,1.4,.4,1);white-space:nowrap;font-size:.9rem}
+.toast.on{transform:translate(-50%,0)}
+.wver{position:fixed;right:8px;bottom:calc(4px + env(safe-area-inset-bottom,0px));font-size:.65rem;color:rgba(255,255,255,.28)}
 button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 </style>
 </head>
@@ -104,7 +117,9 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
   <div class="overlay" id="over" hidden>
     <img src="/assets/mojo-34.png" alt="" width="716" height="1102">
     <h1 class="cursed">Cursed</h1>
+    <div class="rankbox" id="rankBox" hidden><span class="ch" id="rankCh"></span><div><span class="promo" id="rankPromo"></span><b id="rankName"></b><span id="rankNext"></span></div></div>
     <p id="overText"></p>
+    <p class="newtro" id="newTro" hidden></p>
     <div class="btns">
       <button class="primary" id="again">Play again</button>
       <a class="btn ghost" href="/play">Games</a>
@@ -113,6 +128,8 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
   </div>
 </div>
 
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<p class="wver">Whack v1.1</p>
 <script src="/lb.js"></script>
 <script>
 (function(){
@@ -120,6 +137,45 @@ const cv=document.getElementById('c'),ctx=cv.getContext('2d'),stage=document.get
 const $=id=>document.getElementById(id);
 let W=0,H=0,dpr=1,LANES=4,laneW=0,pipeW=0,dangerY=0;
 let paused=false;
+let phase='play',phaseT=0,nextBreak=100,banner='',bannerAt=0,roundVoodoo=0,lowLifeScore=-1,roundTro=[];
+/* chevron rank (Whack-a-Pipe): a chevron for every 100 points of your best score */
+const CTIERS=[{name:'Bronze',light:'#f3c08a',mid:'#c4813f',dark:'#6e3f17',edge:'#3b1f08'},{name:'Silver',light:'#ffffff',mid:'#c9ced6',dark:'#6b7280',edge:'#2b2f36'},
+  {name:'Gold',light:'#fff1a8',mid:'#e9b93a',dark:'#8a5f10',edge:'#3d2804'},{name:'Diamond',light:'#ffffff',mid:'#9fe8ff',dark:'#3aa7d6',edge:'#0b3550'}];
+function chevrons(r){
+  const tier=Math.min(3,Math.floor(Math.max(0,r-1)/5)),count=r<=0?0:r>20?5:((r-1)%5)+1,t=CTIERS[tier];
+  let s='<defs><linearGradient id="cg'+tier+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+t.light+'"/><stop offset=".55" stop-color="'+t.mid+'"/><stop offset="1" stop-color="'+t.dark+'"/></linearGradient></defs>';
+  for(let i=0;i<5;i++){const y=150-i*28,d='M28 '+(y+38)+'L100 '+y+'L172 '+(y+38)+'L172 '+(y+58)+'L100 '+(y+20)+'L28 '+(y+58)+'Z';
+    s+=i<count?'<path d="'+d+'" fill="url(#cg'+tier+')" stroke="'+t.edge+'" stroke-width="4" stroke-linejoin="round"/>':'<path d="'+d+'" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" stroke-dasharray="4 4"/>'}
+  if(r>20)s+='<circle cx="100" cy="104" r="22" fill="#0b1f2e" stroke="'+t.mid+'" stroke-width="3"/><text x="100" y="112" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="22" fill="#fff">'+r+'</text>';
+  return '<svg viewBox="0 0 200 200">'+s+'</svg>';
+}
+function chevName(r){if(!r)return 'No rank yet';const t=CTIERS[Math.min(3,Math.floor((r-1)/5))].name;return r>20?t+' '+r:t+' · '+(((r-1)%5)+1)+' chevron'+(((r-1)%5)?'s':'')}
+
+/* trophies, kept on this device for each player */
+const WTRO=[
+  {id:'z100',name:'Swamp Smasher',desc:'Score 100'},{id:'z200',name:'Bone Breaker',desc:'Score 200'},
+  {id:'z300',name:'Gold Digger',desc:'Score 300'},{id:'z400',name:'Fireproof',desc:'Score 400'},
+  {id:'clean',name:'Clean Hands',desc:'Score 100 without losing a life'},{id:'streak50',name:'Hot Streak',desc:'50 whacks in a row'},
+  {id:'voodoo5',name:'Voodoo Master',desc:'5 voodoo pipes in one round'},{id:'comeback',name:'Comeback Kid',desc:'Score 200 after dropping to your last life'},
+  {id:'grinder',name:'Grinder',desc:'Play 100 rounds'}
+];
+const wkey=()=>{const a=window.PMLB&&PMLB.account();return a?String(a.name).toLowerCase().replace(/ /g,''):''};
+function wTro(){try{return JSON.parse(localStorage.getItem('pm-whack-tro:'+wkey())||'[]')}catch(e){return[]}}
+function wRounds(){try{return +localStorage.getItem('pm-whack-rounds:'+wkey())||0}catch(e){return 0}}
+let toastQ=[],toastOn=false;
+function toast(m){toastQ.push(m);if(!toastOn)nextToast()}
+function nextToast(){const m=toastQ.shift();if(!m){toastOn=false;return}toastOn=true;const el=document.getElementById('toast');el.textContent=m;el.classList.add('on');
+  setTimeout(()=>{el.classList.remove('on');setTimeout(nextToast,350)},2200)}
+function award(id){const have=wTro();if(have.includes(id))return;have.push(id);try{localStorage.setItem('pm-whack-tro:'+wkey(),JSON.stringify(have))}catch(e){}
+  const t=WTRO.find(x=>x.id===id);roundTro.push(t.name);toast('🏆 '+t.name);Snd.cheer()}
+
+/* Mojo's real voice (the boss clip) for the big moments */
+const VOICE={};let voiceLoading=false;
+function loadVoice(){if(voiceLoading||!Snd.ac)return;voiceLoading=true;
+  for(const n of ['letswork','bayou','graveyard','voodoogold','hellfire','golden','voodoo','newrecord','cursed'])
+    fetch('/assets/mojo-'+n+'.mp3').then(r=>r.ok?r.arrayBuffer():Promise.reject()).then(a=>new Promise((ok,no)=>Snd.ac.decodeAudioData(a,ok,no))).then(b=>{VOICE[n]=b}).catch(()=>{})}
+function voice(n,delay){if(!Snd.on||!Snd.ac||!VOICE[n])return;const s=Snd.ac.createBufferSource(),g=Snd.ac.createGain();s.buffer=VOICE[n];g.gain.value=1.4;s.connect(g);g.connect(Snd.master);s.start(Snd.ac.currentTime+(delay||0))}
+
 let pipes=[],bursts=[],flash=0,vflash=0,score=0,lives=3,best=0,running=false,spawnT=0,last=0,streak=0;
 let heat=0,sinceVoodoo=0,voodoosUsed=0; // heat drives the pace; the voodoo pipe cools it down, a little less each time
 /* zones every 100 points, like Flow: the pipes and backdrop change as you climb */
@@ -208,7 +264,7 @@ $('sound').addEventListener('click',()=>{
   try{localStorage.setItem('pm-sound',Snd.on?'on':'off')}catch(e){}
   if(Snd.on)Snd.start();
 });
-document.addEventListener('pointerdown',()=>Snd.unlock(),{passive:true});
+document.addEventListener('pointerdown',()=>{Snd.unlock();loadVoice()},{passive:true});
 
 function drawLives(){
   const el=$('lives');el.innerHTML='';
@@ -393,7 +449,8 @@ function frame(t){
   ctx.clearRect(0,0,W,H);
   drawDanger(t);
   drawCrew(t);
-  if(running&&!paused){
+  if(running&&!paused&&phase!=='play')breakStep(dt,t);
+  else if(running&&!paused){
     spawnT-=dt;
     if(spawnT<=0){spawn();spawnT=spawnGap()}
     for(let i=pipes.length-1;i>=0;i--){
@@ -401,15 +458,66 @@ function frame(t){
       if(p.y<=dangerY){pipes.splice(i,1);if(!p.voodoo)loseLife(t)}
     }
   }
-  for(const p of pipes)drawPipe(p,t);
+  for(const p of pipes)p.gold?drawGoldPipe(p,t):drawPipe(p,t);
   drawBursts(dt);
+  drawBanner(t);
   if(flash>0){ctx.fillStyle='rgba(232,40,30,'+(flash*0.35)+')';ctx.fillRect(0,0,W,H);flash=Math.max(0,flash-dt*2.5)}
   if(vflash>0){ctx.fillStyle='rgba(155,80,255,'+(vflash*0.45)+')';ctx.fillRect(0,0,W,H);vflash=Math.max(0,vflash-dt*1.6)}
   requestAnimationFrame(frame);
 }
 
+/* every 100 points: the pipes drain away for a breather, then a golden rush, then back to it a little faster */
+const ZONE_LINE={1:'bayou',2:'graveyard',3:'voodoogold',4:'hellfire'};
+function roundChecks(){
+  if(score>=100&&lives===3)award('clean');
+  if(streak>=50)award('streak50');
+  if(roundVoodoo>=5)award('voodoo5');
+  if(lowLifeScore>=0&&lowLifeScore<200&&score>=200)award('comeback');
+}
+function maybeBreak(t){
+  if(phase!=='play'||score<nextBreak)return;
+  const k=Math.floor(score/100);nextBreak=(k+1)*100;
+  phase='break';phaseT=2.6;for(const p of pipes)p.drain=true;
+  banner=k<=4?WZ[Math.min(WZ.length-1,k)].name:k*100+'!';bannerAt=t;
+  if(ZONE_LINE[k])voice(ZONE_LINE[k],.15);
+  ['z100','z200','z300','z400'].forEach((id,i)=>{if(score>=(i+1)*100)award(id)});
+}
+function breakStep(dt,t){
+  phaseT-=dt;
+  for(let i=pipes.length-1;i>=0;i--){const p=pipes[i];
+    if(p.drain){p.y+=H*1.4*dt;if(p.y>H+20)pipes.splice(i,1);continue}
+    p.y-=p.v*dt;if(p.y<=dangerY)pipes.splice(i,1); // golden pipes that get away cost nothing
+  }
+  if(phase==='break'&&phaseT<=0){phase='rush';phaseT=5;spawnT=.2;banner='Golden rush!';bannerAt=t;voice('golden')}
+  else if(phase==='rush'){
+    spawnT-=dt;
+    if(spawnT<=0&&phaseT>.8){const lane=freeLane();if(lane>=0)pipes.push({lane,gold:true,x:lane*laneW+laneW/2,y:H+10,len:H*(.14+Math.random()*.06),v:speed()*.75});spawnT=.32}
+    if(phaseT<=0){phase='play';for(const p of pipes)if(p.gold)burst(p.x,p.y);pipes=pipes.filter(p=>!p.gold);spawnT=1;heat+=2;banner='';}
+  }
+}
+function drawGoldPipe(p,t){
+  const x=p.x-pipeW/2,y=p.y,w=pipeW,len=p.len,s=.5+.5*Math.sin(t/120+p.x);
+  ctx.fillStyle='rgba(255,215,90,'+(.12+.12*s)+')';ctx.fillRect(x-14,y-12,w+28,len+18);
+  ctx.fillStyle='#3a2604';ctx.fillRect(x-3,y,w+6,len);
+  ctx.fillStyle='#e9b93a';ctx.fillRect(x,y,w,len);
+  ctx.fillStyle='rgba(255,250,210,.7)';ctx.fillRect(x+w*.18,y,w*.14,len);
+  ctx.fillStyle='rgba(0,0,0,.18)';ctx.fillRect(x+w*.72,y,w*.28,len);
+  ctx.fillStyle='#3a2604';ctx.fillRect(x-9,y-4,w+18,18);ctx.fillStyle='#fff1a8';ctx.fillRect(x-7,y-2,w+14,14);
+  ctx.fillStyle='#fff';ctx.globalAlpha=s;ctx.beginPath();ctx.arc(x+w*.3,y+len*.3,3,0,6.28);ctx.fill();ctx.globalAlpha=1;
+}
+function drawBanner(t){
+  if(!banner||(phase==='play'))return;
+  const age=(t-bannerAt)/1000,a=Math.min(1,age*4)*(phase==='rush'?Math.max(0,1-(age-1.4)/.6):1),sc=1+Math.max(0,.3-age)*1.5;if(a<=0)return;
+  ctx.save();ctx.globalAlpha=a;ctx.translate(W/2,H*.48);ctx.scale(sc,sc);
+  ctx.font='400 '+Math.min(64,W*.13)+'px "Pirata One", Georgia, serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.lineWidth=6;ctx.strokeStyle='#000';ctx.strokeText(banner,0,0);ctx.fillStyle=phase==='rush'?'#f5c842':P.water;ctx.fillText(banner,0,0);
+  ctx.font='800 '+Math.min(17,W*.04)+'px Nunito, sans-serif';ctx.lineWidth=4;
+  const sub=phase==='rush'?'Golden pipes +2. No lives at risk.':'Catch your breath…';ctx.strokeText(sub,0,Math.min(48,W*.1));ctx.fillStyle='#fff';ctx.fillText(sub,0,Math.min(48,W*.1));
+  ctx.restore();
+}
 function loseLife(t){
   lives--;flash=1;streak=0;drawLives();
+  if(lives===1&&lowLifeScore<0)lowLifeScore=score;
   mojoMissAt=t;ganjaMissAt=t;say(MISS_QUIPS,t);pop(['#@%!','?!'],t,true);
   if(lives<=0){gameOver();return}
   Snd.miss();
@@ -417,10 +525,17 @@ function loseLife(t){
 
 function gameOver(){
   running=false;paused=false;$('paused').hidden=true;$('pause').hidden=true;Snd.over();
-  const isBest=score>best;
+  const prevBest=best,isBest=score>best;phase='play';banner='';
+  try{localStorage.setItem('pm-whack-rounds:'+wkey(),String(wRounds()+1))}catch(e){}
+  if(wRounds()>=100)award('grinder');
   if(isBest){best=score;try{localStorage.setItem('pm-whack-best',String(best))}catch(e){};$('best').textContent=best}
   $('overText').innerHTML='You whacked <strong>'+score+'</strong> pipe'+(score===1?'':'s')+'.'+(isBest&&score>0?' New best.':' Best is '+best+'.');
   if(LB)LB.post(score);
+  const r=Math.floor(best/100),promoted=Math.floor(best/100)>Math.floor(prevBest/100);
+  $('rankBox').hidden=r<1;$('rankCh').innerHTML=r?chevrons(r):'';$('rankName').textContent=chevName(r);
+  $('rankPromo').textContent=promoted?'Promoted!':'Your rank';$('rankNext').textContent=' Next chevron at '+(r+1)*100;
+  $('newTro').hidden=!roundTro.length;$('newTro').textContent='🏆 New this round: '+roundTro.join(', ');
+  voice(isBest&&score>0?'newrecord':'cursed',.6);
   setTimeout(()=>{$('over').hidden=false;$('over').scrollTop=0;$('again').focus()},700);
 }
 
@@ -433,17 +548,18 @@ function voodooBlast(t){
   for(const q of pipes){burst(q.x,q.y);score++}
   pipes=[];streak++;
   heat=Math.floor(heat*Math.min(0.7,0.4+0.02*voodoosUsed));voodoosUsed++;
-  checkZone(t);
+  checkZone(t);roundVoodoo++;roundChecks();maybeBreak(t);
   spawnT=1.4;vflash=1;
   $('score').textContent=score;
   mojoHitAt=t;ganjaHitAt=t;quip='Voodoo!';quipAt=t;pop(['!!!'],t);
-  Snd.voodoo();
+  Snd.voodoo();voice('voodoo',.25);
 }
 
 function start(){
   Snd.unlock();Snd.start();
   pipes=[];bursts=[];score=0;lives=3;flash=0;vflash=0;spawnT=0.5;running=true;streak=0;quip='';gpop='';heat=0;sinceVoodoo=0;voodoosUsed=0;setZone(0);
   $('score').textContent=0;drawLives();
+  phase='play';phaseT=0;nextBreak=100;banner='';roundVoodoo=0;lowLifeScore=-1;roundTro=[];voice('letswork',.2);
   $('start').hidden=true;$('over').hidden=true;
   paused=false;$('paused').hidden=true;$('pause').hidden=false;$('pause').innerHTML=PAUSE_ICON;$('pause').setAttribute('aria-label','Pause');
   if(LB)LB.startRun();
@@ -454,11 +570,12 @@ cv.addEventListener('pointerdown',e=>{
   e.preventDefault();
   const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,pad=14;
   for(let i=pipes.length-1;i>=0;i--){
-    const p=pipes[i];
+    const p=pipes[i];if(p.drain)continue;
     if(x>p.x-pipeW/2-pad&&x<p.x+pipeW/2+pad&&y>p.y-pad-10&&y<p.y+p.len+pad){
       const t=performance.now();
       if(p.voodoo){voodooBlast(t);return}
-      pipes.splice(i,1);score++;streak++;heat++;sinceVoodoo++;$('score').textContent=score;burst(p.x,p.y);
+      if(p.gold){pipes.splice(i,1);score+=2;$('score').textContent=score;burst(p.x,p.y);Snd.whack(12);ganjaHitAt=t;return}
+      pipes.splice(i,1);score++;streak++;heat++;sinceVoodoo++;$('score').textContent=score;burst(p.x,p.y);roundChecks();maybeBreak(t);
       Snd.whack(streak);mojoHitAt=t;ganjaHitAt=t;
       const zBefore=zone;checkZone(t);
       if(zone!==zBefore){}
