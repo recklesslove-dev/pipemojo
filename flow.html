@@ -170,6 +170,12 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
 .trophy .crown{position:absolute;top:-4px;right:-2px;font-size:1.05rem}
 .trophy.fight .badge{border-color:#ff3b2f;box-shadow:0 0 12px rgba(255,59,47,.6)}
 .trophy.fight small{color:#ff8a7f}
+.wipe{background:radial-gradient(circle at 50% 30%,rgba(232,40,30,.35) 0%,rgba(10,2,2,.95) 65%)!important;border:2px solid #e8281e}
+.wipe .kicker{margin:0;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-size:.8rem;color:#ff7a70}
+.wipe h2{color:#ff5a4f!important;text-shadow:0 0 22px rgba(232,40,30,.5)!important}
+.wipe p b{color:#fff}
+button.danger{background:transparent;color:#ff7a70;border:2px solid #e8281e}
+button.danger.final{background:#e8281e;color:#fff}
 .ver{margin:22px 0 0;text-align:center;font-size:.72rem;color:rgba(255,255,255,.28);letter-spacing:.5px}
 </style>
 </head>
@@ -234,6 +240,15 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
       <p id="promoText"></p>
       <button class="go" id="promoGo">Carry on</button>
     </div>
+    <div class="win wipe" id="wipe" hidden role="alertdialog" aria-labelledby="wipeTitle">
+      <p class="kicker" id="wipeKick">Careful</p>
+      <h2 id="wipeTitle">Start over?</h2>
+      <p id="wipeText"></p>
+      <div class="resume-btns">
+        <button class="go" id="wipeKeep">Keep my run</button>
+        <button class="danger" id="wipeYes">Yes, start over</button>
+      </div>
+    </div>
     <div class="win" id="resume" hidden>
       <img src="/assets/mojo-front.png" alt="" width="638" height="1100">
       <h2>Welcome back</h2>
@@ -256,7 +271,7 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
   <section class="trophies" aria-label="Trophy case"><h3>Trophy case <span id="tcount"></span></h3><div class="tgrid" id="tgrid"></div></section>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <section class="lb-slot" id="lb" aria-label="Leaderboard"></section>
-  <p class="ver">Flow v1.18</p>
+  <p class="ver">Flow v1.19</p>
 </main>
 
 <div class="bossfx" id="bossFx" hidden aria-label="Boss level">
@@ -1197,11 +1212,25 @@ $('restart').addEventListener('click',()=>{cur=startCur.slice();frozen=startFroz
 window.addEventListener('resize',resize);
 
 /* ---------- startup: local save, then cloud save if signed in ---------- */
+function confirmWipe(onYes){ // starting over erases the run, so it takes two taps to commit
+  const lv=level,el=$('wipe'),yes=$('wipeYes');let step=1;
+  const show=()=>{
+    $('wipeKick').textContent=step===1?'Careful':'Last chance';
+    $('wipeTitle').textContent=step===1?'Start over?':'Gone for good';
+    $('wipeText').innerHTML=step===1
+      ?'This wipes your <b>level '+lv+'</b> run on every device. Your leaderboard best, trophies, rank stars and best streak stay.'
+      :'Level '+lv+' will be erased. There\'s no undo and no way back to it.';
+    yes.textContent=step===1?'Yes, start over':'Start over for good';yes.classList.toggle('final',step===2);
+  };
+  $('wipeKeep').onclick=()=>{el.hidden=true};
+  yes.onclick=()=>{if(step===1){step=2;show();Snd.thud();return}el.hidden=true;onYes()};
+  show();el.hidden=false;Snd.thud();setTimeout(()=>$('wipeKeep').focus(),200);
+}
 function askResume(text,contLabel,altLabel,onCont,onAlt){
   $('resumeText').textContent=text;
   $('cont').textContent=contLabel;$('fresh').textContent=altLabel;
   $('cont').onclick=()=>{$('resume').hidden=true;onCont&&onCont()};
-  $('fresh').onclick=()=>{$('resume').hidden=true;onAlt&&onAlt()};
+  $('fresh').onclick=()=>{$('resume').hidden=true;if(/^New run/.test(altLabel)&&level>1)confirmWipe(()=>{onAlt&&onAlt()});else onAlt&&onAlt()};
   $('resume').hidden=false;
 }
 function offerLocal(s){
