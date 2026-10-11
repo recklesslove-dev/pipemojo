@@ -129,7 +129,7 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<p class="wver">Whack v1.2</p>
+<p class="wver">Whack v1.4</p>
 <script src="/lb.js"></script>
 <script>
 (function(){
@@ -172,10 +172,9 @@ function award(id){const have=wTro();if(have.includes(id))return;have.push(id);t
 /* Mojo's real voice (the boss clip) for the big moments */
 const VOICE={};let voiceLoading=false;
 function loadVoice(){if(voiceLoading||!Snd.ac)return;voiceLoading=true;
-  for(const n of ['letswork','bayou','graveyard','voodoogold','hellfire','golden','voodoo','newrecord','cursed'])
+  for(const n of ['letswork','bayou','graveyard','voodoogold','hellfire','bonusround','newrecord','cursed'])
     fetch('/assets/mojo-'+n+'.mp3').then(r=>r.ok?r.arrayBuffer():Promise.reject()).then(a=>new Promise((ok,no)=>Snd.ac.decodeAudioData(a,ok,no))).then(b=>{VOICE[n]=b}).catch(()=>{})}
-const VOICE_VOL={voodoo:.28,golden:.38}; // shouts are hotter than the other lines
-function voice(n,delay){if(!Snd.on||!Snd.ac||!VOICE[n])return;const s=Snd.ac.createBufferSource(),g=Snd.ac.createGain();s.buffer=VOICE[n];g.gain.value=VOICE_VOL[n]||.45;s.connect(g);g.connect(Snd.master);s.start(Snd.ac.currentTime+(delay||0))}
+function voice(n,delay){if(!Snd.on||!Snd.ac||!VOICE[n])return;const s=Snd.ac.createBufferSource(),g=Snd.ac.createGain();s.buffer=VOICE[n];g.gain.value=.35;s.connect(g);g.connect(Snd.master);s.start(Snd.ac.currentTime+(delay||0))}
 
 let pipes=[],bursts=[],flash=0,vflash=0,score=0,lives=3,best=0,running=false,spawnT=0,last=0,streak=0;
 let heat=0,sinceVoodoo=0,voodoosUsed=0; // heat drives the pace; the voodoo pipe cools it down, a little less each time
@@ -489,7 +488,7 @@ function breakStep(dt,t){
     if(p.drain){p.y+=H*1.4*dt;if(p.y>H+20)pipes.splice(i,1);continue}
     p.y-=p.v*dt;if(p.y<=dangerY)pipes.splice(i,1); // golden pipes that get away cost nothing
   }
-  if(phase==='break'&&phaseT<=0){phase='rush';phaseT=5;spawnT=.2;banner='Golden rush!';bannerAt=t;voice('golden')}
+  if(phase==='break'&&phaseT<=0){phase='rush';phaseT=5;spawnT=.2;banner='Bonus round!';bannerAt=t;voice('bonusround')}
   else if(phase==='rush'){
     spawnT-=dt;
     if(spawnT<=0&&phaseT>.8){const lane=freeLane();if(lane>=0)pipes.push({lane,gold:true,x:lane*laneW+laneW/2,y:H+10,len:H*(.14+Math.random()*.06),v:speed()*.75});spawnT=.32}
@@ -553,7 +552,7 @@ function voodooBlast(t){
   spawnT=1.4;vflash=1;
   $('score').textContent=score;
   mojoHitAt=t;ganjaHitAt=t;quip='Voodoo!';quipAt=t;pop(['!!!'],t);
-  Snd.voodoo();voice('voodoo',.25);
+  Snd.voodoo();
 }
 
 function start(){
