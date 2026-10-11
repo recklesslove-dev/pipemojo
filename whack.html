@@ -106,7 +106,7 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
   <div class="overlay" id="start">
     <img src="/assets/mojo-front.png" alt="" width="638" height="1100">
     <h1>Whack-a-Pipe</h1>
-    <p>Pipes are rising. Tap each one before it crosses the red line. Let three through and you're cursed. Hit a glowing <strong>voodoo pipe</strong> to wipe the board and slow things down.</p>
+    <p>Pipes are rising. Tap each one before it crosses the red line. Let three through and you're cursed. Grab a green <strong>patch kit</strong> to win back a life, and fill Mojo's <strong>wrench meter</strong>, then tap Mojo to smash the pipes closest to the line. Hit a glowing <strong>voodoo pipe</strong> to wipe the board and slow things down.</p>
     <div class="btns"><button class="primary" id="go">Start</button></div>
     <p class="who" id="who"></p>
   </div>
@@ -132,7 +132,7 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<p class="wver">Whack v1.9</p>
+<p class="wver">Whack v1.10</p>
 <script src="/lb.js"></script>
 <script>
 (function(){
@@ -328,6 +328,8 @@ const Snd={
   over(){[330,247,165].forEach((f,i)=>this.tone(f,0.32,'triangle',0.18,f*0.8,i*0.22));this.noise(0.9,900,90,0.2,0.5,0.7)},
   start(){this.tone(392,0.12,'triangle',0.15);this.tone(587,0.18,'triangle',0.14,null,0.1)},
   cheer(){[523,659,784].forEach((f,i)=>this.tone(f,0.14,'triangle',0.12,null,i*0.07))},
+  heal(){[523,659,784,1047].forEach((f,i)=>this.tone(f,0.18,'sine',0.13,f*1.2,i*0.06))},
+  smash(){this.tone(70,0.35,'square',0.16,40);this.noise(0.5,1800,120,0.35,0,0.7);this.tone(1200,0.08,'triangle',0.08,500)},
   voodoo(){this.noise(0.7,200,4000,0.3,0,0.7);[196,247,294,392].forEach((f,i)=>this.tone(f,0.6,'sawtooth',0.07,f*1.5,i*0.05));this.tone(784,0.5,'triangle',0.14,1568,0.3);[0,0.08,0.16,0.24].forEach(d=>this.tone(500+Math.random()*500,0.1,'sine',0.12,1400,0.25+d))}
 };
 try{Snd.on=localStorage.getItem('pm-sound')!=='off'}catch(e){}
@@ -379,7 +381,8 @@ function spawn(){
   for(let k=0;k<n;k++){
     const lane=freeLane();if(lane<0)return;
     const voodoo=k===0&&wantVoodoo();
-    pipes.push({lane,voodoo,x:lane*laneW+laneW/2,y:H+10,len:H*(0.16+Math.random()*0.1),v:speed()*(voodoo?0.85:(0.9+Math.random()*0.25))});
+    const patch=!voodoo&&k===0&&lives<3&&score>=15&&!pipes.some(p=>p.patch)&&Math.random()<0.06;
+    pipes.push({lane,voodoo,patch,x:lane*laneW+laneW/2,y:H+10,len:H*(0.16+Math.random()*0.1),v:speed()*(voodoo?0.85:(0.9+Math.random()*0.25))});
     if(voodoo)sinceVoodoo=0;
   }
 }
@@ -445,6 +448,7 @@ function drawCrew(t){
     if(sinceHit<0.28){const p=sinceHit/0.28;ang+=-0.22*Math.sin(p*Math.PI);lift=6*Math.sin(p*Math.PI)}
     if(sinceMiss<0.45){ox=Math.sin(sinceMiss*60)*6*(1-sinceMiss/0.45)}
     drawSprite(IMG['mojo-34'],W*0.15,floor-lift,h,ang,ox);
+    if(running)drawMeter(t);
     // Mojo's speech bubble
     const age=(t-quipAt)/1000;
     if(quip&&age<1.1){
@@ -529,10 +533,10 @@ function frame(t){
     if(spawnT<=0){spawn();spawnT=spawnGap()}
     for(let i=pipes.length-1;i>=0;i--){
       const p=pipes[i];p.y-=p.v*dt;
-      if(p.y<=dangerY){pipes.splice(i,1);if(!p.voodoo)loseLife(t)}
+      if(p.y<=dangerY){pipes.splice(i,1);if(!p.voodoo&&!p.patch)loseLife(t)}
     }
   }
-  for(const p of pipes)p.gold?drawGoldPipe(p,t):drawPipe(p,t);
+  for(const p of pipes)p.gold?drawGoldPipe(p,t):p.patch?drawPatchPipe(p,t):drawPipe(p,t);
   drawBursts(dt);
   drawBanner(t);
   if(flash>0){ctx.fillStyle='rgba(232,40,30,'+(flash*0.35)+')';ctx.fillRect(0,0,W,H);flash=Math.max(0,flash-dt*2.5)}
@@ -568,6 +572,35 @@ function breakStep(dt,t){
     if(spawnT<=0&&phaseT>.8){const lane=freeLane();if(lane>=0)pipes.push({lane,gold:true,x:lane*laneW+laneW/2,y:H+10,len:H*(.14+Math.random()*.06),v:speed()*.75});spawnT=.32}
     if(phaseT<=0){phase='play';for(const p of pipes)if(p.gold)burst(p.x,p.y);pipes=pipes.filter(p=>!p.gold);spawnT=1;heat+=2;banner='';}
   }
+}
+/* Mojo's wrench meter: whacks fill it, then tap Mojo to smash the pipes closest to the line */
+const METER=35;let meter=0,smashAt=-9999;
+function drawPatchPipe(p,t){
+  const x=p.x-pipeW/2,y=p.y,w=pipeW,len=p.len,s=.5+.5*Math.sin(t/150);
+  ctx.fillStyle='rgba(90,230,120,'+(.12+.12*s)+')';ctx.fillRect(x-14,y-12,w+28,len+18);
+  ctx.fillStyle='#0a2a12';ctx.fillRect(x-3,y,w+6,len);ctx.fillStyle='#2f9e4f';ctx.fillRect(x,y,w,len);
+  ctx.fillStyle='rgba(220,255,225,.45)';ctx.fillRect(x+w*.18,y,w*.14,len);
+  ctx.fillStyle='#0a2a12';ctx.fillRect(x-9,y-4,w+18,18);ctx.fillStyle='#7be08f';ctx.fillRect(x-7,y-2,w+14,14);
+  const cx=p.x,cy=y+Math.min(len*.4,46),a=Math.min(w*.32,16);
+  ctx.fillStyle='#fff';ctx.fillRect(cx-a,cy-a*.33,a*2,a*.66);ctx.fillRect(cx-a*.33,cy-a,a*.66,a*2);
+}
+function mojoBox(){const h=Math.min(dangerY-10,128);return {x:W*0.15,h,top:dangerY-6-h,bot:dangerY-6}}
+function drawMeter(t){
+  const m=mojoBox(),x=m.x+m.h*0.36,y0=m.top+m.h*0.15,hh=m.h*0.78,full=meter>=METER,f=meter/METER;
+  ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(x-1,y0-1,10,hh+2);
+  ctx.fillStyle=full?'rgba(245,200,66,'+(.75+.25*Math.sin(t/120))+')':'#c97a3d';ctx.fillRect(x+1,y0+hh*(1-f),6,hh*f);
+  ctx.strokeStyle='#f5c842';ctx.lineWidth=1.5;ctx.strokeRect(x-1,y0-1,10,hh+2);
+  if(full){ctx.font='900 13px Nunito, system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=4;ctx.strokeStyle='#120a1a';
+    const ty=Math.max(10,m.top+4);ctx.strokeText('TAP MOJO',m.x,ty);ctx.fillStyle='#f5c842';ctx.fillText('TAP MOJO',m.x,ty);ctx.textBaseline='alphabetic'}
+  const age=(t-smashAt)/1000;if(age<.4){ctx.fillStyle='rgba(245,200,66,'+(.35*(1-age/.4))+')';ctx.fillRect(0,0,W,H)}
+}
+function smash(t){
+  // Mojo slams the wrench: the pipe nearest the line in every lane pops
+  const hit=[];for(let l=0;l<LANES;l++){let best=null;for(const p of pipes)if(p.lane===l&&!p.drain&&!p.gold&&(!best||p.y<best.y))best=p;if(best)hit.push(best)}
+  for(const p of hit){burst(p.x,p.y);if(p.patch){lives=Math.min(3,lives+1);drawLives()}else score++}
+  pipes=pipes.filter(p=>!hit.includes(p));meter=0;smashAt=t;mojoHitAt=t;ganjaHitAt=t;
+  $('score').textContent=score;quip='Wrench time!';quipAt=t;pop(['!!!'],t);Snd.smash();flash=0;
+  roundChecks();maybeBreak(t);
 }
 function drawGoldPipe(p,t){
   const x=p.x-pipeW/2,y=p.y,w=pipeW,len=p.len,s=.5+.5*Math.sin(t/120+p.x);
@@ -633,7 +666,7 @@ function start(){
   Snd.unlock();Snd.start();
   pipes=[];bursts=[];score=0;lives=3;flash=0;vflash=0;spawnT=0.5;running=true;streak=0;quip='';gpop='';heat=0;sinceVoodoo=0;voodoosUsed=0;setZone(0);
   $('score').textContent=0;drawLives();
-  phase='play';phaseT=0;nextBreak=100;banner='';roundVoodoo=0;lowLifeScore=-1;roundTro=[];voice('letswork',.2);
+  phase='play';phaseT=0;nextBreak=100;banner='';roundVoodoo=0;lowLifeScore=-1;roundTro=[];meter=0;voice('letswork',.2);
   $('start').hidden=true;$('over').hidden=true;
   paused=false;$('paused').hidden=true;$('pause').hidden=false;$('lockerBtn').hidden=true;$('pause').innerHTML=PAUSE_ICON;$('pause').setAttribute('aria-label','Pause');
   if(LB)LB.startRun();
@@ -641,6 +674,8 @@ function start(){
 
 cv.addEventListener('pointerdown',e=>{
   if(!running||paused)return;
+  {const r0=cv.getBoundingClientRect(),mx=e.clientX-r0.left,my=e.clientY-r0.top,m=mojoBox();
+   if(my<dangerY&&Math.abs(mx-m.x)<m.h*.5){e.preventDefault();if(meter>=METER&&phase==='play')smash(performance.now());return}}
   e.preventDefault();
   const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,pad=14;
   for(let i=pipes.length-1;i>=0;i--){
@@ -648,8 +683,9 @@ cv.addEventListener('pointerdown',e=>{
     if(x>p.x-pipeW/2-pad&&x<p.x+pipeW/2+pad&&y>p.y-pad-10&&y<p.y+p.len+pad){
       const t=performance.now();
       if(p.voodoo){voodooBlast(t);return}
+      if(p.patch){pipes.splice(i,1);lives=Math.min(3,lives+1);drawLives();burst(p.x,p.y);Snd.heal();quip='Patched up!';quipAt=t;pop(['+1'],t);return}
       if(p.gold){pipes.splice(i,1);score+=2;$('score').textContent=score;burst(p.x,p.y);Snd.whack(12);ganjaHitAt=t;return}
-      pipes.splice(i,1);score++;streak++;heat++;sinceVoodoo++;$('score').textContent=score;burst(p.x,p.y);roundChecks();maybeBreak(t);
+      pipes.splice(i,1);score++;streak++;heat++;sinceVoodoo++;if(meter<METER&&++meter===METER)Snd.cheer();$('score').textContent=score;burst(p.x,p.y);roundChecks();maybeBreak(t);
       Snd.whack(streak);mojoHitAt=t;ganjaHitAt=t;
       const zBefore=zone;checkZone(t);
       if(zone!==zBefore){}
