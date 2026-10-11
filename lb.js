@@ -51,6 +51,65 @@ function chevrons(r){
   return '<svg viewBox="0 0 200 200">'+s+'</svg>';
 }
 function chevName(r){if(!r)return 'No rank yet';const t=CTIERS[Math.min(3,Math.floor((r-1)/5))].name;return r>20?t+' '+r:t+' · '+(((r-1)%5)+1)+' chevron'+(((r-1)%5)?'s':'')}
+/* ---------- Army ranks: officers in Flow (a promotion every boss), enlisted in Whack-a-Pipe (every 100 points) ---------- */
+const AR_T=[{light:'#f3c08a',mid:'#c4813f',dark:'#6e3f17',edge:'#3b1f08'},{light:'#ffffff',mid:'#c9ced6',dark:'#6b7280',edge:'#2b2f36'},
+  {light:'#fff1a8',mid:'#e9b93a',dark:'#8a5f10',edge:'#3d2804'},{light:'#ffffff',mid:'#9fe8ff',dark:'#3aa7d6',edge:'#0b3550'}];
+let arN=0;
+function arGrad(t){const id='arg'+(arN++);return {id,def:'<linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+t.light+'"/><stop offset=".5" stop-color="'+t.mid+'"/><stop offset="1" stop-color="'+t.dark+'"/></linearGradient>'}}
+function arStarPath(cx,cy,R,r){let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r:R;d+=(i?'L':'M')+(cx+rr*Math.cos(a)).toFixed(1)+' '+(cy+rr*Math.sin(a)).toFixed(1)}return d+'Z'}
+function arStar(cx,cy,R,t){
+  const r=R*.42;let g='';
+  for(let i=0;i<10;i++){const a1=-Math.PI/2+i*Math.PI/5,a2=-Math.PI/2+(i+1)*Math.PI/5,r1=i%2?r:R,r2=(i+1)%2?r:R;
+    const fill=i%2?t.dark:t.light,f2=(i>=3&&i<=6)?(i%2?t.dark:t.mid):fill;
+    g+='<path d="M'+cx+' '+cy+'L'+(cx+r1*Math.cos(a1)).toFixed(1)+' '+(cy+r1*Math.sin(a1)).toFixed(1)+'L'+(cx+r2*Math.cos(a2)).toFixed(1)+' '+(cy+r2*Math.sin(a2)).toFixed(1)+'Z" fill="'+f2+'"/>'}
+  return g+'<path d="'+arStarPath(cx,cy,R,r)+'" fill="none" stroke="'+t.edge+'" stroke-width="'+(R*.07).toFixed(1)+'" stroke-linejoin="round"/>';
+}
+function arEagle(cx,cy,sc,F,E){
+  return '<g transform="translate('+cx+' '+cy+') scale('+sc+')"><path d="M0 -12 L-10 -20 L-30 -32 L-26 -18 L-44 -22 L-34 -8 L-46 -2 L-28 2 L-34 12 L-14 8 L-10 22 L-4 30 L0 26 L4 30 L10 22 L14 8 L34 12 L28 2 L46 -2 L34 -8 L44 -22 L26 -18 L30 -32 L10 -20Z" fill="'+F+'" stroke="'+E+'" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>'+
+    '<circle cx="0" cy="-19" r="7" fill="'+F+'" stroke="'+E+'" stroke-width="3" vector-effect="non-scaling-stroke"/><path d="M-8 -4 L8 -4 L8 8 Q0 16 -8 8Z" fill="none" stroke="'+E+'" stroke-width="2.5" vector-effect="non-scaling-stroke"/></g>';
+}
+const OFFICER=['Second Lieutenant','First Lieutenant','Captain','Major','Lieutenant Colonel','Colonel','Brigadier General','Major General','Lieutenant General','General','General of the Army'];
+const officerTier=s=>s>=20?3:s>=17?2:s>=14?1:0;
+function officerName(s){if(s<1)return 'No rank yet';if(s<11)return OFFICER[s-1];return ['','Silver ','Gold ','Diamond '][officerTier(s)]+'General of the Army'}
+function armyOfficer(s){
+  if(s<1)return '';
+  const gold=s===1||s===4,t=gold?AR_T[2]:AR_T[1],g=arGrad(t),F='url(#'+g.id+')',E=t.edge;let body='';
+  if(s<=3){ // lieutenant and captain bars
+    const bar=x=>'<rect x="'+x+'" y="30" width="44" height="140" rx="7" fill="'+F+'" stroke="'+E+'" stroke-width="4"/><rect x="'+(x+8)+'" y="38" width="8" height="124" rx="4" fill="rgba(255,255,255,.55)"/>';
+    body=s<3?bar(78):bar(40)+bar(116)+'<rect x="82" y="44" width="36" height="10" fill="'+F+'" stroke="'+E+'" stroke-width="2"/><rect x="82" y="146" width="36" height="10" fill="'+F+'" stroke="'+E+'" stroke-width="2"/>';
+  }else if(s<=5){ // major and lieutenant colonel: the oak leaf
+    body='<path d="M100 22 C70 32 58 54 70 76 C46 82 46 106 66 114 C52 130 62 152 84 150 L92 154 L92 182 L108 182 L108 154 L116 150 C138 152 148 130 134 114 C154 106 154 82 130 76 C142 54 130 32 100 22Z" fill="'+F+'" stroke="'+E+'" stroke-width="4" stroke-linejoin="round"/>'+
+      '<path d="M100 36 V150 M100 70 L78 60 M100 70 L122 60 M100 100 L74 92 M100 100 L126 92 M100 128 L80 124 M100 128 L120 124" stroke="'+E+'" stroke-width="3" fill="none" stroke-linecap="round" opacity=".7"/>';
+  }else if(s===6){body=arEagle(100,104,1.95,F,E)} // colonel: the eagle
+  else if(s<=10){const row=[[[100,62]],[[56,42],[144,42]],[[36,31],[100,31],[164,31]],[[25,23],[75,23],[125,23],[175,23]]][s-7];for(const [x,R] of row)body+=arStar(x,104,R,AR_T[1])} // generals: a row of stars
+  else{ // General of the Army: five stars in a pentagon, then Silver, Gold and Diamond finishes
+    const tt=AR_T[officerTier(s)],pos=[[100,52],[150,88],[131,146],[69,146],[50,88]];for(const [x,y] of pos)body+=arStar(x,y,34,tt);
+    if(s>20)body+='<circle cx="100" cy="105" r="21" fill="#0b1f2e" stroke="'+tt.mid+'" stroke-width="3"/><text x="100" y="113" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="22" fill="#fff">'+s+'</text>';
+  }
+  return '<svg viewBox="0 0 200 200"><defs>'+g.def+'</defs>'+body+'</svg>';
+}
+const ENLISTED=['Private','Private First Class','Specialist','Corporal','Sergeant','Staff Sergeant','Sergeant First Class','Master Sergeant','First Sergeant','Sergeant Major','Command Sergeant Major','Sergeant Major of the Army'];
+const enlistedTier=r=>r>=21?3:r>=18?2:r>=15?1:0;
+function enlistedName(r){if(r<1)return 'No rank yet';if(r<12)return ENLISTED[r-1];return ['','Silver ','Gold ','Diamond '][enlistedTier(r)]+'Sergeant Major of the Army'}
+function armyEnlisted(r){
+  if(r<1)return '';
+  const idx=Math.min(12,r),t=AR_T[r>=12?enlistedTier(r):0],g=arGrad(t),F='url(#'+g.id+')',E=t.edge;
+  const wrap=b=>'<svg viewBox="0 0 200 200"><defs>'+g.def+'</defs>'+b+'</svg>';
+  if(idx===3)return wrap('<path d="M100 26 L160 44 L154 120 Q146 160 100 178 Q54 160 46 120 L40 44Z" fill="'+F+'" stroke="'+E+'" stroke-width="4"/>'+
+    '<path d="M100 40 L146 54 L141 118 Q134 150 100 164 Q66 150 59 118 L54 54Z" fill="#1b1a2a"/>'+arEagle(100,104,1.05,F,E)); // specialist: the shield
+  const chev=a=>'<path d="M30 '+(a+40)+'L100 '+a+'L170 '+(a+40)+'L170 '+(a+56)+'L100 '+(a+16)+'L30 '+(a+56)+'Z" fill="'+F+'" stroke="'+E+'" stroke-width="4" stroke-linejoin="round"/>';
+  const rock=Y=>'<path d="M30 '+Y+'Q100 '+(Y+36)+' 170 '+Y+'L170 '+(Y+16)+'Q100 '+(Y+52)+' 30 '+(Y+16)+'Z" fill="'+F+'" stroke="'+E+'" stroke-width="4" stroke-linejoin="round"/>';
+  const nChev=idx<=2?1:idx===4?2:3,nRock=idx===2||idx===6?1:idx===7?2:idx>=8?3:0;
+  let b='';for(let i=0;i<nChev;i++)b+=chev(i*20);
+  const chevBot=(nChev-1)*20+56,rStart=nChev===3?100:chevBot+6;
+  for(let j=0;j<nRock;j++)b+=rock(rStart+j*20);
+  if(idx===9)b+='<path d="M100 62 L117 81 L100 100 L83 81Z" fill="'+F+'" stroke="'+E+'" stroke-width="3"/>';   // first sergeant: the diamond
+  if(idx===10)b+=arStar(100,80,17,t);                                                                         // sergeant major: the star
+  if(idx===11)b+=arStar(100,80,14,t)+'<path d="M78 74 Q76 96 100 100 Q124 96 122 74" fill="none" stroke="'+F+'" stroke-width="5" stroke-linecap="round"/>'; // command sergeant major: star in a wreath
+  if(idx===12)b+=arEagle(100,82,.6,F,E);                                                                       // sergeant major of the army: the eagle
+  const h=nRock?rStart+(nRock-1)*20+44:chevBot;
+  return wrap('<g transform="translate(0 '+((200-h)/2).toFixed(1)+')">'+b+'</g>');
+}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 async function call(path,body){
@@ -137,7 +196,7 @@ Board.prototype.render=function(){
   else{
     h+='<ol>'+this.top.map((r,i)=>{
       const mine=me&&r.name.toLowerCase().replace(/ /g,'')===me;
-      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+(r.best>=100?'<span class="ri" title="Rank">'+(this.game==='flow'?insignia(Math.floor(r.best/100)):chevrons(Math.floor(r.best/100)))+'</span>':'')+esc(r.name)+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
+      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+(r.best>=100?'<span class="ri" title="'+(this.game==='flow'?officerName(Math.floor(r.best/100)):enlistedName(Math.floor(r.best/100)))+'">'+(this.game==='flow'?armyOfficer(Math.floor(r.best/100)):armyEnlisted(Math.floor(r.best/100)))+'</span>':'')+esc(r.name)+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
     }).join('')+'</ol>';
   }
   h+='</div>';
