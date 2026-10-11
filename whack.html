@@ -106,7 +106,7 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
   <div class="overlay" id="start">
     <img src="/assets/mojo-front.png" alt="" width="638" height="1100">
     <h1>Whack-a-Pipe</h1>
-    <p>Pipes are rising. Tap each one before it crosses the red line. Let three through and you're cursed. Grab a green <strong>patch kit</strong> to win back a life, and fill Mojo's <strong>wrench meter</strong>, then tap Mojo to smash the pipes closest to the line. Hit a glowing <strong>voodoo pipe</strong> to wipe the board and slow things down.</p>
+    <p>Pipes are rising. Tap each one before it crosses the red line. Let three through and you're cursed. Grab a green <strong>patch kit</strong> to win back a life. Fill Mojo's <strong>wrench meter</strong>, then swipe up anywhere to smash the pipes closest to the line. Hit a glowing <strong>voodoo pipe</strong> to wipe the board and slow things down.</p>
     <div class="btns"><button class="primary" id="go">Start</button></div>
     <p class="who" id="who"></p>
   </div>
@@ -132,7 +132,7 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<p class="wver">Whack v1.10</p>
+<p class="wver">Whack v1.11</p>
 <script src="/lb.js"></script>
 <script>
 (function(){
@@ -585,13 +585,14 @@ function drawPatchPipe(p,t){
   ctx.fillStyle='#fff';ctx.fillRect(cx-a,cy-a*.33,a*2,a*.66);ctx.fillRect(cx-a*.33,cy-a,a*.66,a*2);
 }
 function mojoBox(){const h=Math.min(dangerY-10,128);return {x:W*0.15,h,top:dangerY-6-h,bot:dangerY-6}}
-function drawMeter(t){
-  const m=mojoBox(),x=m.x+m.h*0.36,y0=m.top+m.h*0.15,hh=m.h*0.78,full=meter>=METER,f=meter/METER;
-  ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(x-1,y0-1,10,hh+2);
-  ctx.fillStyle=full?'rgba(245,200,66,'+(.75+.25*Math.sin(t/120))+')':'#c97a3d';ctx.fillRect(x+1,y0+hh*(1-f),6,hh*f);
-  ctx.strokeStyle='#f5c842';ctx.lineWidth=1.5;ctx.strokeRect(x-1,y0-1,10,hh+2);
-  if(full){ctx.font='900 13px Nunito, system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=4;ctx.strokeStyle='#120a1a';
-    const ty=Math.max(10,m.top+4);ctx.strokeText('TAP MOJO',m.x,ty);ctx.fillStyle='#f5c842';ctx.fillText('TAP MOJO',m.x,ty);ctx.textBaseline='alphabetic'}
+function drawMeter(t){ // a gold bar on the ledge between Mojo and Ganja
+  const m=mojoBox(),x0=m.x+m.h*0.42,x1=W*0.86-Math.min((dangerY-10)*0.72,96)*0.45,w=Math.max(40,x1-x0),y=dangerY-20,hh=10,full=meter>=METER,f=meter/METER;
+  ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(x0-2,y-2,w+4,hh+4);
+  ctx.fillStyle=full?'rgba(245,200,66,'+(.75+.25*Math.sin(t/120))+')':'#c97a3d';ctx.fillRect(x0,y,w*f,hh);
+  ctx.strokeStyle='#f5c842';ctx.lineWidth=1.5;ctx.strokeRect(x0-2,y-2,w+4,hh+4);
+  ctx.font='900 12px Nunito, system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=4;ctx.strokeStyle='#120a1a';
+  const label=full?'SWIPE UP TO SMASH':'🔧 WRENCH';const ly=y-12;
+  ctx.globalAlpha=full?1:.7;ctx.strokeText(label,x0+w/2,ly);ctx.fillStyle=full?'#f5c842':'#e8d3b0';ctx.fillText(label,x0+w/2,ly);ctx.globalAlpha=1;ctx.textBaseline='alphabetic';
   const age=(t-smashAt)/1000;if(age<.4){ctx.fillStyle='rgba(245,200,66,'+(.35*(1-age/.4))+')';ctx.fillRect(0,0,W,H)}
 }
 function smash(t){
@@ -672,6 +673,13 @@ function start(){
   if(LB)LB.startRun();
 }
 
+let swipe=null;
+cv.addEventListener('pointerdown',e=>{swipe={x:e.clientX,y:e.clientY,t:performance.now()}},{capture:true});
+function endSwipe(e){
+  if(!swipe)return;const dx=e.clientX-swipe.x,dy=e.clientY-swipe.y,dt=performance.now()-swipe.t;swipe=null;
+  if(running&&!paused&&phase==='play'&&meter>=METER&&dy<-60&&Math.abs(dx)<Math.abs(dy)&&dt<600)smash(performance.now());
+}
+cv.addEventListener('pointerup',endSwipe);cv.addEventListener('pointercancel',()=>{swipe=null});
 cv.addEventListener('pointerdown',e=>{
   if(!running||paused)return;
   {const r0=cv.getBoundingClientRect(),mx=e.clientX-r0.left,my=e.clientY-r0.top,m=mojoBox();
