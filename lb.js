@@ -145,19 +145,30 @@ function armyEnlisted(r){
   const top=-12,h=(nRock?lastR+56:last+64)-top;
   return wrap('<g transform="translate(0 '+((200-h)/2-top).toFixed(1)+')">'+b+'</g>');
 }
-/* ---------- the 1K Club badge (clear level 1000 in Flow) ---------- */
-function badge1k(){
+/* ---------- the K Club badge: platinum and diamond, 1K at level 1000, then 2K, 3K... ---------- */
+function badgeK(k){
+  k=Math.max(1,k|0);
+  const glint=(x,y,s,d)=>'<path d="M'+x+' '+(y-s)+' L'+(x+s*.22)+' '+(y-s*.22)+' L'+(x+s)+' '+y+' L'+(x+s*.22)+' '+(y+s*.22)+' L'+x+' '+(y+s)+' L'+(x-s*.22)+' '+(y+s*.22)+' L'+(x-s)+' '+y+' L'+(x-s*.22)+' '+(y-s*.22)+'Z" fill="#fff" opacity="0"><animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.15;.3;1" dur="3s" begin="'+d+'s" repeatCount="indefinite"/></path>';
   let leaves='';
   for(const side of [1,-1])for(let i=0;i<7;i++){const a=(side>0?-50+i*15:130+i*15)*Math.PI/180,x=100+57*Math.cos(a),y=98+57*Math.sin(a);
-    leaves+='<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="8" ry="3.6" transform="rotate('+((a*180/Math.PI)+90*side).toFixed(0)+' '+x.toFixed(1)+' '+y.toFixed(1)+')" fill="url(#k1g)" stroke="#3d2804" stroke-width="1"/>'}
-  return '<svg viewBox="0 0 200 200"><defs><linearGradient id="k1g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1a8"/><stop offset=".5" stop-color="#e9b93a"/><stop offset="1" stop-color="#8a5f10"/></linearGradient>'+
-    '<radialGradient id="k1d" cx=".5" cy=".38" r=".62"><stop offset="0" stop-color="#2e2040"/><stop offset="1" stop-color="#0d0814"/></radialGradient></defs>'+
-    '<circle cx="100" cy="96" r="86" fill="url(#k1g)" stroke="#3d2804" stroke-width="5"/><circle cx="100" cy="96" r="72" fill="url(#k1d)" stroke="#3d2804" stroke-width="3"/>'+leaves+
-    '<path d="'+(()=>{let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?5.5:13;d+=(i?'L':'M')+(100+r*Math.cos(a)).toFixed(1)+' '+(44+r*Math.sin(a)).toFixed(1)}return d+'Z'})()+'" fill="url(#k1g)" stroke="#3d2804" stroke-width="1.5"/>'+
-    '<text x="100" y="118" text-anchor="middle" font-family="\'Pirata One\', Georgia, serif" font-size="62" font-weight="700" fill="url(#k1g)" stroke="#3d2804" stroke-width="2">1K</text>'+
-    '<path d="M26 148 L174 148 L164 163 L174 178 L26 178 L36 163Z" fill="#b8281e" stroke="#3d0a06" stroke-width="3" stroke-linejoin="round"/>'+
-    '<text x="100" y="170" text-anchor="middle" font-family="Nunito, system-ui, sans-serif" font-size="19" font-weight="900" letter-spacing="4" fill="#fff1d0">CLUB</text></svg>';
+    leaves+='<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="8" ry="3.6" transform="rotate('+((a*180/Math.PI)+90*side).toFixed(0)+' '+x.toFixed(1)+' '+y.toFixed(1)+')" fill="url(#kpl)" stroke="#2b3440" stroke-width="1"/>'}
+  const t=k+'K',fs=t.length>2?50:62;
+  return '<svg viewBox="0 0 200 200"><defs>'+
+    '<linearGradient id="kpl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".28" stop-color="#cfd9e6"/><stop offset=".45" stop-color="#f7fbff"/><stop offset=".62" stop-color="#8fa3ba"/><stop offset=".8" stop-color="#e9f1fa"/><stop offset="1" stop-color="#7d90a8"/></linearGradient>'+
+    '<radialGradient id="kin" cx=".5" cy=".36" r=".64"><stop offset="0" stop-color="#1d2a44"/><stop offset="1" stop-color="#060912"/></radialGradient>'+
+    '<linearGradient id="kgem" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#bff3ff"/><stop offset="1" stop-color="#2f9fd6"/></linearGradient>'+
+    '<linearGradient id="krb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8be0"/><stop offset="1" stop-color="#173f86"/></linearGradient></defs>'+
+    '<circle cx="100" cy="96" r="86" fill="url(#kpl)" stroke="#2b3440" stroke-width="5"/><circle cx="100" cy="96" r="72" fill="url(#kin)" stroke="#2b3440" stroke-width="3"/>'+
+    '<circle cx="100" cy="96" r="72" fill="none" stroke="#9fe8ff" stroke-width="1.5" opacity=".45"/>'+leaves+
+    // the diamond on top
+    '<path d="M86 44 L92 34 L108 34 L114 44 L100 60Z" fill="url(#kgem)" stroke="#0b3550" stroke-width="2" stroke-linejoin="round"/>'+
+    '<path d="M86 44 L114 44 M92 34 L96 44 L100 60 L104 44 L108 34 M96 44 L100 34 L104 44" fill="none" stroke="#0b3550" stroke-width="1" opacity=".7"/>'+
+    '<text x="100" y="'+(118-(62-fs)/3)+'" text-anchor="middle" font-family="\'Pirata One\', Georgia, serif" font-size="'+fs+'" font-weight="700" fill="url(#kpl)" stroke="#2b3440" stroke-width="2">'+t+'</text>'+
+    '<path d="M26 148 L174 148 L164 163 L174 178 L26 178 L36 163Z" fill="url(#krb)" stroke="#0b2350" stroke-width="3" stroke-linejoin="round"/>'+
+    '<text x="100" y="170" text-anchor="middle" font-family="Nunito, system-ui, sans-serif" font-size="19" font-weight="900" letter-spacing="4" fill="#f4f8ff">CLUB</text>'+
+    glint(52,40,9,0)+glint(150,62,7,1.1)+glint(112,36,6,2)+glint(70,108,5,.6)+'</svg>';
 }
+function badge1k(){return badgeK(1)}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 async function call(path,body){
@@ -246,7 +257,7 @@ Board.prototype.render=function(){
   else{
     h+='<ol>'+this.top.map((r,i)=>{
       const mine=me&&r.name.toLowerCase().replace(/ /g,'')===me;
-      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+(r.best>=100?'<span class="ri" title="'+(this.game==='flow'?officerName(Math.floor(r.best/100)):enlistedName(Math.floor(r.best/100)))+'">'+(this.game==='flow'?armyOfficer(Math.floor(r.best/100)):armyEnlisted(Math.floor(r.best/100)))+'</span>':'')+esc(r.name)+(this.game==='flow'&&r.best>=1000?'<span class="k1" title="1K Club">'+badge1k()+'</span>':'')+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
+      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+(r.best>=100?'<span class="ri" title="'+(this.game==='flow'?officerName(Math.floor(r.best/100)):enlistedName(Math.floor(r.best/100)))+'">'+(this.game==='flow'?armyOfficer(Math.floor(r.best/100)):armyEnlisted(Math.floor(r.best/100)))+'</span>':'')+esc(r.name)+(this.game==='flow'&&r.best>=1000?'<span class="k1" title="'+Math.floor(r.best/1000)+'K Club">'+badgeK(Math.floor(r.best/1000))+'</span>':'')+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
     }).join('')+'</ol>';
   }
   h+='</div>';

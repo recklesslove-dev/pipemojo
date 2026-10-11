@@ -239,8 +239,8 @@ button.danger.final{background:#e8281e;color:#fff}
     <div class="win reveal club" id="club" hidden>
       <p class="kicker">Elite</p>
       <div class="clubBadge" id="clubBadge"></div>
-      <h2>The 1K Club</h2>
-      <p>One thousand levels. Every bolt, every ice block, every boss Mojo threw at you. Very few ever get here. Welcome to the club.</p>
+      <h2 id="clubTitle">The 1K Club</h2>
+      <p id="clubText"></p>
       <button class="go" id="clubGo">Carry on</button>
     </div>
     <div class="win promo" id="promo" hidden>
@@ -281,7 +281,7 @@ button.danger.final{background:#e8281e;color:#fff}
   <section class="trophies" aria-label="Trophy case"><h3>Trophy case <span id="tcount"></span></h3><div class="tgrid" id="tgrid"></div></section>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <section class="lb-slot" id="lb" aria-label="Leaderboard"></section>
-  <p class="ver">Flow v1.24</p>
+  <p class="ver">Flow v1.25</p>
 </main>
 
 <div class="bossfx" id="bossFx" hidden aria-label="Boss level">
@@ -383,19 +383,30 @@ function applyZone(l){
   const el=document.getElementById('zone');if(el)el.textContent='Zone: '+z.name+(next===PRESTIGE_AT?' (prestige starts at level '+next+')':' (next zone at level '+next+')');
 }
 
-/* ---------- the 1K Club badge (clear level 1000 in Flow) ---------- */
-function badge1k(){
+/* ---------- the K Club badge: platinum and diamond, 1K at level 1000, then 2K, 3K... ---------- */
+function badgeK(k){
+  k=Math.max(1,k|0);
+  const glint=(x,y,s,d)=>'<path d="M'+x+' '+(y-s)+' L'+(x+s*.22)+' '+(y-s*.22)+' L'+(x+s)+' '+y+' L'+(x+s*.22)+' '+(y+s*.22)+' L'+x+' '+(y+s)+' L'+(x-s*.22)+' '+(y+s*.22)+' L'+(x-s)+' '+y+' L'+(x-s*.22)+' '+(y-s*.22)+'Z" fill="#fff" opacity="0"><animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.15;.3;1" dur="3s" begin="'+d+'s" repeatCount="indefinite"/></path>';
   let leaves='';
   for(const side of [1,-1])for(let i=0;i<7;i++){const a=(side>0?-50+i*15:130+i*15)*Math.PI/180,x=100+57*Math.cos(a),y=98+57*Math.sin(a);
-    leaves+='<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="8" ry="3.6" transform="rotate('+((a*180/Math.PI)+90*side).toFixed(0)+' '+x.toFixed(1)+' '+y.toFixed(1)+')" fill="url(#k1g)" stroke="#3d2804" stroke-width="1"/>'}
-  return '<svg viewBox="0 0 200 200"><defs><linearGradient id="k1g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1a8"/><stop offset=".5" stop-color="#e9b93a"/><stop offset="1" stop-color="#8a5f10"/></linearGradient>'+
-    '<radialGradient id="k1d" cx=".5" cy=".38" r=".62"><stop offset="0" stop-color="#2e2040"/><stop offset="1" stop-color="#0d0814"/></radialGradient></defs>'+
-    '<circle cx="100" cy="96" r="86" fill="url(#k1g)" stroke="#3d2804" stroke-width="5"/><circle cx="100" cy="96" r="72" fill="url(#k1d)" stroke="#3d2804" stroke-width="3"/>'+leaves+
-    '<path d="'+(()=>{let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?5.5:13;d+=(i?'L':'M')+(100+r*Math.cos(a)).toFixed(1)+' '+(44+r*Math.sin(a)).toFixed(1)}return d+'Z'})()+'" fill="url(#k1g)" stroke="#3d2804" stroke-width="1.5"/>'+
-    '<text x="100" y="118" text-anchor="middle" font-family="\'Pirata One\', Georgia, serif" font-size="62" font-weight="700" fill="url(#k1g)" stroke="#3d2804" stroke-width="2">1K</text>'+
-    '<path d="M26 148 L174 148 L164 163 L174 178 L26 178 L36 163Z" fill="#b8281e" stroke="#3d0a06" stroke-width="3" stroke-linejoin="round"/>'+
-    '<text x="100" y="170" text-anchor="middle" font-family="Nunito, system-ui, sans-serif" font-size="19" font-weight="900" letter-spacing="4" fill="#fff1d0">CLUB</text></svg>';
+    leaves+='<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="8" ry="3.6" transform="rotate('+((a*180/Math.PI)+90*side).toFixed(0)+' '+x.toFixed(1)+' '+y.toFixed(1)+')" fill="url(#kpl)" stroke="#2b3440" stroke-width="1"/>'}
+  const t=k+'K',fs=t.length>2?50:62;
+  return '<svg viewBox="0 0 200 200"><defs>'+
+    '<linearGradient id="kpl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".28" stop-color="#cfd9e6"/><stop offset=".45" stop-color="#f7fbff"/><stop offset=".62" stop-color="#8fa3ba"/><stop offset=".8" stop-color="#e9f1fa"/><stop offset="1" stop-color="#7d90a8"/></linearGradient>'+
+    '<radialGradient id="kin" cx=".5" cy=".36" r=".64"><stop offset="0" stop-color="#1d2a44"/><stop offset="1" stop-color="#060912"/></radialGradient>'+
+    '<linearGradient id="kgem" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#bff3ff"/><stop offset="1" stop-color="#2f9fd6"/></linearGradient>'+
+    '<linearGradient id="krb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b8be0"/><stop offset="1" stop-color="#173f86"/></linearGradient></defs>'+
+    '<circle cx="100" cy="96" r="86" fill="url(#kpl)" stroke="#2b3440" stroke-width="5"/><circle cx="100" cy="96" r="72" fill="url(#kin)" stroke="#2b3440" stroke-width="3"/>'+
+    '<circle cx="100" cy="96" r="72" fill="none" stroke="#9fe8ff" stroke-width="1.5" opacity=".45"/>'+leaves+
+    // the diamond on top
+    '<path d="M86 44 L92 34 L108 34 L114 44 L100 60Z" fill="url(#kgem)" stroke="#0b3550" stroke-width="2" stroke-linejoin="round"/>'+
+    '<path d="M86 44 L114 44 M92 34 L96 44 L100 60 L104 44 L108 34 M96 44 L100 34 L104 44" fill="none" stroke="#0b3550" stroke-width="1" opacity=".7"/>'+
+    '<text x="100" y="'+(118-(62-fs)/3)+'" text-anchor="middle" font-family="\'Pirata One\', Georgia, serif" font-size="'+fs+'" font-weight="700" fill="url(#kpl)" stroke="#2b3440" stroke-width="2">'+t+'</text>'+
+    '<path d="M26 148 L174 148 L164 163 L174 178 L26 178 L36 163Z" fill="url(#krb)" stroke="#0b2350" stroke-width="3" stroke-linejoin="round"/>'+
+    '<text x="100" y="170" text-anchor="middle" font-family="Nunito, system-ui, sans-serif" font-size="19" font-weight="900" letter-spacing="4" fill="#f4f8ff">CLUB</text>'+
+    glint(52,40,9,0)+glint(150,62,7,1.1)+glint(112,36,6,2)+glint(70,108,5,.6)+'</svg>';
 }
+function badge1k(){return badgeK(1)}
 
 /* ---------- Army ranks: officers in Flow (a promotion every boss), enlisted in Whack-a-Pipe (every 100 points) ---------- */
 const AR_T=[{light:'#f3c08a',mid:'#c4813f',dark:'#6e3f17',edge:'#3b1f08'},{light:'#ffffff',mid:'#c9ced6',dark:'#6b7280',edge:'#2b2f36'},
@@ -1261,7 +1272,7 @@ function bossTiles(){ // one tile per boss you've reached, plus the next one
   return h;
 }
 $('tgrid').addEventListener('click',e=>{const b=e.target.closest('[data-rev]');if(b){showReveal(+b.dataset.rev,true);return}
-  if(e.target.closest('[data-club]')){showClub(true);return}
+  if(e.target.closest('[data-club]')){showClub(true,Math.max(1,Math.floor((level-1)/1000)));return}
   const f=e.target.closest('[data-boss]');if(f)startReplay(+f.dataset.boss)});
 
 function startReplay(L){
@@ -1310,7 +1321,7 @@ function win(){
   const bossLine=isBoss(level)?' Mojo storms off grumbling. Boss beaten!':'';
   if(isBoss(level))setTimeout(()=>awardBoss(level,moves<par),1500);
   if(isBoss(level)&&!replay)setTimeout(()=>showPromotion(level/100),1500);
-  if(level===1000&&!replay&&!trophies.includes('k1000'))pendingClub=true;
+  if(level%1000===0&&!replay&&!trophies.includes('k'+level))pendingClub=level/1000;
   $('winText').textContent=`Level ${level} cleared in ${moves} taps. Par was ${par}.${note} ${riders}${bossLine}`;
   $('next').textContent=replay?'Back to my run':'Next level';
   if(replay){$('boardNote').textContent='Replays don\'t change your run or the leaderboard.'}
@@ -1340,13 +1351,17 @@ $('next').addEventListener('click',()=>{
 });
 $('zoneGo').addEventListener('click',()=>{$('zoneUp').hidden=true});
 let pendingClub=false;
-function showClub(again){
-  $('clubBadge').innerHTML=badge1k();$('club').hidden=false;Snd.underPar();setTimeout(()=>Snd.zone(),500);
-  if(!again)toast('🏆 Welcome to the 1K Club');setTimeout(()=>$('clubGo').focus(),300);
+function showClub(again,k){
+  k=k||Math.max(1,Math.floor((level-1)/1000));
+  $('clubBadge').innerHTML=badgeK(k);$('clubTitle').textContent='The '+k+'K Club';
+  $('clubText').textContent=k===1?'One thousand levels. Every bolt, every ice block, every boss Mojo threw at you. Very few ever get here. Welcome to the club.'
+    :(k*1000).toLocaleString()+' levels. You just keep going. Almost nobody will ever see this screen.';
+  $('club').hidden=false;Snd.underPar();setTimeout(()=>Snd.zone(),500);
+  if(!again){toast('🏆 Welcome to the '+k+'K Club');if(!trophies.includes('k'+k*1000)){trophies.push('k'+k*1000);saveGame()}}setTimeout(()=>$('clubGo').focus(),300);
   if(again)board.scrollIntoView({behavior:'smooth',block:'center'});
 }
 $('clubGo').addEventListener('click',()=>{$('club').hidden=true});
-$('promoGo').addEventListener('click',()=>{$('promo').hidden=true;drawRank();if(pendingClub){pendingClub=false;showClub(false)}});
+$('promoGo').addEventListener('click',()=>{$('promo').hidden=true;drawRank();if(pendingClub){const k=pendingClub;pendingClub=false;showClub(false,k)}});
 $('newb').addEventListener('click',generate);
 $('restart').addEventListener('click',()=>{cur=startCur.slice();frozen=startFrozen.slice();seen=new Array(n*n).fill(0);bumpTile=-1;moves=0;solved=false;anims={};hintTile=-1;flow=computeFlow();$('win').hidden=true;updateStats();saveGame(false)});
 window.addEventListener('resize',resize);
