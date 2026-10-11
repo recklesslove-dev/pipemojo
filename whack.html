@@ -106,7 +106,7 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
   <div class="overlay" id="start">
     <img src="/assets/mojo-front.png" alt="" width="638" height="1100">
     <h1>Whack-a-Pipe</h1>
-    <p>Pipes are rising. Tap each one before it crosses the red line. Let three through and you're cursed. Grab a green <strong>patch kit</strong> to win back a life. Fill Mojo's <strong>wrench meter</strong>, then swipe up anywhere to smash the pipes closest to the line. Hit a glowing <strong>voodoo pipe</strong> to wipe the board and slow things down.</p>
+    <p>Pipes are rising. Tap each one before it crosses the red line. Let three through and you're cursed. Grab a green <strong>patch kit</strong> to win back a life. Fill Mojo's <strong>wrench meter</strong>, then swipe up anywhere to smash every pipe on the board. Hit a glowing <strong>voodoo pipe</strong> to wipe the board and slow things down.</p>
     <div class="btns"><button class="primary" id="go">Start</button></div>
     <p class="who" id="who"></p>
   </div>
@@ -132,7 +132,7 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<p class="wver">Whack v1.11</p>
+<p class="wver">Whack v1.12</p>
 <script src="/lb.js"></script>
 <script>
 (function(){
@@ -596,8 +596,8 @@ function drawMeter(t){ // a gold bar on the ledge between Mojo and Ganja
   const age=(t-smashAt)/1000;if(age<.4){ctx.fillStyle='rgba(245,200,66,'+(.35*(1-age/.4))+')';ctx.fillRect(0,0,W,H)}
 }
 function smash(t){
-  // Mojo slams the wrench: the pipe nearest the line in every lane pops
-  const hit=[];for(let l=0;l<LANES;l++){let best=null;for(const p of pipes)if(p.lane===l&&!p.drain&&!p.gold&&(!best||p.y<best.y))best=p;if(best)hit.push(best)}
+  // Mojo slams the wrench: every pipe on the board pops
+  const hit=pipes.filter(p=>!p.drain&&!p.gold);
   for(const p of hit){burst(p.x,p.y);if(p.patch){lives=Math.min(3,lives+1);drawLives()}else score++}
   pipes=pipes.filter(p=>!hit.includes(p));meter=0;smashAt=t;mojoHitAt=t;ganjaHitAt=t;
   $('score').textContent=score;quip='Wrench time!';quipAt=t;pop(['!!!'],t);Snd.smash();flash=0;
