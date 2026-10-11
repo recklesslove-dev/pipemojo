@@ -271,7 +271,7 @@ button.danger.final{background:#e8281e;color:#fff}
   <section class="trophies" aria-label="Trophy case"><h3>Trophy case <span id="tcount"></span></h3><div class="tgrid" id="tgrid"></div></section>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <section class="lb-slot" id="lb" aria-label="Leaderboard"></section>
-  <p class="ver">Flow v1.19</p>
+  <p class="ver">Flow v1.20</p>
 </main>
 
 <div class="bossfx" id="bossFx" hidden aria-label="Boss level">
@@ -344,8 +344,8 @@ function zoneFor(l){
   if(l<PRESTIGE_AT)return Object.assign({},ZONES[Math.min(ZONES.length-1,period(l))]);
   const k=Math.floor((l-PRESTIGE_AT)/25),base=ZONES[k%ZONES.length],stars=1+Math.floor(k/ZONES.length);
   return Object.assign({},base,{
-    name:base.name+' · Prestige',hints:0,frozen:0.08,locked:0.1,double:true,triple:stars>=2,
-    blurb:stars>=2?'Beignet the maggot crawled up a third drain. Ganja, Zydeco and Beignet are all waiting. Fill every one.'
+    name:base.name+' · Prestige',hints:0,frozen:0.08,locked:0.1,double:true,triple:stars>=2,quad:stars>=3,
+    blurb:stars>=3?'Roux the crawfish claimed a fourth drain. Ganja, Zydeco, Beignet and Roux are all waiting. Fill every one.':stars>=2?'Beignet the maggot crawled up a third drain. Ganja, Zydeco and Beignet are all waiting. Fill every one.'
                   :'Back around with every twist turned on: frozen, bolted, two drains.'});
 }
 const EMBLEMS={
@@ -432,7 +432,7 @@ let bossOn=false;
 function bossZone(l){
   const base=zoneFor(l);
   return Object.assign({},base,{name:'Mojo\'s Challenge',emblem:'tophat',accent:'#ff3b2f',hints:0,
-    frozen:.08,locked:.08,vines:.06,ghost:.1,cursed:.08,double:true,triple:!!base.triple,
+    frozen:.08,locked:.08,vines:.06,ghost:.1,cursed:.08,double:true,triple:!!base.triple,quad:!!base.quad,
     copper:'#e0b040',copperDark:'#8a5a10',hl:'rgba(255,240,180,.55)',cap:'#c99a2e',outline:'#2a0606',
     water:'#ff3b2f',waterLight:'#ffc2b8',rgb:'255,59,47',tile:'#1e0a0c',tileWet:'#3a0f10',
     bg:'radial-gradient(ellipse 90% 55% at 50% 100%, rgba(255,40,20,.38) 0%, transparent 62%),radial-gradient(ellipse 80% 45% at 50% 0%, rgba(224,176,64,.18) 0%, transparent 60%),#0c0202'});
@@ -482,7 +482,7 @@ if(LB)LB.refresh();
 
 /* ---------- character art ---------- */
 const IMG={};
-for(const k of['ganja-front','ganja-side','fly-front','fly-side','maggot-front','maggot-side']){const im=new Image();im.src='/assets/'+k+'.png';IMG[k]=im}
+for(const k of['ganja-front','ganja-side','fly-front','fly-side','maggot-front','maggot-side','crawfish-front','crawfish-side']){const im=new Image();im.src='/assets/'+k+'.png';IMG[k]=im}
 const ready=im=>im&&im.complete&&im.naturalWidth>0;
 
 /* ---------- sound (synthesized, no files) ---------- */
@@ -563,7 +563,7 @@ document.addEventListener('pointerdown',()=>Snd.unlock(),{once:false,passive:tru
 /* ---------- game state ---------- */
 let replay=false,replayBackup=null;
 let meltAt={},vine=[],cursed=[],ghost=[],seen=[],parStreak=0,bestStreak=0,trophies=[],underCount=0;
-let level=1,n,sol,cur,startCur,sr,er,er2=-1,er3=-1,frozen=[],startFrozen=[],locked=[],bumpTile=-1,bumpAt=0,moves=0,par=0,anims={},solved=false,solvedAt=0,flow=null,path=[],hints=3,hintTile=-1,hintAt=0;
+let level=1,n,sol,cur,startCur,sr,er,er2=-1,er3=-1,er4=-1,frozen=[],startFrozen=[],locked=[],bumpTile=-1,bumpAt=0,moves=0,par=0,anims={},solved=false,solvedAt=0,flow=null,path=[],hints=3,hintTile=-1,hintAt=0;
 let Wd=0,Hd=0,cell=0,gut=0,padTop=0;
 let best=1;
 try{best=parseInt(localStorage.getItem('pm-flow-best')||'1',10)||1}catch(e){}
@@ -581,7 +581,7 @@ function saveGame(important){ // every move saves on this device; the cloud copy
   if(replay)return; // boss replays never touch the real run
   const a=acct();
   if(nameKey(a&&a.name)!==owner)return; // never save one player's board into another's slot
-  const obj={v:1,level,n,sol,cur,startCur,sr,er,er2,er3,frozen,startFrozen,locked,vine,cursed,ghost,seen,parStreak,bestStreak,trophies,underCount,moves,par,hints,solved,savedAt:Date.now()};
+  const obj={v:1,level,n,sol,cur,startCur,sr,er,er2,er3,er4,frozen,startFrozen,locked,vine,cursed,ghost,seen,parStreak,bestStreak,trophies,underCount,moves,par,hints,solved,savedAt:Date.now()};
   try{localStorage.setItem(slotFor(a),JSON.stringify(obj))}catch(e){}
   lastObj=obj;
   if(!(a&&cloudReady))return;
@@ -606,7 +606,7 @@ function restore(s){
   if(s.solved){level=s.level+1;generate();checkTrophies(true);return}
   level=s.level;setLook();n=s.n;sol=s.sol;cur=s.cur;startCur=s.startCur||s.cur.slice();sr=s.sr;er=s.er;
   const z0=()=>new Array(n*n).fill(0);
-  er2=typeof s.er2==='number'?s.er2:-1;er3=typeof s.er3==='number'?s.er3:-1;frozen=Array.isArray(s.frozen)?s.frozen:z0();
+  er2=typeof s.er2==='number'?s.er2:-1;er3=typeof s.er3==='number'?s.er3:-1;er4=typeof s.er4==='number'?s.er4:-1;frozen=Array.isArray(s.frozen)?s.frozen:z0();
   startFrozen=Array.isArray(s.startFrozen)?s.startFrozen:frozen.slice();locked=Array.isArray(s.locked)?s.locked:z0();
   vine=Array.isArray(s.vine)?s.vine:new Array(n*n).fill(-1);cursed=Array.isArray(s.cursed)?s.cursed:z0();
   ghost=Array.isArray(s.ghost)?s.ghost:z0();seen=Array.isArray(s.seen)?s.seen:z0();
@@ -635,17 +635,17 @@ function computeFlow(){
   }
   const e=er*n+n-1,okE=i=>!!(f[i]&&(cur[i]&E));
   if(frozen[s]&&(cur[s]&W))iceHit[s]=1;
-  return {f,iceHit,count,ok:okE(e)&&(er2<0||okE(er2*n+n-1))&&(er3<0||okE(er3*n+n-1))};
+  return {f,iceHit,count,ok:okE(e)&&(er2<0||okE(er2*n+n-1))&&(er3<0||okE(er3*n+n-1))&&(er4<0||okE(er4*n+n-1))};
 }
 
 function drainFull(row){const i=row*n+n-1;return !!(flow&&flow.f[i]&&(cur[i]&E))}
-function drainsFilled(){return [er,er2,er3].filter(r=>r>=0&&drainFull(r)).length}
-const drainCount=()=>[er,er2,er3].filter(r=>r>=0).length;
+function drainsFilled(){return [er,er2,er3,er4].filter(r=>r>=0&&drainFull(r)).length}
+const drainCount=()=>[er,er2,er3,er4].filter(r=>r>=0).length;
 function solutionPath(){
   const a=pathTo(er*n+n-1);
   if(er2<0)return a;
   const seen=new Set(a);
-  for(const r of [er2,er3]){if(r<0)continue;for(const i of pathTo(r*n+n-1))if(!seen.has(i)){seen.add(i);a.push(i)}}
+  for(const r of [er2,er3,er4]){if(r<0)continue;for(const i of pathTo(r*n+n-1))if(!seen.has(i)){seen.add(i);a.push(i)}}
   return a;
 }
 function pathTo(t){
@@ -667,7 +667,7 @@ function pathTo(t){
 
 function generateTutorial(){
   vine=new Array(9).fill(-1);cursed=new Array(9).fill(0);ghost=new Array(9).fill(0);seen=new Array(9).fill(0);
-  n=3;sr=1;er=1;er2=-1;er3=-1;
+  n=3;sr=1;er=1;er2=-1;er3=-1;er4=-1;
   const deco=[N|E,E|S,S|W,W|N,N,S];
   sol=new Array(9).fill(0).map(()=>deco[rnd(deco.length)]);
   for(let x=0;x<3;x++)sol[3+x]=W|E;
@@ -691,10 +691,17 @@ function generateRandom(){
   }
   sr=rnd(n);er=rnd(n);
   sol[sr*n]|=W;sol[er*n+n-1]|=E;
-  er2=-1;er3=-1;
+  er2=-1;er3=-1;er4=-1;
   if(Z.double&&n>=4){do{er2=rnd(n)}while(Math.abs(er2-er)<2);sol[er2*n+n-1]|=E}
   if(Z.triple&&n>=7){let tries=0;do{er3=rnd(n);tries++}while((Math.abs(er3-er)<2||Math.abs(er3-er2)<2)&&tries<50);
     if(Math.abs(er3-er)<2||Math.abs(er3-er2)<2)er3=-1;else sol[er3*n+n-1]|=E}
+  if(Z.quad&&n>=9){ // Roux's fourth drain: re-pick the third and fourth together so all four fit, spaced apart
+    if(er3>=0)sol[er3*n+n-1]&=~E;
+    const far=(r,list)=>list.every(o=>Math.abs(r-o)>=2),pairs=[];
+    for(let a=0;a<n;a++)for(let b=a+2;b<n;b++)if(far(a,[er,er2])&&far(b,[er,er2]))pairs.push([a,b]);
+    if(pairs.length){[er3,er4]=pairs[rnd(pairs.length)];sol[er3*n+n-1]|=E;sol[er4*n+n-1]|=E}
+    else if(er3>=0)sol[er3*n+n-1]|=E;
+  }
   let tries=0;
   do{cur=sol.map(m=>rotK(m,rnd(4)));tries++}while(computeFlow().ok&&tries<50);
 }
@@ -748,7 +755,7 @@ function revealGhosts(){
 function generate(){
   setLook();
   if(level%100>=97)loadBossVideo(); // get the boss video ready a few levels early
-  hints=Z.hints;hintTile=-1;bumpTile=-1;er2=-1;er3=-1;
+  hints=Z.hints;hintTile=-1;bumpTile=-1;er2=-1;er3=-1;er4=-1;
   if(level===1)generateTutorial();else generateRandom();
   path=solutionPath();
   addTwists();
@@ -774,7 +781,7 @@ function updateStats(){
   const ds=$('drainStat');ds.hidden=er2<0;
   $('streakStat').hidden=parStreak<2;$('streak').textContent='🔥 '+parStreak;
   $('sub').textContent='Tap pipes to turn them. Run Mojo\'s water from the valve to '+
-    (er3>=0?'Ganja\'s, Zydeco\'s and Beignet\'s drains.':er2>=0?'Ganja\'s and Zydeco\'s drains.':'Ganja\'s drain.');
+    (er4>=0?'Ganja\'s, Zydeco\'s, Beignet\'s and Roux\'s drains.':er3>=0?'Ganja\'s, Zydeco\'s and Beignet\'s drains.':er2>=0?'Ganja\'s and Zydeco\'s drains.':'Ganja\'s drain.');
   if(er2>=0&&flow){const k=drainsFilled(),t=drainCount();$('drains').textContent=k+'/'+t;$('drains').classList.toggle('done',k===t)}
 }
 
@@ -788,7 +795,7 @@ function leaks(){
       const nx=x+d.dx,ny=y+d.dy;
       if(nx<0||ny<0||nx>=n||ny>=n){
         if(d.b===W&&x===0&&y===sr)continue;
-        if(d.b===E&&x===n-1&&(y===er||y===er2||y===er3))continue;
+        if(d.b===E&&x===n-1&&(y===er||y===er2||y===er3||y===er4))continue;
         out.push([i,d]);continue;
       }
       if(frozen[ny*n+nx])continue;
@@ -1000,7 +1007,7 @@ function draw(t){
   const dx=ex+gut*0.5;
   drawDrain(dx,ey,drainFull(er),t);
   // extra drains: Zydeco (the fly) guards the second, Beignet (the maggot) the third
-  const crew=[[er2,'fly'],[er3,'maggot']];
+  const crew=[[er2,'fly'],[er3,'maggot'],[er4,'crawfish']];
   for(const [row] of crew){
     if(row<0)continue;
     const ey2=row*cell+cell/2;
@@ -1023,6 +1030,7 @@ function draw(t){
   rider(er,'ganja',0);
   if(er2>=0)rider(er2,'fly',1.3);
   if(er3>=0)rider(er3,'maggot',2.6);
+  if(er4>=0)rider(er4,'crawfish',3.9);
   ctx.restore();
 }
 
@@ -1056,10 +1064,12 @@ cv.addEventListener('pointerdown',e=>{
 /* ---------- new friends: a big reveal the first time each character shows up ---------- */
 const REVEALS={
   150:{img:'fly-front',name:'Zydeco',text:'The fly. Fastest wings on the bayou, hums while he works, and he just claimed the second drain. Fill his drain too, or he\'ll never stop buzzing about it.'},
-  450:{img:'maggot-front',name:'Beignet',text:'The maggot. Soft, sweet and pale as powdered sugar, and he\'s waited 450 levels for this. The third drain is his now. Don\'t leave him dry.'}
+  450:{img:'maggot-front',name:'Beignet',text:'The maggot. Soft, sweet and pale as powdered sugar, and he\'s waited 450 levels for this. The third drain is his now. Don\'t leave him dry.'},
+  675:{img:'crawfish-front',name:'Roux',text:'The crawfish. Red as a boiled mudbug and proud of every inch of those claws. He\'s been waiting at the bottom of the bayou for 675 levels. The fourth drain is his. Fill it before he pinches somebody.'}
 };
 function showReveal(lv,replay){
   const r=REVEALS[lv];if(!r)return false;
+  try{localStorage.setItem('pm-reveal-'+lv+':'+owner,'1')}catch(e){}
   $('revImg').src='/assets/'+r.img+'.png';$('revImg').alt=r.name;
   $('revName').textContent=r.name;$('revText').textContent=r.text;
   $('revZone').textContent=replay?'':'Zone: '+Z.name;
@@ -1087,6 +1097,7 @@ const TROPHIES=[
   lvlT(200,'l200','Mojo\'s Domain',svgBadge('tophat')),
   lvlT(225,'l225','Prestige','★'),
   lvlT(450,'l450','Met Beignet',imgBadge('maggot-front')),
+  lvlT(675,'l675','Met Roux',imgBadge('crawfish-front')),
   {id:'s5',name:'On a Roll',desc:'Par streak of 5',art:'🔥5',ok:x=>x.streak>=5},
   {id:'s10',name:'Hot Hand',desc:'Par streak of 10',art:'🔥10',ok:x=>x.streak>=10},
   {id:'s25',name:'Untouchable',desc:'Par streak of 25',art:'🔥25',ok:x=>x.streak>=25},
@@ -1134,7 +1145,7 @@ $('tgrid').addEventListener('click',e=>{const b=e.target.closest('[data-rev]');i
 
 function startReplay(L){
   if(replay)return;
-  replayBackup=JSON.parse(JSON.stringify({v:1,level,n,sol,cur,startCur,sr,er,er2,er3,frozen,startFrozen,locked,vine,cursed,ghost,seen,parStreak,bestStreak,trophies,underCount,moves,par,hints,solved,savedAt:Date.now()}));
+  replayBackup=JSON.parse(JSON.stringify({v:1,level,n,sol,cur,startCur,sr,er,er2,er3,er4,frozen,startFrozen,locked,vine,cursed,ghost,seen,parStreak,bestStreak,trophies,underCount,moves,par,hints,solved,savedAt:Date.now()}));
   replay=true;$('replayBar').hidden=false;$('win').hidden=true;
   level=L;generate();
   board.scrollIntoView({behavior:'smooth',block:'center'});
@@ -1168,7 +1179,7 @@ function win(){
   if(!replay&&level+1>best){best=level+1;try{localStorage.setItem('pm-flow-best',String(best))}catch(e){}}
   updateStats();
   const used=Z.hints-hints;
-  const riders=er3>=0?'Ganja, Zydeco and Beignet are going for a ride.':er2>=0?'Ganja and Zydeco are going for a ride.':'Ganja\'s going for a ride.';
+  const riders=er4>=0?'Ganja, Zydeco, Beignet and Roux are going for a ride.':er3>=0?'Ganja, Zydeco and Beignet are going for a ride.':er2>=0?'Ganja and Zydeco are going for a ride.':'Ganja\'s going for a ride.';
   if(moves<=par){parStreak++;celebrate(moves<par)}else parStreak=0;
   if(moves<par)underCount++;
   bestStreak=Math.max(bestStreak,parStreak);
@@ -1226,10 +1237,17 @@ function confirmWipe(onYes){ // starting over erases the run, so it takes two ta
   yes.onclick=()=>{if(step===1){step=2;show();Snd.thud();return}el.hidden=true;onYes()};
   show();el.hidden=false;Snd.thud();setTimeout(()=>$('wipeKeep').focus(),200);
 }
+function catchUpRoux(){ // already at 675+ when Roux arrived: meet him now, with his drain on the board
+  if(level<675||replay)return;
+  let seen=false;try{seen=!!localStorage.getItem('pm-reveal-675:'+owner)}catch(e){}
+  if(seen)return;
+  if(er4<0&&!solved&&Z.quad)generate();
+  showReveal(675,false);checkTrophies(true);
+}
 function askResume(text,contLabel,altLabel,onCont,onAlt){
   $('resumeText').textContent=text;
   $('cont').textContent=contLabel;$('fresh').textContent=altLabel;
-  $('cont').onclick=()=>{$('resume').hidden=true;onCont&&onCont()};
+  $('cont').onclick=()=>{$('resume').hidden=true;onCont&&onCont();setTimeout(catchUpRoux,150)};
   $('fresh').onclick=()=>{$('resume').hidden=true;if(/^New run/.test(altLabel)&&level>1)confirmWipe(()=>{onAlt&&onAlt()});else onAlt&&onAlt()};
   $('resume').hidden=false;
 }
