@@ -57,6 +57,11 @@ h1{font-family:var(--title);font-weight:400;font-size:clamp(2.8rem,12vw,4rem);li
 .game h2{font-family:var(--title);font-weight:400;font-size:clamp(1.6rem,6.8vw,2.1rem);line-height:1;padding-right:62px}
 .game.whack h2{color:#ff5a4f}
 .game.flow h2{color:var(--cyan)}
+.game.locker{border-color:rgba(245,200,66,.45)}
+.game.locker h2{color:var(--gold)}
+.game.locker .go{background:var(--gold);color:#1a1004}
+.lk-thumb{position:relative;width:96px;height:96px;border-radius:12px;overflow:hidden;background:#120c1a url(/assets/locker-bg.jpg) 70% 60%/cover}
+.lk-thumb img{position:absolute;left:4px;bottom:2px;height:74px;width:auto;filter:drop-shadow(0 4px 6px rgba(0,0,0,.6))}
 .game p{color:rgba(255,255,255,.62);font-size:.95rem;line-height:1.4;margin-top:4px}
 .best{display:inline-block;margin-top:10px;font-weight:800;font-size:.8rem;color:var(--gold)}
 .best:empty{display:none}
@@ -130,6 +135,15 @@ footer{text-align:center;color:rgba(255,255,255,.3);font-size:.8rem;margin-top:3
         <ol class="top3" id="top-flow" aria-label="Flow top 3"></ol>
       </div>
       <span class="go">Play</span>
+    </a>
+
+    <a class="game locker" href="/locker">
+      <span class="lk-thumb" aria-hidden="true"><img src="/assets/mojo-front.png" alt=""></span>
+      <div>
+        <h2>Mojo's Locker</h2>
+        <p>Your Army ranks, trophies and pipe skins. Tap the locker and gear up.</p>
+      </div>
+      <span class="go">Open</span>
     </a>
   </div>
 
