@@ -129,7 +129,7 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<p class="wver">Whack v1.1</p>
+<p class="wver">Whack v1.2</p>
 <script src="/lb.js"></script>
 <script>
 (function(){
@@ -174,7 +174,8 @@ const VOICE={};let voiceLoading=false;
 function loadVoice(){if(voiceLoading||!Snd.ac)return;voiceLoading=true;
   for(const n of ['letswork','bayou','graveyard','voodoogold','hellfire','golden','voodoo','newrecord','cursed'])
     fetch('/assets/mojo-'+n+'.mp3').then(r=>r.ok?r.arrayBuffer():Promise.reject()).then(a=>new Promise((ok,no)=>Snd.ac.decodeAudioData(a,ok,no))).then(b=>{VOICE[n]=b}).catch(()=>{})}
-function voice(n,delay){if(!Snd.on||!Snd.ac||!VOICE[n])return;const s=Snd.ac.createBufferSource(),g=Snd.ac.createGain();s.buffer=VOICE[n];g.gain.value=1.4;s.connect(g);g.connect(Snd.master);s.start(Snd.ac.currentTime+(delay||0))}
+const VOICE_VOL={voodoo:.28,golden:.38}; // shouts are hotter than the other lines
+function voice(n,delay){if(!Snd.on||!Snd.ac||!VOICE[n])return;const s=Snd.ac.createBufferSource(),g=Snd.ac.createGain();s.buffer=VOICE[n];g.gain.value=VOICE_VOL[n]||.45;s.connect(g);g.connect(Snd.master);s.start(Snd.ac.currentTime+(delay||0))}
 
 let pipes=[],bursts=[],flash=0,vflash=0,score=0,lives=3,best=0,running=false,spawnT=0,last=0,streak=0;
 let heat=0,sinceVoodoo=0,voodoosUsed=0; // heat drives the pace; the voodoo pipe cools it down, a little less each time
