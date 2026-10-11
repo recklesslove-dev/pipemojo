@@ -132,7 +132,7 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<p class="wver">Whack v1.13</p>
+<p class="wver">Whack v1.14</p>
 <script src="/lb.js"></script>
 <script>
 (function(){
@@ -585,8 +585,10 @@ function breakStep(dt,t){
   else if(phase==='rush'){
     spawnT-=dt;
     if(spawnT<=0&&phaseT>.8){const lane=freeLane();if(lane>=0)pipes.push({lane,gold:true,x:lane*laneW+laneW/2,y:H+10,len:H*(.14+Math.random()*.06),v:speed()*.75});spawnT=.32}
-    if(phaseT<=0){phase='play';for(const p of pipes)if(p.gold)burst(p.x,p.y);pipes=pipes.filter(p=>!p.gold);spawnT=1;heat+=2;banner='';}
+    if(phaseT<=0){phase='over';phaseT=1.6;for(const p of pipes)if(p.gold)p.drain=true; // leftover gold pipes sink away (no points)
+banner='Bonus round over';bannerAt=t;Snd.start()}
   }
+  else if(phase==='over'&&phaseT<=0){phase='play';spawnT=.6;heat+=2;banner=''} // a clear end before the pipes come back
 }
 /* Mojo's wrench meter: whacks fill it, then tap Mojo to smash the pipes closest to the line */
 const METER=35;let meter=0,smashAt=-9999;
@@ -633,9 +635,9 @@ function drawBanner(t){
   const age=(t-bannerAt)/1000,a=Math.min(1,age*4)*(phase==='rush'?Math.max(0,1-(age-1.4)/.6):1),sc=1+Math.max(0,.3-age)*1.5;if(a<=0)return;
   ctx.save();ctx.globalAlpha=a;ctx.translate(W/2,H*.48);ctx.scale(sc,sc);
   ctx.font='400 '+Math.min(64,W*.13)+'px "Pirata One", Georgia, serif';ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.lineWidth=6;ctx.strokeStyle='#000';ctx.strokeText(banner,0,0);ctx.fillStyle=phase==='rush'?'#f5c842':P.water;ctx.fillText(banner,0,0);
+  ctx.lineWidth=6;ctx.strokeStyle='#000';ctx.strokeText(banner,0,0);ctx.fillStyle=phase==='rush'||phase==='over'?'#f5c842':P.water;ctx.fillText(banner,0,0);
   ctx.font='800 '+Math.min(17,W*.04)+'px Nunito, sans-serif';ctx.lineWidth=4;
-  const sub=phase==='rush'?'Golden pipes +2. No lives at risk.':'Catch your breath…';ctx.strokeText(sub,0,Math.min(48,W*.1));ctx.fillStyle='#fff';ctx.fillText(sub,0,Math.min(48,W*.1));
+  const sub=phase==='rush'?'Golden pipes +2. No lives at risk.':phase==='over'?'Back to work…':'Catch your breath…';ctx.strokeText(sub,0,Math.min(48,W*.1));ctx.fillStyle='#fff';ctx.fillText(sub,0,Math.min(48,W*.1));
   ctx.restore();
 }
 function loseLife(t){
