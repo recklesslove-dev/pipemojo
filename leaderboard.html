@@ -64,6 +64,8 @@ li.me{box-shadow:inset 3px 0 0 var(--gold);background:rgba(245,200,66,.12)}
 li.msg{color:rgba(255,255,255,.55);font-weight:600}
 .ri{display:inline-block;width:24px;height:24px;vertical-align:-5px;margin-right:6px}
 .ri svg{width:100%;height:100%}
+.k1{display:inline-block;width:26px;height:26px;vertical-align:-6px;margin-left:6px}
+.k1 svg{width:100%;height:100%}
 .fl{font-size:.8rem;font-weight:800;color:#ffb347;margin-left:4px;white-space:nowrap}
 .play{display:block;text-align:center;margin-top:14px;font-weight:800;padding:13px;border-radius:10px}
 .whack .play{background:var(--red);color:#fff}
@@ -125,6 +127,8 @@ li.msg{color:rgba(255,255,255,.55);font-weight:600}
       <p>You need to be signed in to a name, and you need a connection. Whack-a-Pipe scores are also checked against how long the round actually lasted, so fake scores get turned away.</p></details>
     <details><summary>What's the insignia next to a name?</summary>
       <p>That's the player's Army rank. Flow players are officers: every boss beaten (every 100 levels) is a promotion, from Second Lieutenant up to five-star General of the Army. Whack-a-Pipe players are enlisted: every 100 points of their best score is a promotion, from Private up to Sergeant Major of the Army. After the top rank come Silver, Gold and Diamond finishes. Tap or hover an insignia to see the rank.</p></details>
+    <details><summary>What's the 1K badge?</summary>
+      <p>The 1K Club. It's only for Flow players who have cleared level 1000. That's a lot of bolts, ice and boss fights.</p></details>
     <details><summary>What's the 🔥 next to a name?</summary>
       <p>That's the player's best Flow par streak: the most levels in a row they've cleared on par or better. It's their best ever, so it stays even after a streak ends.</p></details>
     <details><summary>Does Flow save my progress?</summary>
@@ -265,6 +269,19 @@ function armyEnlisted(r){
   const top=-12,h=(nRock?lastR+56:last+64)-top;
   return wrap('<g transform="translate(0 '+((200-h)/2-top).toFixed(1)+')">'+b+'</g>');
 }
+/* ---------- the 1K Club badge (clear level 1000 in Flow) ---------- */
+function badge1k(){
+  let leaves='';
+  for(const side of [1,-1])for(let i=0;i<7;i++){const a=(side>0?-50+i*15:130+i*15)*Math.PI/180,x=100+57*Math.cos(a),y=98+57*Math.sin(a);
+    leaves+='<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="8" ry="3.6" transform="rotate('+((a*180/Math.PI)+90*side).toFixed(0)+' '+x.toFixed(1)+' '+y.toFixed(1)+')" fill="url(#k1g)" stroke="#3d2804" stroke-width="1"/>'}
+  return '<svg viewBox="0 0 200 200"><defs><linearGradient id="k1g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1a8"/><stop offset=".5" stop-color="#e9b93a"/><stop offset="1" stop-color="#8a5f10"/></linearGradient>'+
+    '<radialGradient id="k1d" cx=".5" cy=".38" r=".62"><stop offset="0" stop-color="#2e2040"/><stop offset="1" stop-color="#0d0814"/></radialGradient></defs>'+
+    '<circle cx="100" cy="96" r="86" fill="url(#k1g)" stroke="#3d2804" stroke-width="5"/><circle cx="100" cy="96" r="72" fill="url(#k1d)" stroke="#3d2804" stroke-width="3"/>'+leaves+
+    '<path d="'+(()=>{let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?5.5:13;d+=(i?'L':'M')+(100+r*Math.cos(a)).toFixed(1)+' '+(44+r*Math.sin(a)).toFixed(1)}return d+'Z'})()+'" fill="url(#k1g)" stroke="#3d2804" stroke-width="1.5"/>'+
+    '<text x="100" y="118" text-anchor="middle" font-family="\'Pirata One\', Georgia, serif" font-size="62" font-weight="700" fill="url(#k1g)" stroke="#3d2804" stroke-width="2">1K</text>'+
+    '<path d="M26 148 L174 148 L164 163 L174 178 L26 178 L36 163Z" fill="#b8281e" stroke="#3d0a06" stroke-width="3" stroke-linejoin="round"/>'+
+    '<text x="100" y="170" text-anchor="middle" font-family="Nunito, system-ui, sans-serif" font-size="19" font-weight="900" letter-spacing="4" fill="#fff1d0">CLUB</text></svg>';
+}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let me='';
 try{const a=JSON.parse(localStorage.getItem('pm-lb')||'null');if(a&&a.name){me=a.name;document.getElementById('you').innerHTML='You\'re playing as <b>'+esc(a.name)+'</b>. Your rows are highlighted.'}}catch(e){}
@@ -275,7 +292,7 @@ async function load(game,unit){
     const r=await fetch(API+'/top?game='+game);const d=await r.json();
     const top=d.top||[];
     if(!top.length){ol.innerHTML='<li class="msg">No scores yet. Be the first.</li>';return}
-    ol.innerHTML=top.map((x,i)=>'<li'+(me&&key(x.name)===key(me)?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+(x.best>=100?'<span class="ri" title="'+(game==='flow'?officerName(Math.floor(x.best/100)):enlistedName(Math.floor(x.best/100)))+'">'+(game==='flow'?armyOfficer(Math.floor(x.best/100)):armyEnlisted(Math.floor(x.best/100)))+'</span>':'')+esc(x.name)+(x.streak>=2?' <span class="fl" title="Best par streak">🔥'+x.streak+'</span>':'')+'</span><span class="s">'+unit+x.best+'</span></li>').join('');
+    ol.innerHTML=top.map((x,i)=>'<li'+(me&&key(x.name)===key(me)?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+(x.best>=100?'<span class="ri" title="'+(game==='flow'?officerName(Math.floor(x.best/100)):enlistedName(Math.floor(x.best/100)))+'">'+(game==='flow'?armyOfficer(Math.floor(x.best/100)):armyEnlisted(Math.floor(x.best/100)))+'</span>':'')+esc(x.name)+(game==='flow'&&x.best>=1000?'<span class="k1" title="1K Club">'+badge1k()+'</span>':'')+(x.streak>=2?' <span class="fl" title="Best par streak">🔥'+x.streak+'</span>':'')+'</span><span class="s">'+unit+x.best+'</span></li>').join('');
   }catch(e){ol.innerHTML='<li class="msg">Couldn\'t load the board. Try again in a bit.</li>'}
 }
 load('whack','');load('flow','Lv ');

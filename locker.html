@@ -68,6 +68,9 @@ a{color:inherit;text-decoration:none}
 .lockerHit{position:absolute;left:65.5%;top:22%;width:34%;height:66%;cursor:pointer;border-radius:6px}
 .lockerHit::after{content:'';position:absolute;inset:0;border-radius:6px;box-shadow:0 0 0 2px rgba(245,200,66,.0),0 0 26px rgba(245,200,66,0);animation:hint 2.6s ease-in-out infinite}
 @keyframes hint{0%,100%{box-shadow:0 0 0 2px rgba(245,200,66,0),0 0 22px rgba(245,200,66,0)}50%{box-shadow:0 0 0 2px rgba(245,200,66,.55),0 0 26px rgba(245,200,66,.35)}}
+.doorBadge{position:absolute;left:72%;top:35%;width:19%;aspect-ratio:1;pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.7))}
+.doorBadge[hidden]{display:none}
+.doorBadge svg{width:100%;height:100%}
 .tag{position:absolute;left:82.5%;top:91%;transform:translateX(-50%);white-space:nowrap;font-weight:800;font-size:clamp(.72rem,3cqw,1rem);
   color:var(--gold);background:rgba(10,6,14,.72);padding:.35em .8em;border-radius:999px;border:1px solid rgba(245,200,66,.35);pointer-events:none}
 
@@ -150,6 +153,7 @@ a{color:inherit;text-decoration:none}
   </button>
   <div class="say" id="say" aria-live="polite"></div>
   <video id="mojoVid" src="/assets/mojo-idle.mp4" muted playsinline loop autoplay preload="auto" hidden></video>
+  <div class="doorBadge" id="doorBadge" hidden aria-label="1K Club"></div>
   <button class="lockerHit" id="lockerHit" aria-label="Open the locker"></button>
   <div class="tag">Tap the locker</div>
 </main>
@@ -160,7 +164,7 @@ a{color:inherit;text-decoration:none}
   <button class="pill" id="sound" aria-pressed="true">Sound on</button>
 </div>
 
-<p class="ver">Locker v1.11</p>
+<p class="ver">Locker v1.12</p>
 <section class="gear" id="gear" aria-label="Your gear" aria-hidden="true">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="gearTitle">
     <div class="sheetHead"><h2 id="gearTitle">Your gear</h2><button class="close" id="close">Close</button></div>
@@ -376,6 +380,20 @@ function insignia(stars,forceTier){
   if(stars>20&&forceTier==null)s+='<circle cx="100" cy="105" r="21" fill="#0b1f2e" stroke="'+t.mid+'" stroke-width="3"/><text x="100" y="113" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="22" fill="#fff">'+stars+'</text>';
   return '<svg viewBox="0 0 200 200">'+s+'</svg>';
 }
+/* ---------- the 1K Club badge (clear level 1000 in Flow) ---------- */
+function badge1k(){
+  let leaves='';
+  for(const side of [1,-1])for(let i=0;i<7;i++){const a=(side>0?-50+i*15:130+i*15)*Math.PI/180,x=100+57*Math.cos(a),y=98+57*Math.sin(a);
+    leaves+='<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="8" ry="3.6" transform="rotate('+((a*180/Math.PI)+90*side).toFixed(0)+' '+x.toFixed(1)+' '+y.toFixed(1)+')" fill="url(#k1g)" stroke="#3d2804" stroke-width="1"/>'}
+  return '<svg viewBox="0 0 200 200"><defs><linearGradient id="k1g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1a8"/><stop offset=".5" stop-color="#e9b93a"/><stop offset="1" stop-color="#8a5f10"/></linearGradient>'+
+    '<radialGradient id="k1d" cx=".5" cy=".38" r=".62"><stop offset="0" stop-color="#2e2040"/><stop offset="1" stop-color="#0d0814"/></radialGradient></defs>'+
+    '<circle cx="100" cy="96" r="86" fill="url(#k1g)" stroke="#3d2804" stroke-width="5"/><circle cx="100" cy="96" r="72" fill="url(#k1d)" stroke="#3d2804" stroke-width="3"/>'+leaves+
+    '<path d="'+(()=>{let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?5.5:13;d+=(i?'L':'M')+(100+r*Math.cos(a)).toFixed(1)+' '+(44+r*Math.sin(a)).toFixed(1)}return d+'Z'})()+'" fill="url(#k1g)" stroke="#3d2804" stroke-width="1.5"/>'+
+    '<text x="100" y="118" text-anchor="middle" font-family="\'Pirata One\', Georgia, serif" font-size="62" font-weight="700" fill="url(#k1g)" stroke="#3d2804" stroke-width="2">1K</text>'+
+    '<path d="M26 148 L174 148 L164 163 L174 178 L26 178 L36 163Z" fill="#b8281e" stroke="#3d0a06" stroke-width="3" stroke-linejoin="round"/>'+
+    '<text x="100" y="170" text-anchor="middle" font-family="Nunito, system-ui, sans-serif" font-size="19" font-weight="900" letter-spacing="4" fill="#fff1d0">CLUB</text></svg>';
+}
+
 /* ---------- Army ranks: officers in Flow (a promotion every boss), enlisted in Whack-a-Pipe (every 100 points) ---------- */
 const AR_T=[{light:'#f3c08a',mid:'#c4813f',dark:'#6e3f17',edge:'#3b1f08'},{light:'#ffffff',mid:'#c9ced6',dark:'#6b7280',edge:'#2b2f36'},
   {light:'#fff1a8',mid:'#e9b93a',dark:'#8a5f10',edge:'#3d2804'},{light:'#ffffff',mid:'#9fe8ff',dark:'#3aa7d6',edge:'#0b3550'}];
@@ -512,7 +530,7 @@ const TROPHIES=[
   lvlT(25,'l25','Bayou Bound',svg('gator')),lvlT(50,'l50','Grave Digger',svg('skull')),lvlT(75,'l75','Voodoo Touched',svg('doll')),
   lvlT(100,'l100','Hellfire Survivor',svg('flameskull')),lvlT(125,'l125','Ice Breaker',svg('snowflake')),lvlT(150,'l150','Met Zydeco',img('fly-front')),
   lvlT(175,'l175','Sewer Royalty',svg('manhole')),lvlT(200,'l200','Mojo\'s Domain',svg('tophat')),lvlT(225,'l225','Prestige','<span style="font-size:2rem;color:#f5c842">★</span>'),
-  lvlT(450,'l450','Met Beignet',img('maggot-front')),lvlT(675,'l675','Met Roux',img('crawfish-front')),
+  lvlT(450,'l450','Met Beignet',img('maggot-front')),lvlT(675,'l675','Met Roux',img('crawfish-front')),{id:'k1000',name:'1K Club',desc:'Clear level 1000',art:badge1k()},
   {id:'s5',name:'On a Roll',desc:'Par streak of 5',art:'🔥5'},{id:'s10',name:'Hot Hand',desc:'Par streak of 10',art:'🔥10'},{id:'s25',name:'Untouchable',desc:'Par streak of 25',art:'🔥25'},
   {id:'u1',name:'Under Par',desc:'Beat par once',art:svg('wrench')},{id:'u25',name:'Pipe Wizard',desc:'Beat par 25 times',art:svg('mask')}
 ];
@@ -579,13 +597,15 @@ addEventListener('keydown',e=>{if(e.key==='Escape')closeLocker()});
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('[data-tab]').forEach(x=>{const on=x===b;x.setAttribute('aria-selected',String(on));$('p-'+x.dataset.tab).hidden=!on});Snd.pick();
 }));
+function showDoorBadge(){const d=$('doorBadge');if(level>1000||trophies.includes('k1000')){d.innerHTML=badge1k();d.hidden=false}}
+showDoorBadge();
 /* signed in: pull your ranks from your name, so every device shows the same thing */
 if(window.PMLB&&PMLB.account()){
   Promise.all([PMLB.cloudLoad('flow'),PMLB.cloudLoad('whack')]).then(([f,w])=>{
     if(f&&f.v===1){const fl=f.solved?f.level+1:f.level;if(fl>level){level=fl;if(Array.isArray(f.trophies))trophies=f.trophies;STARS=Math.max(0,Math.floor((level-1)/100))}}
     if(w){WBEST=Math.max(WBEST,+w.best||0);try{localStorage.setItem('pm-whack-best',String(WBEST))}catch(e){}
       WTROS=[...new Set(WTROS.concat(Array.isArray(w.tro)?w.tro:[]))];try{localStorage.setItem('pm-whack-tro:'+WACC,JSON.stringify(WTROS))}catch(e){}}
-    if(opened){renderRank();renderTrophies();renderSkins()}
+    showDoorBadge();if(opened){renderRank();renderTrophies();renderSkins()}
   }).catch(()=>{});
 }
 setTimeout(()=>say(away>=3?'Where you been? Pipes don\'t fix themselves.':progressLine()||(level>1?'Welcome back. Check your gear.':'This here\'s my locker.')),900);
