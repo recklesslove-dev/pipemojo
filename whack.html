@@ -132,7 +132,7 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<p class="wver">Whack v1.12</p>
+<p class="wver">Whack v1.13</p>
 <script src="/lb.js"></script>
 <script>
 (function(){
@@ -284,6 +284,21 @@ function showWho(){
 }
 showWho();
 if(window.PMLB)PMLB.onChange(showWho);
+/* your Whack best, trophies and rounds follow your name to every device (like Flow's run) */
+function wPushCloud(){if(!(window.PMLB&&PMLB.account()))return;PMLB.cloudSave('whack',{best,tro:wTro(),rounds:wRounds(),savedAt:Date.now()})}
+function wPullCloud(){
+  if(!(window.PMLB&&PMLB.account()))return;
+  PMLB.cloudLoad('whack').then(c=>{
+    if(c===undefined)return;c=c||{};
+    const cb=+c.best||0,ct=Array.isArray(c.tro)?c.tro:[],cr=+c.rounds||0;
+    if(cb>best){best=cb;try{localStorage.setItem('pm-whack-best',String(best))}catch(e){};$('best').textContent=best}
+    const all=[...new Set(wTro().concat(ct))];try{localStorage.setItem('pm-whack-tro:'+wkey(),JSON.stringify(all))}catch(e){}
+    const r=Math.max(wRounds(),cr);try{localStorage.setItem('pm-whack-rounds:'+wkey(),String(r))}catch(e){}
+    if(best>cb||all.length>ct.length||r>cr)wPushCloud(); // this device knew more: share it
+  });
+}
+wPullCloud();
+if(window.PMLB)PMLB.onChange(()=>wPullCloud());
 
 /* ---------- character art ---------- */
 const IMG={};
@@ -644,6 +659,7 @@ function gameOver(){
   $('rankPromo').textContent=promoted?'Promoted!':'Your rank';$('rankNext').textContent=' Next: '+enlistedName(r+1)+' at '+(r+1)*100;
   $('newTro').hidden=!roundTro.length;$('newTro').textContent='🏆 New this round: '+roundTro.join(', ');
   voice(isBest&&score>0?'newrecord':'cursed',.6);
+  wPushCloud();
   setTimeout(()=>{$('over').hidden=false;$('over').scrollTop=0;$('again').focus()},700);
 }
 

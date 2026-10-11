@@ -160,7 +160,7 @@ a{color:inherit;text-decoration:none}
   <button class="pill" id="sound" aria-pressed="true">Sound on</button>
 </div>
 
-<p class="ver">Locker v1.10</p>
+<p class="ver">Locker v1.11</p>
 <section class="gear" id="gear" aria-label="Your gear" aria-hidden="true">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="gearTitle">
     <div class="sheetHead"><h2 id="gearTitle">Your gear</h2><button class="close" id="close">Close</button></div>
@@ -177,6 +177,7 @@ a{color:inherit;text-decoration:none}
   </div>
 </section>
 
+<script src="/lb.js"></script>
 <script>
 (function(){
 const $=id=>document.getElementById(id);
@@ -188,10 +189,10 @@ function flowSave(){
   const a=account(),key=a?'pm-flow-save:'+String(a.name).toLowerCase().replace(/ /g,''):'pm-flow-save';
   try{return JSON.parse(localStorage.getItem(key)||'null')}catch(e){return null}
 }
-const save=flowSave()||{};
-const level=save.solved?(save.level||1)+1:(save.level||1);
-const trophies=Array.isArray(save.trophies)?save.trophies:[];
-const STARS=Math.max(0,Math.floor((level-1)/100));
+let save=flowSave()||{};
+let level=save.solved?(save.level||1)+1:(save.level||1);
+let trophies=Array.isArray(save.trophies)?save.trophies:[];
+let STARS=Math.max(0,Math.floor((level-1)/100));
 
 /* ---------- sound ---------- */
 const Snd={ac:null,on:true,
@@ -496,8 +497,8 @@ function chevrons(r){
 }
 function chevName(r){if(!r)return 'No rank yet';const t=CTIERS[Math.min(3,Math.floor((r-1)/5))].name;return r>20?t+' '+r:t+' · '+(((r-1)%5)+1)+' chevron'+(((r-1)%5)?'s':'')}
 const WACC=(()=>{try{const a=JSON.parse(localStorage.getItem('pm-lb')||'null');return a?String(a.name).toLowerCase().replace(/ /g,''):''}catch(e){return ''}})();
-const WBEST=(()=>{try{return +localStorage.getItem('pm-whack-best')||0}catch(e){return 0}})();
-const WTROS=(()=>{try{return JSON.parse(localStorage.getItem('pm-whack-tro:'+WACC)||'[]')}catch(e){return[]}})();
+let WBEST=(()=>{try{return +localStorage.getItem('pm-whack-best')||0}catch(e){return 0}})();
+let WTROS=(()=>{try{return JSON.parse(localStorage.getItem('pm-whack-tro:'+WACC)||'[]')}catch(e){return[]}})();
 const WTRO=[
   {id:'z100',name:'Swamp Smasher',desc:'Score 100',art:svg('gator')},{id:'z200',name:'Bone Breaker',desc:'Score 200',art:svg('skull')},
   {id:'z300',name:'Gold Digger',desc:'Score 300',art:svg('doll')},{id:'z400',name:'Fireproof',desc:'Score 400',art:svg('flameskull')},
@@ -578,6 +579,15 @@ addEventListener('keydown',e=>{if(e.key==='Escape')closeLocker()});
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('[data-tab]').forEach(x=>{const on=x===b;x.setAttribute('aria-selected',String(on));$('p-'+x.dataset.tab).hidden=!on});Snd.pick();
 }));
+/* signed in: pull your ranks from your name, so every device shows the same thing */
+if(window.PMLB&&PMLB.account()){
+  Promise.all([PMLB.cloudLoad('flow'),PMLB.cloudLoad('whack')]).then(([f,w])=>{
+    if(f&&f.v===1){const fl=f.solved?f.level+1:f.level;if(fl>level){level=fl;if(Array.isArray(f.trophies))trophies=f.trophies;STARS=Math.max(0,Math.floor((level-1)/100))}}
+    if(w){WBEST=Math.max(WBEST,+w.best||0);try{localStorage.setItem('pm-whack-best',String(WBEST))}catch(e){}
+      WTROS=[...new Set(WTROS.concat(Array.isArray(w.tro)?w.tro:[]))];try{localStorage.setItem('pm-whack-tro:'+WACC,JSON.stringify(WTROS))}catch(e){}}
+    if(opened){renderRank();renderTrophies();renderSkins()}
+  }).catch(()=>{});
+}
 setTimeout(()=>say(away>=3?'Where you been? Pipes don\'t fix themselves.':progressLine()||(level>1?'Welcome back. Check your gear.':'This here\'s my locker.')),900);
 })();
 </script>
