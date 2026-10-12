@@ -132,14 +132,16 @@ button:focus-visible,.btn:focus-visible,.back:focus-visible{outline:3px solid va
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<p class="wver">Whack v1.14</p>
+<p class="wver">Whack v1.15</p>
 <script src="/lb.js"></script>
+<script src="/extras.js"></script>
 <script>
 (function(){
 const cv=document.getElementById('c'),ctx=cv.getContext('2d'),stage=document.getElementById('stage');
 const $=id=>document.getElementById(id);
 let W=0,H=0,dpr=1,LANES=4,laneW=0,pipeW=0,dangerY=0;
 let paused=false;
+let goldSpawn=0,goldHit=0,roundTime=0,marathon=false;
 let phase='play',phaseT=0,nextBreak=100,banner='',bannerAt=0,roundVoodoo=0,lowLifeScore=-1,roundTro=[];
 /* chevron rank (Whack-a-Pipe): a chevron for every 100 points of your best score */
 const CTIERS=[{name:'Bronze',light:'#f3c08a',mid:'#c4813f',dark:'#6e3f17',edge:'#3b1f08'},{name:'Silver',light:'#ffffff',mid:'#c9ced6',dark:'#6b7280',edge:'#2b2f36'},
@@ -285,18 +287,19 @@ function showWho(){
 showWho();
 if(window.PMLB)PMLB.onChange(showWho);
 /* your Whack best, trophies and rounds follow your name to every device (like Flow's run) */
-function wPushCloud(){if(!(window.PMLB&&PMLB.account()))return;PMLB.cloudSave('whack',{best,tro:wTro(),rounds:wRounds(),savedAt:Date.now()})}
+function wPushCloud(){if(!(window.PMLB&&PMLB.account()))return;PMLB.cloudSave('whack',{best,tro:wTro(),rounds:wRounds(),x:window.PMX?PMX.list():[],days:window.PMX?PMX.days():undefined,savedAt:Date.now()})}
 function wPullCloud(){
   if(!(window.PMLB&&PMLB.account()))return;
   PMLB.cloudLoad('whack').then(c=>{
-    if(c===undefined)return;c=c||{};
+    if(c===undefined)return;c=c||{};if(window.PMX)PMX.merge(c);
     const cb=+c.best||0,ct=Array.isArray(c.tro)?c.tro:[],cr=+c.rounds||0;
     if(cb>best){best=cb;try{localStorage.setItem('pm-whack-best',String(best))}catch(e){};$('best').textContent=best}
     const all=[...new Set(wTro().concat(ct))];try{localStorage.setItem('pm-whack-tro:'+wkey(),JSON.stringify(all))}catch(e){}
     const r=Math.max(wRounds(),cr);try{localStorage.setItem('pm-whack-rounds:'+wkey(),String(r))}catch(e){}
-    if(best>cb||all.length>ct.length||r>cr)wPushCloud(); // this device knew more: share it
+    if(best>cb||all.length>ct.length||r>cr||(window.PMX&&PMX.list().length>(c.x||[]).length))wPushCloud(); // this device knew more: share it
   });
 }
+if(window.PMX)PMX.onAward=n=>{toast('🏆 '+n);roundTro.push(n.replace(/^\S+ /,''));Snd.cheer()};
 wPullCloud();
 if(window.PMLB)PMLB.onChange(()=>wPullCloud());
 
@@ -542,6 +545,7 @@ function frame(t){
   ctx.clearRect(0,0,W,H);
   drawDanger(t);
   drawCrew(t);
+  if(running&&!paused){roundTime+=dt;if(!marathon&&roundTime>=300){marathon=true;if(window.PMX)PMX.award('marathon','⏱️ Secret trophy: Marathon')}}
   if(running&&!paused&&phase!=='play')breakStep(dt,t);
   else if(running&&!paused){
     spawnT-=dt;
@@ -581,11 +585,11 @@ function breakStep(dt,t){
     if(p.drain){p.y+=H*1.4*dt;if(p.y>H+20)pipes.splice(i,1);continue}
     p.y-=p.v*dt;if(p.y<=dangerY)pipes.splice(i,1); // golden pipes that get away cost nothing
   }
-  if(phase==='break'&&phaseT<=0){phase='rush';phaseT=5;spawnT=.2;banner='Bonus round!';bannerAt=t;voice('bonusround')}
+  if(phase==='break'&&phaseT<=0){phase='rush';phaseT=5;spawnT=.2;goldSpawn=0;goldHit=0;banner='Bonus round!';bannerAt=t;voice('bonusround')}
   else if(phase==='rush'){
     spawnT-=dt;
-    if(spawnT<=0&&phaseT>.8){const lane=freeLane();if(lane>=0)pipes.push({lane,gold:true,x:lane*laneW+laneW/2,y:H+10,len:H*(.14+Math.random()*.06),v:speed()*.75});spawnT=.32}
-    if(phaseT<=0){phase='over';phaseT=1.6;for(const p of pipes)if(p.gold)p.drain=true; // leftover gold pipes sink away (no points)
+    if(spawnT<=0&&phaseT>.8){const lane=freeLane();if(lane>=0){goldSpawn++;}if(lane>=0)pipes.push({lane,gold:true,x:lane*laneW+laneW/2,y:H+10,len:H*(.14+Math.random()*.06),v:speed()*.75});spawnT=.32}
+    if(phaseT<=0){if(goldSpawn>0&&goldHit===goldSpawn&&window.PMX)PMX.award('golden','✨ Secret trophy: Golden Touch');phase='over';phaseT=1.6;for(const p of pipes)if(p.gold)p.drain=true; // leftover gold pipes sink away (no points)
 banner='Bonus round over';bannerAt=t;Snd.start()}
   }
   else if(phase==='over'&&phaseT<=0){phase='play';spawnT=.6;heat+=2;banner=''} // a clear end before the pipes come back
@@ -685,7 +689,7 @@ function start(){
   Snd.unlock();Snd.start();
   pipes=[];bursts=[];score=0;lives=3;flash=0;vflash=0;spawnT=0.5;running=true;streak=0;quip='';gpop='';heat=0;sinceVoodoo=0;voodoosUsed=0;setZone(0);
   $('score').textContent=0;drawLives();
-  phase='play';phaseT=0;nextBreak=100;banner='';roundVoodoo=0;lowLifeScore=-1;roundTro=[];meter=0;voice('letswork',.2);
+  phase='play';phaseT=0;nextBreak=100;banner='';roundVoodoo=0;lowLifeScore=-1;roundTro=[];meter=0;roundTime=0;marathon=false;voice('letswork',.2);if(window.PMX)PMX.tick();
   $('start').hidden=true;$('over').hidden=true;
   paused=false;$('paused').hidden=true;$('pause').hidden=false;$('lockerBtn').hidden=true;$('pause').innerHTML=PAUSE_ICON;$('pause').setAttribute('aria-label','Pause');
   if(LB)LB.startRun();
@@ -710,7 +714,7 @@ cv.addEventListener('pointerdown',e=>{
       const t=performance.now();
       if(p.voodoo){voodooBlast(t);return}
       if(p.patch){pipes.splice(i,1);lives=Math.min(3,lives+1);drawLives();burst(p.x,p.y);Snd.heal();quip='Patched up!';quipAt=t;pop(['+1'],t);return}
-      if(p.gold){pipes.splice(i,1);score+=2;$('score').textContent=score;burst(p.x,p.y);Snd.whack(12);ganjaHitAt=t;return}
+      if(p.gold){goldHit++;pipes.splice(i,1);score+=2;$('score').textContent=score;burst(p.x,p.y);Snd.whack(12);ganjaHitAt=t;return}
       pipes.splice(i,1);score++;streak++;heat++;sinceVoodoo++;if(meter<METER&&++meter===METER)Snd.cheer();$('score').textContent=score;burst(p.x,p.y);roundChecks();maybeBreak(t);
       Snd.whack(streak);mojoHitAt=t;ganjaHitAt=t;
       const zBefore=zone;checkZone(t);

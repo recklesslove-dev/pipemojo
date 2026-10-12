@@ -164,7 +164,7 @@ a{color:inherit;text-decoration:none}
   <button class="pill" id="sound" aria-pressed="true">Sound on</button>
 </div>
 
-<p class="ver">Locker v1.13</p>
+<p class="ver">Locker v1.14</p>
 <section class="gear" id="gear" aria-label="Your gear" aria-hidden="true">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="gearTitle">
     <div class="sheetHead"><h2 id="gearTitle">Your gear</h2><button class="close" id="close">Close</button></div>
@@ -182,6 +182,7 @@ a{color:inherit;text-decoration:none}
 </section>
 
 <script src="/lb.js"></script>
+<script src="/extras.js"></script>
 <script>
 (function(){
 const $=id=>document.getElementById(id);
@@ -300,7 +301,9 @@ function nextLine(){ // sometimes a line about your progress, otherwise a random
 let sayT=0;
 function say(text){const s=$('say');s.textContent=text;s.classList.add('on');clearTimeout(sayT);
   sayT=setTimeout(()=>s.classList.remove('on'),Math.min(8000,Math.max(3500,1800+text.length*75)))} // longer lines stay up longer
+let pokes=0;
 mojo.addEventListener('click',()=>{mojo.classList.remove('tilt','tap','hop');void mojo.offsetWidth;mojo.classList.add('hop');Snd.tap();
+  if(++pokes===50&&window.PMX&&PMX.award('annoy','😤 Secret trophy: Annoying')){say('Alright, alright, I\'m awake.');setTimeout(()=>mojo.classList.remove('hop'),800);return}
   say(nextLine());setTimeout(()=>mojo.classList.remove('hop'),800)});
 
 /* ---------- Mojo on video: the green screen is keyed out live, so he stands right in the room ---------- */
@@ -541,11 +544,24 @@ const TROPHIES=[
   lvlT(25,'l25','Bayou Bound',svg('gator')),lvlT(50,'l50','Grave Digger',svg('skull')),lvlT(75,'l75','Voodoo Touched',svg('doll')),
   lvlT(100,'l100','Hellfire Survivor',svg('flameskull')),lvlT(125,'l125','Ice Breaker',svg('snowflake')),lvlT(150,'l150','Met Zydeco',img('fly-front')),
   lvlT(175,'l175','Sewer Royalty',svg('manhole')),lvlT(200,'l200','Mojo\'s Domain',svg('tophat')),lvlT(225,'l225','Prestige','<span style="font-size:2rem;color:#f5c842">★</span>'),
-  lvlT(450,'l450','Met Beignet',img('maggot-front')),lvlT(675,'l675','Met Roux',img('crawfish-front')),{id:'k1000',name:'1K Club',desc:'Clear level 1000',art:badge1k()},
+  lvlT(450,'l450','Met Beignet',img('maggot-front')),lvlT(675,'l675','Met Roux',img('crawfish-front')),{id:'crew',name:'Full Crew',desc:'Meet all four friends',art:'🤝'},{id:'bs5',name:'Boss Slayer',desc:'Beat 5 bosses',art:'⚔️5'},{id:'bs10',name:'Boss Hunter',desc:'Beat 10 bosses',art:'⚔️10'},{id:'bs20',name:'Boss Legend',desc:'Beat 20 bosses',art:'⚔️20'},{id:'cc5',name:'Crown Collector',desc:'Win 5 boss crowns',art:'👑5'},{id:'k1000',name:'1K Club',desc:'Clear level 1000',art:badge1k()},
   {id:'s5',name:'On a Roll',desc:'Par streak of 5',art:'🔥5'},{id:'s10',name:'Hot Hand',desc:'Par streak of 10',art:'🔥10'},{id:'s25',name:'Untouchable',desc:'Par streak of 25',art:'🔥25'},
   {id:'u1',name:'Under Par',desc:'Beat par once',art:svg('wrench')},{id:'u25',name:'Pipe Wizard',desc:'Beat par 25 times',art:svg('mask')}
 ];
 function tile(got,art,name,desc,extra){return '<div class="tile'+(got?'':' locked')+'"><span class="badge">'+art+(extra||'')+'</span><b>'+name+'</b><small>'+desc+'</small></div>'}
+function extrasHTML(){
+  if(!window.PMX)return '';
+  const have=PMX.list(),d=PMX.days(),now=PMX.seasonNow(),next=PMX.nextSeason();
+  let h='<h3 class="sec">Daily streak</h3><p class="note">Play any game on back-to-back days. Current streak: <b>'+(d.streak||0)+' day'+(d.streak===1?'':'s')+'</b> · best '+(d.best||0)+'.</p><div class="grid">'+
+    PMX.DAILY.map(t=>tile(have.includes(t.id),t.art,t.name,t.n+' days in a row')).join('')+'</div>';
+  const won=PMX.SEASONS.flatMap(s=>have.filter(id=>id.startsWith('s:'+s.id+':')).map(id=>({s,y:id.split(':')[2]})));
+  h+='<h3 class="sec">Holidays</h3><p class="note">'+(now?'<b>Happening now:</b> '+now.art+' '+now.name+'. Play today to earn it.':next?'Next up: '+next.art+' '+next.name+' · '+next.desc.replace(/^Play /,'')+'.':'')+' Each one is only around for a week.</p>'+
+    '<div class="grid">'+(won.length?won.map(w=>tile(true,'<span style="font-size:1.8rem">'+w.s.art+'</span>',w.s.name,w.y)).join(''):'')+
+    (now&&!have.includes(now.key)?tile(false,'<span style="font-size:1.8rem">'+now.art+'</span>',now.name,'Play today'):'')+'</div>';
+  h+='<h3 class="sec">Secret</h3><p class="note">Hidden until you find them.</p><div class="grid">'+
+    PMX.SECRETS.map(t=>have.includes(t.id)?tile(true,'<span style="font-size:1.8rem">'+t.art+'</span>',t.name,t.desc):tile(false,'<span style="font-size:1.8rem">❓</span>','???','Keep exploring')).join('')+'</div>';
+  return h;
+}
 function renderTrophies(){
   let h=TROPHIES.map(t=>tile(trophies.includes(t.id),t.art,t.name,t.desc)).join('');
   for(let L=100;L<=Math.max(100,Math.floor(level/100)*100+100);L+=100){
@@ -554,7 +570,7 @@ function renderTrophies(){
   }
   const got=trophies.filter(t=>!/^b/.test(t)).length;
   $('p-trophies').innerHTML='<h3 class="sec">Flow</h3><p class="note">'+got+' of '+TROPHIES.length+' trophies. Boss trophies and crowns are earned in Flow.</p><div class="grid">'+h+'</div>'+
-    '<h3 class="sec">Whack-a-Pipe</h3><p class="note">'+WTROS.length+' of '+WTRO.length+' trophies.</p><div class="grid">'+WTRO.map(t=>tile(WTROS.includes(t.id),t.art,t.name,t.desc)).join('')+'</div>';
+    '<h3 class="sec">Whack-a-Pipe</h3><p class="note">'+WTROS.length+' of '+WTRO.length+' trophies.</p><div class="grid">'+WTRO.map(t=>tile(WTROS.includes(t.id),t.art,t.name,t.desc)).join('')+'</div>'+extrasHTML();
 }
 
 /* pipe skins: shown now, equipping arrives with the next Flow update */
@@ -608,6 +624,8 @@ addEventListener('keydown',e=>{if(e.key==='Escape')closeLocker()});
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('[data-tab]').forEach(x=>{const on=x===b;x.setAttribute('aria-selected',String(on));$('p-'+x.dataset.tab).hidden=!on});Snd.pick();
 }));
+function checkDouble(){if(window.PMX&&STARS>=1&&WBEST>=100)PMX.award('double','🎖️ Secret trophy: Double Duty')}
+if(window.PMX){PMX.onAward=n=>{say(n);Snd.pick();if(opened)renderTrophies()};PMX.sync();setTimeout(()=>{PMX.tick();checkDouble();if(opened)renderTrophies()},1500)}
 function showDoorBadge(){const d=$('doorBadge');if(level>1000||trophies.includes('k1000')){d.innerHTML=badgeK(Math.max(1,Math.floor((level-1)/1000)));d.hidden=false}}
 showDoorBadge();
 /* signed in: pull your ranks from your name, so every device shows the same thing */
@@ -616,7 +634,7 @@ if(window.PMLB&&PMLB.account()){
     if(f&&f.v===1){const fl=f.solved?f.level+1:f.level;if(fl>level){level=fl;if(Array.isArray(f.trophies))trophies=f.trophies;STARS=Math.max(0,Math.floor((level-1)/100))}}
     if(w){WBEST=Math.max(WBEST,+w.best||0);try{localStorage.setItem('pm-whack-best',String(WBEST))}catch(e){}
       WTROS=[...new Set(WTROS.concat(Array.isArray(w.tro)?w.tro:[]))];try{localStorage.setItem('pm-whack-tro:'+WACC,JSON.stringify(WTROS))}catch(e){}}
-    showDoorBadge();if(opened){renderRank();renderTrophies();renderSkins()}
+    showDoorBadge();checkDouble();if(opened){renderRank();renderTrophies();renderSkins()}
   }).catch(()=>{});
 }
 setTimeout(()=>say(away>=3?'Where you been? Pipes don\'t fix themselves.':progressLine()||(level>1?'Welcome back. Check your gear.':'This here\'s my locker.')),900);

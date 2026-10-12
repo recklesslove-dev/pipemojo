@@ -281,7 +281,7 @@ button.danger.final{background:#e8281e;color:#fff}
   <section class="trophies" aria-label="Trophy case"><h3>Trophy case <span id="tcount"></span></h3><div class="tgrid" id="tgrid"></div></section>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <section class="lb-slot" id="lb" aria-label="Leaderboard"></section>
-  <p class="ver">Flow v1.25</p>
+  <p class="ver">Flow v1.26</p>
 </main>
 
 <div class="bossfx" id="bossFx" hidden aria-label="Boss level">
@@ -292,6 +292,7 @@ button.danger.final{background:#e8281e;color:#fff}
   <button type="button" class="skip" id="bossSkip">Skip</button>
 </div>
 <script src="/lb.js"></script>
+<script src="/extras.js"></script>
 <script>
 (function(){
 const N=1,E=2,S=4,W=8;
@@ -1228,6 +1229,11 @@ const TROPHIES=[
   lvlT(225,'l225','Prestige','★'),
   lvlT(450,'l450','Met Beignet',imgBadge('maggot-front')),
   lvlT(675,'l675','Met Roux',imgBadge('crawfish-front')),
+  {id:'crew',name:'Full Crew',desc:'Meet Ganja, Zydeco, Beignet and Roux',art:'🤝',ok:x=>x.level>=675},
+  {id:'bs5',name:'Boss Slayer',desc:'Beat 5 bosses',art:'⚔️5',ok:x=>x.bosses>=5},
+  {id:'bs10',name:'Boss Hunter',desc:'Beat 10 bosses',art:'⚔️10',ok:x=>x.bosses>=10},
+  {id:'bs20',name:'Boss Legend',desc:'Beat 20 bosses',art:'⚔️20',ok:x=>x.bosses>=20},
+  {id:'cc5',name:'Crown Collector',desc:'Win 5 boss crowns',art:'👑5',ok:x=>x.crowns>=5},
   {id:'k1000',name:'1K Club',desc:'Clear level 1000',art:badge1k(),ok:x=>x.level>1000,club:true},
   {id:'s5',name:'On a Roll',desc:'Par streak of 5',art:'🔥5',ok:x=>x.streak>=5},
   {id:'s10',name:'Hot Hand',desc:'Par streak of 10',art:'🔥10',ok:x=>x.streak>=10},
@@ -1243,7 +1249,7 @@ function nextToast(){
   setTimeout(()=>{t.classList.remove('on');setTimeout(nextToast,400)},2600);
 }
 function checkTrophies(silent){
-  const x={level,streak:Math.max(bestStreak,parStreak),under:underCount};
+  const x={level,streak:Math.max(bestStreak,parStreak),under:underCount,bosses:trophies.filter(t=>/^b\d+$/.test(t)).length,crowns:trophies.filter(t=>/^b\d+c$/.test(t)).length};
   for(const t of TROPHIES){
     if(trophies.includes(t.id)||!t.ok(x))continue;
     trophies.push(t.id);
@@ -1294,7 +1300,7 @@ $('replayExit').addEventListener('click',exitReplay);
 function awardBoss(L,under){
   if(!trophies.includes('b'+L)){trophies.push('b'+L);toast('🏆 Boss '+L+' beaten!');Snd.underPar()}
   if(under&&!trophies.includes('b'+L+'c')){trophies.push('b'+L+'c');toast('👑 Boss '+L+' crown: beaten under par!')}
-  renderTrophies();
+  checkTrophies(false);
 }
 
 function celebrate(under){ // big themed emblem when you make par, a gold burst when you beat it
@@ -1321,6 +1327,7 @@ function win(){
   const bossLine=isBoss(level)?' Mojo storms off grumbling. Boss beaten!':'';
   if(isBoss(level))setTimeout(()=>awardBoss(level,moves<par),1500);
   if(isBoss(level)&&!replay)setTimeout(()=>showPromotion(level/100),1500);
+  if(!replay&&new Date().getHours()<4&&window.PMX)PMX.award('night','🌙 Secret trophy: Night Shift');
   if(level%1000===0&&!replay&&!trophies.includes('k'+level))pendingClub=level/1000;
   $('winText').textContent=`Level ${level} cleared in ${moves} taps. Par was ${par}.${note} ${riders}${bossLine}`;
   $('next').textContent=replay?'Back to my run':'Next level';
@@ -1481,6 +1488,7 @@ if(window.PMLB)PMLB.onChange((type,a)=>{
   });
 });
 renderTrophies();
+if(window.PMX){PMX.onAward=n=>{toast('🏆 '+n);Snd.par()};PMX.sync();setTimeout(()=>PMX.tick(),1500)} // daily streak and holiday badges
 requestAnimationFrame(loop);
 })();
 </script>
