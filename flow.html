@@ -303,7 +303,7 @@ button.danger.final{background:#e8281e;color:#fff}
   <section class="trophies" aria-label="Trophy case"><h3>Trophy case <span id="tcount"></span></h3><div class="tgrid" id="tgrid"></div></section>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <section class="lb-slot" id="lb" aria-label="Leaderboard"></section>
-  <p class="ver">Flow v1.27</p>
+  <p class="ver">Flow v1.28</p>
 </main>
 
 <div class="bossfx" id="bossFx" hidden aria-label="Boss level">
@@ -415,6 +415,15 @@ function applyZone(l){
   const b=document.getElementById('board');if(b)b.style.borderColor='rgba('+z.rgb+',.22)';
   const next=(zi+1)*25;
   const el=document.getElementById('zone');if(el)el.textContent='Zone: '+z.name+(next===PRESTIGE_AT?' (prestige starts at level '+next+')':' (next zone at level '+next+')');
+}
+
+/* the 100 Club ... 900 Club medals (Flow levels cleared), on the way to the 1K Club */
+function clubMini(n){
+  const t=n<=300?['#f3c08a','#c4813f','#6e3f17']:n<=600?['#ffffff','#c9ced6','#6b7280']:['#fff1a8','#e9b93a','#8a5f10'];
+  return '<svg viewBox="0 0 100 100"><defs><linearGradient id="cm'+n+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+t[0]+'"/><stop offset=".5" stop-color="'+t[1]+'"/><stop offset="1" stop-color="'+t[2]+'"/></linearGradient></defs>'+
+    '<circle cx="50" cy="50" r="46" fill="url(#cm'+n+')" stroke="#120a1a" stroke-width="3"/><circle cx="50" cy="50" r="36" fill="#160d22" stroke="'+t[2]+'" stroke-width="2"/>'+
+    '<text x="50" y="58" text-anchor="middle" font-family="\'Pirata One\', Georgia, serif" font-size="28" fill="url(#cm'+n+')">'+n+'</text>'+
+    '<text x="50" y="74" text-anchor="middle" font-family="Nunito, sans-serif" font-weight="900" font-size="9" letter-spacing="2" fill="'+t[0]+'">CLUB</text></svg>';
 }
 
 /* ---------- the K Club badge: platinum and diamond, 1K at level 1000, then 2K, 3K... ---------- */
@@ -1276,6 +1285,15 @@ const TROPHIES=[
   {id:'bs10',name:'Boss Hunter',desc:'Beat 10 bosses',art:'⚔️10',ok:x=>x.bosses>=10},
   {id:'bs20',name:'Boss Legend',desc:'Beat 20 bosses',art:'⚔️20',ok:x=>x.bosses>=20},
   {id:'cc5',name:'Crown Collector',desc:'Win 5 boss crowns',art:'👑5',ok:x=>x.crowns>=5},
+  {id:'c100',name:'100 Club',desc:'Clear level 100',art:clubMini(100),ok:x=>x.level>100},
+  {id:'c200',name:'200 Club',desc:'Clear level 200',art:clubMini(200),ok:x=>x.level>200},
+  {id:'c300',name:'300 Club',desc:'Clear level 300',art:clubMini(300),ok:x=>x.level>300},
+  {id:'c400',name:'400 Club',desc:'Clear level 400',art:clubMini(400),ok:x=>x.level>400},
+  {id:'c500',name:'500 Club',desc:'Clear level 500',art:clubMini(500),ok:x=>x.level>500},
+  {id:'c600',name:'600 Club',desc:'Clear level 600',art:clubMini(600),ok:x=>x.level>600},
+  {id:'c700',name:'700 Club',desc:'Clear level 700',art:clubMini(700),ok:x=>x.level>700},
+  {id:'c800',name:'800 Club',desc:'Clear level 800',art:clubMini(800),ok:x=>x.level>800},
+  {id:'c900',name:'900 Club',desc:'Clear level 900',art:clubMini(900),ok:x=>x.level>900},
   {id:'k1000',name:'1K Club',desc:'Clear level 1000',art:badge1k(),ok:x=>x.level>1000,club:true},
   {id:'s5',name:'On a Roll',desc:'Par streak of 5',art:'🔥5',ok:x=>x.streak>=5},
   {id:'s10',name:'Hot Hand',desc:'Par streak of 10',art:'🔥10',ok:x=>x.streak>=10},

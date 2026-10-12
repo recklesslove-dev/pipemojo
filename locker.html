@@ -164,7 +164,7 @@ a{color:inherit;text-decoration:none}
   <button class="pill" id="sound" aria-pressed="true">Sound on</button>
 </div>
 
-<p class="ver">Locker v1.14</p>
+<p class="ver">Locker v1.15</p>
 <section class="gear" id="gear" aria-label="Your gear" aria-hidden="true">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="gearTitle">
     <div class="sheetHead"><h2 id="gearTitle">Your gear</h2><button class="close" id="close">Close</button></div>
@@ -383,6 +383,15 @@ function insignia(stars,forceTier){
   if(stars>20&&forceTier==null)s+='<circle cx="100" cy="105" r="21" fill="#0b1f2e" stroke="'+t.mid+'" stroke-width="3"/><text x="100" y="113" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="22" fill="#fff">'+stars+'</text>';
   return '<svg viewBox="0 0 200 200">'+s+'</svg>';
 }
+/* the 100 Club ... 900 Club medals (Flow levels cleared), on the way to the 1K Club */
+function clubMini(n){
+  const t=n<=300?['#f3c08a','#c4813f','#6e3f17']:n<=600?['#ffffff','#c9ced6','#6b7280']:['#fff1a8','#e9b93a','#8a5f10'];
+  return '<svg viewBox="0 0 100 100"><defs><linearGradient id="cm'+n+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+t[0]+'"/><stop offset=".5" stop-color="'+t[1]+'"/><stop offset="1" stop-color="'+t[2]+'"/></linearGradient></defs>'+
+    '<circle cx="50" cy="50" r="46" fill="url(#cm'+n+')" stroke="#120a1a" stroke-width="3"/><circle cx="50" cy="50" r="36" fill="#160d22" stroke="'+t[2]+'" stroke-width="2"/>'+
+    '<text x="50" y="58" text-anchor="middle" font-family="\'Pirata One\', Georgia, serif" font-size="28" fill="url(#cm'+n+')">'+n+'</text>'+
+    '<text x="50" y="74" text-anchor="middle" font-family="Nunito, sans-serif" font-weight="900" font-size="9" letter-spacing="2" fill="'+t[0]+'">CLUB</text></svg>';
+}
+
 /* ---------- the K Club badge: platinum and diamond, 1K at level 1000, then 2K, 3K... ---------- */
 function badgeK(k){
   k=Math.max(1,k|0);
@@ -544,7 +553,7 @@ const TROPHIES=[
   lvlT(25,'l25','Bayou Bound',svg('gator')),lvlT(50,'l50','Grave Digger',svg('skull')),lvlT(75,'l75','Voodoo Touched',svg('doll')),
   lvlT(100,'l100','Hellfire Survivor',svg('flameskull')),lvlT(125,'l125','Ice Breaker',svg('snowflake')),lvlT(150,'l150','Met Zydeco',img('fly-front')),
   lvlT(175,'l175','Sewer Royalty',svg('manhole')),lvlT(200,'l200','Mojo\'s Domain',svg('tophat')),lvlT(225,'l225','Prestige','<span style="font-size:2rem;color:#f5c842">★</span>'),
-  lvlT(450,'l450','Met Beignet',img('maggot-front')),lvlT(675,'l675','Met Roux',img('crawfish-front')),{id:'crew',name:'Full Crew',desc:'Meet all four friends',art:'🤝'},{id:'bs5',name:'Boss Slayer',desc:'Beat 5 bosses',art:'⚔️5'},{id:'bs10',name:'Boss Hunter',desc:'Beat 10 bosses',art:'⚔️10'},{id:'bs20',name:'Boss Legend',desc:'Beat 20 bosses',art:'⚔️20'},{id:'cc5',name:'Crown Collector',desc:'Win 5 boss crowns',art:'👑5'},{id:'k1000',name:'1K Club',desc:'Clear level 1000',art:badge1k()},
+  lvlT(450,'l450','Met Beignet',img('maggot-front')),lvlT(675,'l675','Met Roux',img('crawfish-front')),{id:'crew',name:'Full Crew',desc:'Meet all four friends',art:'🤝'},{id:'bs5',name:'Boss Slayer',desc:'Beat 5 bosses',art:'⚔️5'},{id:'bs10',name:'Boss Hunter',desc:'Beat 10 bosses',art:'⚔️10'},{id:'bs20',name:'Boss Legend',desc:'Beat 20 bosses',art:'⚔️20'},{id:'cc5',name:'Crown Collector',desc:'Win 5 boss crowns',art:'👑5'},{id:'c100',name:'100 Club',desc:'Clear level 100',art:clubMini(100)},{id:'c200',name:'200 Club',desc:'Clear level 200',art:clubMini(200)},{id:'c300',name:'300 Club',desc:'Clear level 300',art:clubMini(300)},{id:'c400',name:'400 Club',desc:'Clear level 400',art:clubMini(400)},{id:'c500',name:'500 Club',desc:'Clear level 500',art:clubMini(500)},{id:'c600',name:'600 Club',desc:'Clear level 600',art:clubMini(600)},{id:'c700',name:'700 Club',desc:'Clear level 700',art:clubMini(700)},{id:'c800',name:'800 Club',desc:'Clear level 800',art:clubMini(800)},{id:'c900',name:'900 Club',desc:'Clear level 900',art:clubMini(900)},{id:'k1000',name:'1K Club',desc:'Clear level 1000',art:badge1k()},
   {id:'s5',name:'On a Roll',desc:'Par streak of 5',art:'🔥5'},{id:'s10',name:'Hot Hand',desc:'Par streak of 10',art:'🔥10'},{id:'s25',name:'Untouchable',desc:'Par streak of 25',art:'🔥25'},
   {id:'u1',name:'Under Par',desc:'Beat par once',art:svg('wrench')},{id:'u25',name:'Pipe Wizard',desc:'Beat par 25 times',art:svg('mask')}
 ];
