@@ -179,6 +179,28 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
 .wipe p b{color:#fff}
 button.danger{background:transparent;color:#ff7a70;border:2px solid #e8281e}
 button.danger.final{background:#e8281e;color:#fff}
+.clubfx{position:fixed;inset:0;z-index:40;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 42%,#1d3358 0%,#0a1224 45%,#03050b 100%)}
+.clubfx[hidden]{display:none}
+.clubfx .rays{position:absolute;left:50%;top:42%;width:170vmax;height:170vmax;margin:-85vmax 0 0 -85vmax;border-radius:50%;
+  background:repeating-conic-gradient(rgba(159,232,255,.13) 0deg 7deg,transparent 7deg 18deg);animation:rays 26s linear infinite;
+  -webkit-mask:radial-gradient(circle,#000 0%,transparent 62%);mask:radial-gradient(circle,#000 0%,transparent 62%)}
+@keyframes rays{to{transform:rotate(360deg)}}
+.clubfx canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.clubfx .cwrap{position:relative;text-align:center;padding:calc(20px + env(safe-area-inset-top,0px)) 20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center}
+.clubfx .ckick{margin:0;font-weight:900;letter-spacing:8px;text-transform:uppercase;color:#9fe8ff;font-size:clamp(.9rem,3.6vw,1.2rem);opacity:0;animation:fadeUp .6s 1.3s forwards}
+.clubfx .cbadge{width:min(74vw,50vh,420px);aspect-ratio:1;margin:6px 0 4px;transform:scale(0);animation:cIn 1.1s 1.1s cubic-bezier(.2,1.5,.35,1) forwards,cPulse 2.2s 2.3s ease-in-out infinite}
+.clubfx .cbadge svg{width:100%;height:100%}
+@keyframes cIn{0%{transform:scale(0) rotate(-200deg)}70%{transform:scale(1.14) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes cPulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 22px rgba(159,232,255,.55))}50%{transform:scale(1.07);filter:drop-shadow(0 0 60px rgba(159,232,255,.95)) brightness(1.15)}}
+.clubfx .ctitle{margin:0;font-family:"Pirata One",Georgia,serif;font-weight:400;font-size:clamp(3rem,13vw,6.4rem);line-height:1;
+  background:linear-gradient(100deg,#8fa3ba 0%,#ffffff 30%,#bff3ff 45%,#ffffff 55%,#8fa3ba 80%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 0 #0b1a33) drop-shadow(0 0 24px rgba(159,232,255,.55));opacity:0;animation:fadeUp .7s 1.9s forwards,shine 3s 2.6s linear infinite}
+@keyframes shine{to{background-position:-250% 0}}
+.clubfx .csub{max-width:34ch;margin:10px 0 18px;color:#dbe8f7;line-height:1.5;font-size:clamp(.95rem,3.8vw,1.15rem);opacity:0;animation:fadeUp .7s 2.5s forwards}
+.clubfx .cgo{opacity:0;animation:fadeUp .6s 3.2s forwards;background:linear-gradient(90deg,#dfe8f2,#ffffff,#9fe8ff);color:#0a1224;font-size:1.1rem;padding:14px 30px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.clubfx .rays,.clubfx .cbadge,.clubfx .ctitle{animation:none;transform:none;opacity:1}.clubfx .ckick,.clubfx .csub,.clubfx .cgo{animation:none;opacity:1}}
 .ver{margin:22px 0 0;text-align:center;font-size:.72rem;color:rgba(255,255,255,.28);letter-spacing:.5px}
 </style>
 </head>
@@ -281,7 +303,7 @@ button.danger.final{background:#e8281e;color:#fff}
   <section class="trophies" aria-label="Trophy case"><h3>Trophy case <span id="tcount"></span></h3><div class="tgrid" id="tgrid"></div></section>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <section class="lb-slot" id="lb" aria-label="Leaderboard"></section>
-  <p class="ver">Flow v1.26</p>
+  <p class="ver">Flow v1.27</p>
 </main>
 
 <div class="bossfx" id="bossFx" hidden aria-label="Boss level">
@@ -290,6 +312,17 @@ button.danger.final{background:#e8281e;color:#fff}
   <div class="bfb" id="bossFb" hidden><img src="/assets/mojo-front.png" alt="Pipe Mojo"><p>"Think you can handle this kind of pressure?"</p></div>
   <div class="stamp" id="bossStamp">BOSS LEVEL</div>
   <button type="button" class="skip" id="bossSkip">Skip</button>
+</div>
+<div class="clubfx" id="clubFx" hidden role="dialog" aria-labelledby="cTitle">
+  <div class="rays" aria-hidden="true"></div>
+  <canvas id="clubSpark" aria-hidden="true"></canvas>
+  <div class="cwrap">
+    <p class="ckick">Elite</p>
+    <div class="cbadge" id="cBadge"></div>
+    <h1 class="ctitle" id="cTitle">The 1K Club</h1>
+    <p class="csub" id="cSub"></p>
+    <button class="go cgo" id="cGo">Carry on</button>
+  </div>
 </div>
 <script src="/lb.js"></script>
 <script src="/extras.js"></script>
@@ -657,6 +690,15 @@ const Snd={
     this.noise(1.2,150,3000,0.25,0,0.6);
     [262,330,392,523,659].forEach((f,i)=>this.tone(f,0.5,'triangle',0.13,null,0.15+i*0.11));
     this.tone(1047,0.9,'sine',0.12,null,0.75);
+  },
+  club(){ // drumroll, boom, a big platinum chord, and sparkles
+    if(!this.on||!this.ac)return;
+    for(let i=0;i<24;i++)this.noise(0.06,900+i*40,600,0.04+i*0.006,i*0.05,1.2);
+    this.tone(55,1.2,'square',0.2,40,1.2);this.noise(1.1,2500,90,0.4,1.2,0.6);
+    [262,330,392,523,659,784,1047].forEach((f,i)=>{this.tone(f,1.6,'triangle',0.1,null,1.25+i*0.07);this.tone(f*2,1.2,'sine',0.04,null,1.25+i*0.07)});
+    [392,494,587,784].forEach((f,i)=>this.tone(f,0.5,'triangle',0.09,null,2.7+i*0.06));
+    [523,659,784,1047,1319].forEach(f=>this.tone(f,2.2,'triangle',0.09,null,3.25));this.tone(65,1.6,'sine',0.22,50,3.25);
+    for(let i=0;i<22;i++){const f=1800+Math.random()*2400;this.tone(f,0.16,'sine',0.05,f*1.4,1.6+i*0.13)}
   },
   win(){
     for(let i=0;i<6;i++){const f=320+i*90+Math.random()*60;this.tone(f,0.13,'sine',0.17,f*2.2,i*0.07)}
@@ -1358,16 +1400,37 @@ $('next').addEventListener('click',()=>{
 });
 $('zoneGo').addEventListener('click',()=>{$('zoneUp').hidden=true});
 let pendingClub=false;
+let sparkRAF=0;
 function showClub(again,k){
   k=k||Math.max(1,Math.floor((level-1)/1000));
-  $('clubBadge').innerHTML=badgeK(k);$('clubTitle').textContent='The '+k+'K Club';
-  $('clubText').textContent=k===1?'One thousand levels. Every bolt, every ice block, every boss Mojo threw at you. Very few ever get here. Welcome to the club.'
+  const fx=$('clubFx');
+  $('cBadge').innerHTML=badgeK(k);$('cTitle').textContent='The '+k+'K Club';
+  $('cSub').textContent=k===1?'One thousand levels. Every bolt, every ice block, every boss Mojo threw at you. Very few ever get here. Welcome to the club.'
     :(k*1000).toLocaleString()+' levels. You just keep going. Almost nobody will ever see this screen.';
-  $('club').hidden=false;Snd.underPar();setTimeout(()=>Snd.zone(),500);
-  if(!again){toast('🏆 Welcome to the '+k+'K Club');if(!trophies.includes('k'+k*1000)){trophies.push('k'+k*1000);saveGame()}}setTimeout(()=>$('clubGo').focus(),300);
-  if(again)board.scrollIntoView({behavior:'smooth',block:'center'});
+  for(const el of fx.querySelectorAll('.ckick,.cbadge,.ctitle,.csub,.cgo')){el.style.animation='none';void el.offsetWidth;el.style.animation=''} // replay from the start
+  fx.hidden=false;Snd.unlock();Snd.club();
+  if(!again){setTimeout(()=>toast('🏆 Welcome to the '+k+'K Club'),3400);if(!trophies.includes('k'+k*1000)){trophies.push('k'+k*1000);saveGame()}}
+  // platinum confetti and twinkles
+  const cv2=$('clubSpark'),c=cv2.getContext('2d'),dpr=window.devicePixelRatio||1;let W2,H2,parts=[];
+  const size=()=>{W2=cv2.clientWidth;H2=cv2.clientHeight;cv2.width=W2*dpr;cv2.height=H2*dpr;c.setTransform(dpr,0,0,dpr,0,0)};size();
+  const cols=['#ffffff','#dfe8f2','#9fe8ff','#bff3ff','#8fa3ba','#f5c842'];
+  const burst=n=>{for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=200+Math.random()*520;
+    parts.push({x:W2/2,y:H2*.42,vx:Math.cos(a)*v,vy:Math.sin(a)*v-180,r:2+Math.random()*4,c:cols[i%cols.length],rot:Math.random()*6,vr:(Math.random()-.5)*10,life:2.4+Math.random()*1.6,tw:Math.random()<.3})}};
+  const start=performance.now();let last=start,b1=false,b2=false;cancelAnimationFrame(sparkRAF);
+  (function step(t){const dt=Math.min(.05,(t-last)/1000);last=t;const el=(t-start)/1000;
+    if(!b1&&el>1.2){b1=true;burst(160)} if(!b2&&el>3.25){b2=true;burst(120)}
+    if(el>1.2&&Math.random()<.5)parts.push({x:Math.random()*W2,y:-10,vx:(Math.random()-.5)*40,vy:60+Math.random()*90,r:2+Math.random()*3,c:cols[Math.floor(Math.random()*cols.length)],rot:0,vr:(Math.random()-.5)*6,life:8,tw:Math.random()<.4});
+    c.clearRect(0,0,W2,H2);
+    for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life-=dt;if(p.life<=0||p.y>H2+20){parts.splice(i,1);continue}
+      p.vy+=320*dt*(p.vy>120?0:1);p.vx*=.985;p.x+=p.vx*dt;p.y+=p.vy*dt;p.rot+=p.vr*dt;
+      c.globalAlpha=Math.min(1,p.life);c.fillStyle=p.c;
+      if(p.tw){const s2=p.r*(1.5+Math.sin(t/90+i));c.beginPath();c.moveTo(p.x,p.y-s2*2);c.lineTo(p.x+s2*.4,p.y);c.lineTo(p.x,p.y+s2*2);c.lineTo(p.x-s2*.4,p.y);c.closePath();c.fill();
+        c.beginPath();c.moveTo(p.x-s2*2,p.y);c.lineTo(p.x,p.y+s2*.4);c.lineTo(p.x+s2*2,p.y);c.lineTo(p.x,p.y-s2*.4);c.closePath();c.fill()}
+      else{c.save();c.translate(p.x,p.y);c.rotate(p.rot);c.fillRect(-p.r,-p.r*.5,p.r*2,p.r);c.restore()}}
+    c.globalAlpha=1;if(!fx.hidden)sparkRAF=requestAnimationFrame(step)})(start);
+  setTimeout(()=>$('cGo').focus(),3300);
 }
-$('clubGo').addEventListener('click',()=>{$('club').hidden=true});
+$('cGo').addEventListener('click',()=>{$('clubFx').hidden=true;cancelAnimationFrame(sparkRAF)});
 $('promoGo').addEventListener('click',()=>{$('promo').hidden=true;drawRank();if(pendingClub){const k=pendingClub;pendingClub=false;showClub(false,k)}});
 $('newb').addEventListener('click',generate);
 $('restart').addEventListener('click',()=>{cur=startCur.slice();frozen=startFrozen.slice();seen=new Array(n*n).fill(0);bumpTile=-1;moves=0;solved=false;anims={};hintTile=-1;flow=computeFlow();$('win').hidden=true;updateStats();saveGame(false)});
