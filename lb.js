@@ -188,13 +188,15 @@ const CSS=`
 .lb li{display:flex;align-items:center;gap:10px;padding:7px 12px;font-weight:700;font-size:.95rem;background:rgba(255,255,255,.03)}
 .lb li:nth-child(odd){background:rgba(255,255,255,.06)}
 .lb li .r{width:1.6em;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums}
-.lb li .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb li .n{flex:1;min-width:0;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.lb li .n .nm{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.lb li .n .ri,.lb li .n .k1,.lb li .n .fl{flex:none}
 .lb li .s{font-variant-numeric:tabular-nums;color:#00e5ff}
-.lb .ri{display:inline-block;width:20px;height:20px;vertical-align:-4px;margin-right:5px}
+.lb .ri{display:inline-block;width:20px;height:20px;margin-right:2px}
 .lb .ri svg{width:100%;height:100%}
-.lb .k1{display:inline-block;width:22px;height:22px;vertical-align:-5px;margin-left:5px}
+.lb .k1{display:inline-block;width:20px;height:20px}
 .lb .k1 svg{width:100%;height:100%}
-.lb .fl{font-size:.78rem;font-weight:800;color:#ffb347;margin-left:4px;white-space:nowrap}
+.lb .fl{font-size:.74rem;font-weight:800;color:#ffb347;white-space:nowrap}
 .lb li.me{background:rgba(0,229,255,.14);box-shadow:inset 3px 0 0 #00e5ff}
 .lb li:first-child .r{color:#f5c842}
 .lb .empty{padding:12px;color:rgba(255,255,255,.55);font-size:.9rem}
@@ -257,7 +259,7 @@ Board.prototype.render=function(){
   else{
     h+='<ol>'+this.top.map((r,i)=>{
       const mine=me&&r.name.toLowerCase().replace(/ /g,'')===me;
-      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+(r.best>=100?'<span class="ri" title="'+(this.game==='flow'?officerName(Math.floor(r.best/100)):enlistedName(Math.floor(r.best/100)))+'">'+(this.game==='flow'?armyOfficer(Math.floor(r.best/100)):armyEnlisted(Math.floor(r.best/100)))+'</span>':'')+esc(r.name)+(this.game==='flow'&&r.best>=1000?'<span class="k1" title="'+Math.floor(r.best/1000)+'K Club">'+badgeK(Math.floor(r.best/1000))+'</span>':'')+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
+      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+(r.best>=100?'<span class="ri" title="'+(this.game==='flow'?officerName(Math.floor(r.best/100)):enlistedName(Math.floor(r.best/100)))+'">'+(this.game==='flow'?armyOfficer(Math.floor(r.best/100)):armyEnlisted(Math.floor(r.best/100)))+'</span>':'')+'<span class="nm">'+esc(r.name)+'</span>'+(this.game==='flow'&&r.best>=1000?'<span class="k1" title="'+Math.floor(r.best/1000)+'K Club">'+badgeK(Math.floor(r.best/1000))+'</span>':'')+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
     }).join('')+'</ol>';
   }
   h+='</div>';
