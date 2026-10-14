@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hot &amp; Cold | Pipe Mojo</title>
+<meta name="theme-color" content="#060606">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hot & Cold">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--black:#060606;--panel:#120c1a;--ink:#f2ece2;--muted:#9d93ab;--hot:#ff4a3d;--cold:#2f8cff;--gold:#f5c842;--mix:#b84dff;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%}
+body{margin:0;min-height:100%;color:var(--ink);font-family:Nunito,system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent;
+  background:radial-gradient(ellipse 70% 50% at 0% 20%,rgba(255,74,61,.18) 0%,transparent 60%),radial-gradient(ellipse 70% 50% at 100% 20%,rgba(47,140,255,.18) 0%,transparent 60%),var(--black);background-attachment:fixed;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:600px;margin:0 auto;padding:12px max(8px,env(safe-area-inset-right,0px)) 28px max(8px,env(safe-area-inset-left,0px))}
+.toprow{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.back{font-weight:800;font-size:.9rem;color:var(--muted);text-decoration:none;padding:6px 0}
+.pill{background:transparent;border:1.5px solid rgba(255,255,255,.25);color:#fff;font:inherit;font-weight:800;font-size:.85rem;padding:6px 12px;border-radius:8px}
+.top{display:flex;align-items:center;gap:12px}
+.top img{width:58px;height:auto;flex:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
+h1{font-family:"Pirata One",Georgia,serif;font-weight:400;font-size:2.4rem;line-height:1;margin:0;color:var(--gold)}
+h1 .h{color:var(--hot);text-shadow:0 0 16px rgba(255,74,61,.5)} h1 .c{color:var(--cold);text-shadow:0 0 16px rgba(47,140,255,.5)}
+.sub{margin:5px 0 0;color:var(--muted);font-size:.95rem;line-height:1.4}
+.stats{display:flex;gap:20px;margin:16px 0 10px;font-weight:700}
+.stats div{display:flex;flex-direction:column}
+.stats .k{font-size:.78rem;color:var(--muted);font-weight:500}
+.stats .v{font-size:1.35rem;font-variant-numeric:tabular-nums}
+#fx.done{color:#39d353}
+.board{position:relative;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:6px 0 8px;display:flex;justify-content:center;align-items:center;min-height:400px}
+#game{display:block;touch-action:manipulation;cursor:pointer}
+.warn{position:absolute;left:50%;top:10px;transform:translate(-50%,-20px);opacity:0;transition:.25s;background:#2a0d36;border:2px solid var(--mix);color:#fff;font-weight:800;
+  padding:8px 14px;border-radius:999px;white-space:nowrap;font-size:.9rem;box-shadow:0 0 20px rgba(184,77,255,.5);pointer-events:none;z-index:3}
+.warn.on{opacity:1;transform:translate(-50%,0)}
+.win{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:rgba(6,6,6,.86);border-radius:14px;padding:20px;z-index:4}
+.win[hidden]{display:none}
+.win img{width:80px;height:auto}
+.win h2{font-family:"Pirata One",Georgia,serif;font-weight:400;font-size:2.6rem;margin:0;background:linear-gradient(90deg,var(--hot),#fff,var(--cold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.win p{margin:8px 0 18px;max-width:32ch;line-height:1.45}
+.actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+button{font:inherit;font-weight:800;font-size:1rem;border:0;border-radius:10px;padding:12px 16px;cursor:pointer;background:#221a2e;color:var(--ink)}
+button.go{background:linear-gradient(90deg,var(--hot),var(--cold));color:#fff}
+button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.hint{color:var(--muted);font-size:.88rem;margin:14px 2px 0;line-height:1.5}
+.ver{margin:22px 0 0;text-align:center;font-size:.72rem;color:rgba(255,255,255,.28)}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="toprow"><a class="back" href="/play">‹ Games</a><button class="pill" id="sound" aria-pressed="true">Sound on</button></div>
+  <header class="top">
+    <img src="/assets/mojo-front.png" alt="">
+    <div><h1>Pipe Mojo: <span class="h">Hot</span> &amp; <span class="c">Cold</span></h1>
+    <p class="sub">Run hot water to the <b style="color:var(--hot)">H</b> fixtures and cold to the <b style="color:var(--cold)">C</b> fixtures. Never let them touch.</p></div>
+  </header>
+  <div class="stats" aria-live="polite">
+    <div><span class="k">Level</span><span class="v" id="lvl">1</span></div>
+    <div><span class="k">Taps</span><span class="v" id="taps">0</span></div>
+    <div><span class="k">Par</span><span class="v" id="par">0</span></div>
+    <div><span class="k">Fixtures</span><span class="v" id="fx">0/2</span></div>
+  </div>
+  <div class="board" id="board">
+    <canvas id="game" aria-label="Hot and cold pipe board"></canvas>
+    <div class="warn" id="warn">⚠️ Cross-connection!</div>
+    <div class="win" id="win" hidden>
+      <img src="/assets/mojo-34.png" alt="">
+      <h2>Clean install</h2>
+      <p id="winText"></p>
+      <button class="go" id="next">Next job</button>
+    </div>
+  </div>
+  <div class="actions"><button id="restart">Restart level</button><button id="newb">New board</button></div>
+  <p class="hint">Tap a pipe to turn it. Hot water runs red, cold runs blue. If they ever meet it's a cross-connection, and the job won't pass until you split them. Shower valves need hot on one side and cold on the other.</p>
+  <p class="ver">Hot &amp; Cold v0.1 · prototype</p>
+</main>
+<script>
+(function(){
+const N=1,E=2,S=4,W=8;
+const DIRS=[{b:N,dx:0,dy:-1,o:S},{b:E,dx:1,dy:0,o:W},{b:S,dx:0,dy:1,o:N},{b:W,dx:-1,dy:0,o:E}];
+const rot=m=>((m<<1)|(m>>3))&15,rotK=(m,k)=>{for(let i=0;i<k;i++)m=rot(m);return m},rnd=k=>Math.floor(Math.random()*k);
+const $=id=>document.getElementById(id);
+const C={hot:'#ff4a3d',hotL:'#ffc2b8',cold:'#2f8cff',coldL:'#c8e6ff',mix:'#b84dff',copper:'#c97a3d',copperDark:'#8f4f22',hl:'rgba(255,214,170,.35)',outline:'#0b0710',tile:'#1a1224'};
+
+/* ---------- sound (built in code, like the other games) ---------- */
+const Snd={ac:null,on:true,m:null,nb:null,
+  unlock(){if(this.ac){if(this.ac.state==='suspended')this.ac.resume();return}const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    this.ac=new AC();this.m=this.ac.createGain();this.m.gain.value=.55;this.m.connect(this.ac.destination);
+    const len=this.ac.sampleRate;this.nb=this.ac.createBuffer(1,len,len);const d=this.nb.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1},
+  tone(f,dur,type,vol,slide,delay){if(!this.on||!this.ac)return;const c=this.ac,t=c.currentTime+(delay||0),o=c.createOscillator(),g=c.createGain();
+    o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol||.2,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(this.m);o.start(t);o.stop(t+dur+.03)},
+  noise(dur,f1,f2,vol,delay,q){if(!this.on||!this.ac)return;const c=this.ac,t=c.currentTime+(delay||0),s=c.createBufferSource(),bp=c.createBiquadFilter(),g=c.createGain();
+    s.buffer=this.nb;bp.type='bandpass';bp.Q.value=q||1.2;bp.frequency.setValueAtTime(f1,t);bp.frequency.exponentialRampToValueAtTime(f2,t+dur);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol||.25,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(bp);bp.connect(g);g.connect(this.m);s.start(t);s.stop(t+dur+.03)},
+  clunk(){this.tone(170,.1,'square',.07,85);this.tone(95,.12,'sine',.25,60);this.noise(.05,2400,900,.12)},
+  hot(k){const f=330+Math.min(k,14)*30;this.tone(f,.14,'sine',.18,f*1.8);this.noise(.12,3000,1500,.05)}, // a little hiss of steam
+  cold(k){const f=420+Math.min(k,14)*30;this.tone(f,.12,'triangle',.16,f*2.1)},
+  fixture(){[659,880].forEach((f,i)=>this.tone(f,.18,'triangle',.13,null,i*.07))},
+  buzz(){this.tone(110,.35,'sawtooth',.12,90);this.tone(116,.35,'sawtooth',.1,95);this.noise(.3,600,300,.12)},
+  win(){[523,659,784,1047].forEach((f,i)=>this.tone(f,.22,'triangle',.14,null,i*.08));this.noise(1,1600,140,.25,.4,.9)}
+};
+try{Snd.on=localStorage.getItem('pm-sound')!=='off'}catch(e){}
+const syncSound=()=>{$('sound').textContent=Snd.on?'Sound on':'Sound off';$('sound').setAttribute('aria-pressed',String(Snd.on))};syncSound();
+$('sound').addEventListener('click',()=>{Snd.on=!Snd.on;syncSound();Snd.unlock();try{localStorage.setItem('pm-sound',Snd.on?'on':'off')}catch(e){}});
+document.addEventListener('pointerdown',()=>Snd.unlock(),{passive:true});
+
+/* ---------- state ---------- */
+let level=1,n,sol,cur,startCur,src=[0,0],ports=[],fixtures=[],path=new Set(),moves=0,par=0,anims={},solved=false,solvedAt=0,st=null,lastMix=false,warnT=0;
+let Wd=0,Hd=0,cell=0,gut=0,padTop=0;
+const board=$('board'),cv=$('game'),ctx=cv.getContext('2d');
+try{level=Math.max(1,parseInt(localStorage.getItem('pm-hc-level')||'1',10)||1)}catch(e){}
+
+/* ---------- board generation: two separate pipe networks grown side by side, so every board is solvable ---------- */
+function build(){
+  n=Math.min(4+Math.floor((level-1)/3),9);
+  for(let tries=0;tries<80;tries++){
+    const hs=rnd(n);let cs;do{cs=rnd(n)}while(Math.abs(cs-hs)<2);
+    const reg=new Int8Array(n*n).fill(-1),s=new Array(n*n).fill(0),size=[0,0];
+    const assign=(i,g)=>{reg[i]=g;size[g]++};assign(hs*n,0);assign(cs*n,1);
+    let left=n*n-2;
+    while(left>0){
+      const opts=[[],[]];
+      for(let i=0;i<n*n;i++){if(reg[i]<0)continue;const x=i%n,y=(i/n)|0;
+        for(const d of DIRS){const nx=x+d.dx,ny=y+d.dy;if(nx<0||ny<0||nx>=n||ny>=n)continue;const j=ny*n+nx;if(reg[j]<0)opts[reg[i]].push([i,j,d])}}
+      let g=opts[0].length&&opts[1].length?(size[0]<=size[1]?(Math.random()<.65?0:1):(Math.random()<.65?1:0)):opts[0].length?0:1;
+      const [i,j,d]=opts[g][rnd(opts[g].length)];s[i]|=d.b;s[j]|=d.o;assign(j,g);left--;
+    }
+    const col=[];for(let r=0;r<n;r++)col.push(reg[r*n+n-1]);
+    if(!col.includes(0)||!col.includes(1))continue;
+    // fixtures on the right: singles, and (later) a shower valve that needs hot and cold side by side
+    const want=level<4?2:level<10?3:4,used=new Set(),fx=[];
+    if(level>=6&&Math.random()<.6){const opts=[];for(let r=0;r<n-1;r++)if(col[r]!==col[r+1])opts.push(r);
+      if(opts.length){const r=opts[rnd(opts.length)];fx.push({type:'mix',rows:[r,r+1]});used.add(r);used.add(r+1);if(r>0)used.add(r-1);if(r+2<n)used.add(r+2)}}
+    const free=g=>{const a=[];for(let r=0;r<n;r++)if(!used.has(r)&&col[r]===g)a.push(r);return a};
+    const has=g=>fx.some(f=>f.rows.some(r=>col[r]===g));
+    for(const g of [0,1])if(!has(g)){const a=free(g);if(!a.length)break;const r=a[rnd(a.length)];fx.push({type:'one',rows:[r]});used.add(r)}
+    if(!has(0)||!has(1))continue;
+    while(fx.reduce((k,f)=>k+(f.type==='mix'?1:1),0)<want){const a=free(0).concat(free(1));if(!a.length)break;const r=a[rnd(a.length)];fx.push({type:'one',rows:[r]});used.add(r)}
+    src=[hs,cs];sol=s;sol[hs*n]|=W;sol[cs*n]|=W;
+    ports=[];for(const f of fx)for(const r of f.rows){sol[r*n+n-1]|=E;ports.push({row:r,need:col[r]})}
+    fixtures=fx.map(f=>Object.assign(f,{needs:f.rows.map(r=>col[r])}));
+    return true;
+  }
+  return false;
+}
+function pathTo(from,to){
+  const prev=new Int32Array(n*n).fill(-2),q=[from];prev[from]=-1;
+  while(q.length){const i=q.shift();if(i===to)break;const x=i%n,y=(i/n)|0;
+    for(const d of DIRS){if(!(sol[i]&d.b))continue;const nx=x+d.dx,ny=y+d.dy;if(nx<0||ny<0||nx>=n||ny>=n)continue;const j=ny*n+nx;if(prev[j]!==-2)continue;prev[j]=i;q.push(j)}}
+  const p=[];if(prev[to]===-2)return p;for(let i=to;i!==-1;i=prev[i])p.push(i);return p;
+}
+function flood(c,startRow){
+  const f=new Uint8Array(n*n),s=startRow*n;if(!(c[s]&W))return f;
+  const q=[s];f[s]=1;
+  while(q.length){const i=q.shift(),x=i%n,y=(i/n)|0;
+    for(const d of DIRS){if(!(c[i]&d.b))continue;const nx=x+d.dx,ny=y+d.dy;if(nx<0||ny<0||nx>=n||ny>=n)continue;const j=ny*n+nx;
+      if(f[j]||!(c[j]&d.o))continue;f[j]=1;q.push(j)}}
+  return f;
+}
+function evaluate(c){
+  const hot=flood(c,src[0]),cold=flood(c,src[1]),mixed=[];
+  for(let i=0;i<n*n;i++)if(hot[i]&&cold[i])mixed.push(i);
+  let good=0;const portOk=ports.map(p=>{const i=p.row*n+n-1,open=!!(c[i]&E),h=open&&hot[i],k=open&&cold[i];
+    const ok=p.need===0?(h&&!k):(k&&!h);if(ok)good++;return {ok,wrong:open&&(p.need===0?k:h)}});
+  return {hot,cold,mixed,portOk,good,ok:good===ports.length&&mixed.length===0};
+}
+const kFor=(i,m)=>{for(let k=0;k<4;k++)if(rotK(m,k)===sol[i])return k;return 0};
+function generate(){
+  if(!build()){level=Math.max(1,level-1);build()}
+  path=new Set();for(const p of ports)for(const i of pathTo(src[p.need]*n,p.row*n+n-1))path.add(i);
+  for(let t=0;t<40;t++){
+    cur=sol.map(m=>rotK(m,rnd(4)));
+    // pieces off the main runs must never be the only thing causing a cross-connection
+    for(let k=0;k<30;k++){const test=cur.map((m,i)=>path.has(i)?sol[i]:m),e=evaluate(test);if(!e.mixed.length)break;for(const i of e.mixed)if(!path.has(i))cur[i]=sol[i]}
+    if(!evaluate(cur).ok)break;
+  }
+  startCur=cur.slice();par=0;for(const i of path)par+=kFor(i,cur[i]);
+  moves=0;solved=false;anims={};lastMix=false;st=evaluate(cur);$('win').hidden=true;updateStats();resize();
+  try{localStorage.setItem('pm-hc-level',String(level))}catch(e){}
+}
+function updateStats(){$('lvl').textContent=level;$('taps').textContent=moves;$('par').textContent=par;
+  const f=$('fx');f.textContent=st.good+'/'+ports.length;f.classList.toggle('done',st.good===ports.length&&!st.mixed.length)}
+
+function resize(){
+  const GUT=.7,PAD=.25;let c=(board.clientWidth-6)/(n+GUT*2);cell=Math.max(12,Math.min(c,110));gut=cell*GUT;padTop=cell*PAD;
+  Wd=gut*2+cell*n;Hd=cell*n+padTop*2;const d=window.devicePixelRatio||1;
+  cv.style.width=Wd+'px';cv.style.height=Hd+'px';cv.width=Math.round(Wd*d);cv.height=Math.round(Hd*d);ctx.setTransform(d,0,0,d,0,0);
+}
+window.addEventListener('resize',resize);
+
+/* ---------- drawing ---------- */
+function arms(mask,r,w,color){ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap='butt';
+  for(const d of DIRS){if(!(mask&d.b))continue;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(d.dx*r,d.dy*r);ctx.stroke()}
+  ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,w/2,0,Math.PI*2);ctx.fill()}
+function drawPipe(cx,cy,mask,angle,water,t){
+  const r=cell/2,w=cell*.26;ctx.save();ctx.translate(cx,cy);ctx.rotate(angle);
+  arms(mask,r,w+cell*.06,C.outline);arms(mask,r,w,C.copper);
+  ctx.strokeStyle=C.copperDark;ctx.lineWidth=cell*.07;for(const d of DIRS){if(!(mask&d.b))continue;const at=r-cell*.06,px=-d.dy,py=d.dx,h=w*.5+cell*.05;
+    ctx.beginPath();ctx.moveTo(d.dx*at+px*h,d.dy*at+py*h);ctx.lineTo(d.dx*at-px*h,d.dy*at-py*h);ctx.stroke()}
+  if(water){const col=water==='m'?(Math.sin(t/90)>0?C.mix:'#ff7af0'):water==='h'?C.hot:C.cold;arms(mask,r,w*.55,col);
+    if(solved){ctx.setLineDash([cell*.12,cell*.16]);ctx.lineDashOffset=-t*.04;ctx.strokeStyle=water==='h'?C.hotL:C.coldL;ctx.lineWidth=w*.2;ctx.lineCap='round';
+      for(const d of DIRS){if(!(mask&d.b))continue;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(d.dx*r,d.dy*r);ctx.stroke()}ctx.setLineDash([])}}
+  else{ctx.strokeStyle=C.hl;ctx.lineWidth=w*.16;for(const d of DIRS){if(!(mask&d.b))continue;const o=w*.22;ctx.beginPath();ctx.moveTo(-d.dy*o,d.dx*o);ctx.lineTo(d.dx*r-d.dy*o,d.dy*r+d.dx*o);ctx.stroke()}}
+  ctx.restore();
+}
+function tag(x,y,letter,col,s){ctx.fillStyle=col;ctx.beginPath();ctx.arc(x,y,s,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#0b0710';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#fff';ctx.font='900 '+(s*1.2)+'px Nunito, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(letter,x,y+1);ctx.textBaseline='alphabetic'}
+function draw(t){
+  ctx.clearRect(0,0,Wd,Hd);ctx.save();ctx.translate(0,padTop);
+  const mixSet=new Set(st.mixed);
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){const i=y*n+x,px=gut+x*cell,py=y*cell;
+    const water=mixSet.has(i)?'m':st.hot[i]?'h':st.cold[i]?'c':'';
+    ctx.fillStyle=water==='h'?'#2a1214':water==='c'?'#101a2c':water==='m'?'#24102e':C.tile;ctx.fillRect(px+1.5,py+1.5,cell-3,cell-3);
+    let a=0;const an=anims[i];if(an){const p=Math.min(1,(t-an)/140);a=-Math.PI/2*(1-(1-(1-p)*(1-p)));if(p>=1)delete anims[i]}
+    drawPipe(px+cell/2,py+cell/2,cur[i],a,water,t);
+    if(water==='m'){ctx.strokeStyle='rgba(184,77,255,'+(.5+.5*Math.sin(t/120))+')';ctx.lineWidth=3;ctx.strokeRect(px+3,py+3,cell-6,cell-6)}}
+  // the two valves
+  [[src[0],'H',C.hot],[src[1],'C',C.cold]].forEach(([row,L,col])=>{const y=row*cell+cell/2,w=cell*.26;
+    ctx.strokeStyle=C.outline;ctx.lineWidth=w+cell*.06;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(gut+1,y);ctx.stroke();ctx.strokeStyle=C.copper;ctx.lineWidth=w;ctx.stroke();
+    ctx.strokeStyle=col;ctx.lineWidth=w*.55;ctx.stroke();
+    ctx.save();ctx.translate(gut*.45,y);ctx.rotate(solved?t*.004:0);ctx.strokeStyle=col;ctx.lineWidth=cell*.06;ctx.beginPath();ctx.arc(0,0,cell*.24,0,Math.PI*2);ctx.stroke();
+    for(let k=0;k<4;k++){ctx.rotate(Math.PI/2);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(cell*.24,0);ctx.stroke()}ctx.restore();
+    tag(gut*.45,y-cell*.36,L,col,cell*.13)});
+  // fixtures on the right
+  const ex=gut+n*cell,fx=ex+gut*.5;let pi=0;
+  for(const f of fixtures){
+    if(f.type==='mix'){const y0=f.rows[0]*cell+cell/2,y1=f.rows[1]*cell+cell/2,ok=st.portOk[pi].ok&&st.portOk[pi+1].ok;
+      for(let k=0;k<2;k++){const y=k?y1:y0,need=f.needs[k],po=st.portOk[pi+k];
+        ctx.strokeStyle=C.outline;ctx.lineWidth=cell*.32;ctx.beginPath();ctx.moveTo(ex-1,y);ctx.lineTo(fx,y);ctx.stroke();
+        ctx.strokeStyle=po.ok?(need===0?C.hot:C.cold):'#5a5266';ctx.lineWidth=cell*.18;ctx.stroke();
+        tag(fx+cell*.02,y,need===0?'H':'C',need===0?C.hot:C.cold,cell*.13)}
+      // the shower valve body joining both lines
+      ctx.fillStyle=ok?'#e9c46a':'#8c8796';ctx.strokeStyle=C.outline;ctx.lineWidth=2;const bx=fx+cell*.14,bw=gut*.32;
+      ctx.fillRect(bx,y0-cell*.12,bw,y1-y0+cell*.24);ctx.strokeRect(bx,y0-cell*.12,bw,y1-y0+cell*.24);
+      ctx.font='900 '+(cell*.16)+'px Nunito';ctx.textAlign='center';ctx.fillStyle='#120a1a';ctx.save();ctx.translate(bx+bw/2,(y0+y1)/2);ctx.rotate(-Math.PI/2);ctx.fillText('SHOWER',0,cell*.06);ctx.restore();
+      if(ok&&!solved){ctx.fillStyle='rgba(200,230,255,.8)';for(let k=0;k<4;k++){const dy=((t/8+k*12)%(cell*.6));ctx.beginPath();ctx.arc(bx+bw/2+(k-1.5)*3,(y1+cell*.14)+dy,1.5,0,6.3);ctx.fill()}}
+      pi+=2;continue}
+    const y=f.rows[0]*cell+cell/2,need=f.needs[0],po=st.portOk[pi],col=need===0?C.hot:C.cold;
+    ctx.strokeStyle=C.outline;ctx.lineWidth=cell*.32;ctx.beginPath();ctx.moveTo(ex-1,y);ctx.lineTo(fx,y);ctx.stroke();
+    ctx.strokeStyle=po.ok?col:'#5a5266';ctx.lineWidth=cell*.18;ctx.stroke();
+    // a little sink basin
+    ctx.fillStyle=po.ok?'#f2ece2':'#8c8796';ctx.strokeStyle=C.outline;ctx.lineWidth=2;ctx.beginPath();
+    ctx.moveTo(fx-cell*.02,y-cell*.08);ctx.lineTo(fx+gut*.42,y-cell*.08);ctx.quadraticCurveTo(fx+gut*.4,y+cell*.3,fx+gut*.2,y+cell*.3);ctx.quadraticCurveTo(fx,y+cell*.3,fx-cell*.02,y-cell*.08);ctx.fill();ctx.stroke();
+    tag(fx+gut*.2,y-cell*.3,need===0?'H':'C',col,cell*.13);
+    if(po.wrong){ctx.strokeStyle=C.mix;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(fx,y-cell*.2);ctx.lineTo(fx+gut*.4,y+cell*.25);ctx.moveTo(fx+gut*.4,y-cell*.2);ctx.lineTo(fx,y+cell*.25);ctx.stroke()}
+    pi++;
+  }
+  ctx.restore();
+}
+function loop(t){draw(t);requestAnimationFrame(loop)}
+
+/* ---------- input ---------- */
+const LINES=['Cross-connection! That\'s a code violation.','Hot and cold don\'t mix, rookie.','Inspector\'s gonna red-tag that.','Separate them lines!'];
+function warn(){const w=$('warn');w.textContent='⚠️ '+LINES[rnd(LINES.length)];w.classList.add('on');clearTimeout(warnT);warnT=setTimeout(()=>w.classList.remove('on'),2600)}
+cv.addEventListener('pointerdown',e=>{
+  if(solved)return;Snd.unlock();
+  const r=cv.getBoundingClientRect(),x=Math.floor((e.clientX-r.left-gut)/cell),y=Math.floor((e.clientY-r.top-padTop)/cell);
+  if(x<0||y<0||x>=n||y>=n)return;
+  const i=y*n+x,beforeH=st.hot.reduce((a,b)=>a+b,0),beforeC=st.cold.reduce((a,b)=>a+b,0),beforeGood=st.good;
+  cur[i]=rot(cur[i]);anims[i]=performance.now();moves++;st=evaluate(cur);updateStats();Snd.clunk();
+  const mix=st.mixed.length>0;if(mix&&!lastMix){Snd.buzz();warn()}lastMix=mix;
+  if(st.good>beforeGood&&!mix)Snd.fixture();
+  else{const h=st.hot.reduce((a,b)=>a+b,0),c=st.cold.reduce((a,b)=>a+b,0);if(h>beforeH)Snd.hot(h);else if(c>beforeC)Snd.cold(c)}
+  if(st.ok)win();
+});
+function win(){
+  solved=true;solvedAt=performance.now();Snd.win();
+  $('winText').textContent='Job '+level+' passed inspection in '+moves+' taps. Par was '+par+'.'+(moves<=par?' Clean work.':'');
+  setTimeout(()=>{$('win').hidden=false;$('next').focus()},1100);
+}
+$('next').addEventListener('click',()=>{level++;generate()});
+$('newb').addEventListener('click',generate);
+$('restart').addEventListener('click',()=>{cur=startCur.slice();moves=0;solved=false;lastMix=false;st=evaluate(cur);$('win').hidden=true;updateStats()});
+generate();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
