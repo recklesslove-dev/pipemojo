@@ -37,7 +37,8 @@ h1 .h{color:var(--hot);text-shadow:0 0 16px rgba(255,74,61,.5)} h1 .c{color:var(
 .stats .v{font-size:1.35rem;font-variant-numeric:tabular-nums}
 #fx.done{color:#39d353}
 .board{position:relative;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:6px 0 8px;display:flex;justify-content:center;align-items:center;min-height:400px}
-#game{display:block;touch-action:manipulation;cursor:pointer}
+#env{position:absolute;inset:0;width:100%;height:100%;border-radius:13px;pointer-events:none;z-index:0}
+#game{display:block;position:relative;z-index:1;touch-action:manipulation;cursor:pointer}
 .warn{position:absolute;left:50%;top:10px;transform:translate(-50%,-20px);opacity:0;transition:.25s;background:#2a0d36;border:2px solid var(--mix);color:#fff;font-weight:800;
   padding:8px 14px;border-radius:999px;white-space:nowrap;font-size:.9rem;box-shadow:0 0 20px rgba(184,77,255,.5);pointer-events:none;z-index:3}
 .warn.on{opacity:1;transform:translate(-50%,0)}
@@ -113,6 +114,7 @@ button:focus-visible,.back:focus-visible,.pill:focus-visible{outline:3px solid v
     <div><span class="k">Fixtures</span><span class="v" id="fx">0/2</span></div>
   </div>
   <div class="board" id="board">
+    <canvas id="env" aria-hidden="true"></canvas>
     <canvas id="game" aria-label="Hot and cold pipe board"></canvas>
     <div class="warn" id="warn">⚠️ Crossover!</div>
     <div class="splash" id="splash" hidden aria-live="assertive">
@@ -141,7 +143,7 @@ button:focus-visible,.back:focus-visible,.pill:focus-visible{outline:3px solid v
   </div>
   <div class="actions"><button id="restart">Restart job</button><button id="newb">New board</button></div>
   <p class="hint">Tap a pipe to turn it. The water heater sends hot water (red) and the street main sends cold (blue). Get every fixture its water. Showers, tubs, sinks and washers need both. If hot and cold ever meet, that's a crossover.</p>
-  <p class="ver">Hot &amp; Cold v0.7 · prototype</p>
+  <p class="ver">Hot &amp; Cold v0.8 · prototype</p>
 </main>
 <div class="insfx" id="insFx" hidden aria-label="Inspection day">
   <video id="insBg" muted playsinline preload="none" aria-hidden="true"></video>
@@ -202,9 +204,10 @@ function critArt(el,list,h){el.innerHTML='';for(const k of list){const im=new Im
 /* fixtures: what each one needs */
 const SINGLE={1:['toilet','icemaker','hosebibb'],0:['dishwasher','boiler']};
 const DOUBLE=['shower','tub','lav','washer'];
-const NAMES={toilet:'toilet',icemaker:'ice maker',hosebibb:'hose bibb',dishwasher:'dishwasher',boiler:'coffee urn',shower:'shower',tub:'tub',lav:'sink',washer:'washer'};
+const NAMES={toilet:'Toilet',icemaker:'Ice maker',hosebibb:'Hose bibb',dishwasher:'Dishwasher',boiler:'Coffee urn',shower:'Shower',tub:'Tub',lav:'Sink',washer:'Washer'};
 const ready=im=>im&&im.complete&&im.naturalWidth>0;
-const FXI={};for(const k of['toilet','lav','shower','tub','washer','dishwasher','hosebibb','heater']){const im=new Image();im.src='/assets/fx-'+k+'.png';FXI[k]=im}
+const FXF={toilet:'toilet',lav:'lav',shower:'shower',tub:'tub',washer:'washer',dishwasher:'dishwasher',hosebibb:'hosebibb',heater:'heater',icemaker:'icemaker',boiler:'coffeeurn'};
+const FXI={};for(const k in FXF){const im=new Image();im.src='/assets/fx-'+FXF[k]+'.png';FXI[k]=im}
 const PASS=new Image();PASS.src='/assets/insp-pass.png';
 const TAG=[1,2,3].map(k=>{const im=new Image();im.src='/assets/insp-fail-'+k+'.png';return im});
 
@@ -253,12 +256,13 @@ document.addEventListener('pointerdown',()=>Snd.unlock(),{passive:true});
 /* ---------- state ---------- */
 let level=1,best=1,n,sol,cur,startCur,src=[0,0],ports=[],fixtures=[],path=new Set(),moves=0,par=0,anims={},solved=false,solvedAt=0,st=null,lastMix=false,warnT=0,splashT=0;
 let locked=[],frozen=[],startFrozen=[],cursed=[],vine=[],ghost=[],seen=[],meltAt={},bump=-1,bumpAt=0,Z=zoneFor(1),C={};
-let Wd=0,Hd=0,cell=0,gutL=0,gutR=0,padTop=0;
-const board=$('board'),cv=$('game'),ctx=cv.getContext('2d');
+let Wd=0,Hd=0,cell=0,gutL=0,gutR=0,padTop=0,FR=12,MOTIF=null,TEX=null;
+const ENVK=['plank','brick','subway','velvet','stone','panel','mardi','deck'];
+const board=$('board'),cv=$('game'),ctx=cv.getContext('2d'),ev=$('env'),ectx=ev.getContext('2d');
 try{level=Math.max(1,parseInt(localStorage.getItem('pm-hc-level')||'1',10)||1);best=Math.max(level,parseInt(localStorage.getItem('pm-hc-best')||'1',10)||1)}catch(e){}
 
 function applyZone(){
-  Z=zoneFor(level);C={copper:Z.pipe[0],dark:Z.pipe[1],hl:Z.pipe[2],tile:Z.tile,outline:Z.outline||'#0b0710'};
+  Z=zoneFor(level);Z.env=ENVK[period(level)%ZONES.length];MOTIF=motif(Z.env);C={copper:Z.pipe[0],dark:Z.pipe[1],hl:Z.pipe[2],tile:Z.tile,outline:Z.outline||'#0b0710'};
   for(const k of Z.crit||[]){const im=new Image();im.src='/assets/'+k+'-front.png'} // warm the cache for the win screen
   document.body.style.background=Z.bg;document.body.style.backgroundAttachment='fixed';document.documentElement.style.setProperty('--zone',Z.accent);
   board.style.borderColor=Z.accent+'55';
@@ -357,13 +361,69 @@ function updateStats(){$('lvl').textContent=level;$('taps').textContent=moves;$(
   const f=$('fx');f.textContent=st.good+'/'+ports.length;f.classList.toggle('done',st.good===ports.length&&!st.mixed.length)}
 
 function resize(){
+  FR=Math.round(Math.max(10,Math.min(18,board.clientWidth*.03)));board.style.padding=FR+'px'; // room for the zone frame
   const L=.95,R=1.25,PAD=.3,wide=matchMedia('(orientation: landscape) and (min-width: 600px)').matches;
-  let c=(board.clientWidth-6)/(n+L+R);if(wide)c=Math.min(c,(board.clientHeight-14)/(n+PAD*2));
+  let c=(board.clientWidth-FR*2-4)/(n+L+R);if(wide)c=Math.min(c,(board.clientHeight-FR*2-6)/(n+PAD*2));
   cell=Math.max(12,Math.min(c,140));gutL=cell*L;gutR=cell*R;padTop=cell*PAD;
   Wd=gutL+gutR+cell*n;Hd=cell*n+padTop*2;const d=window.devicePixelRatio||1;
   cv.style.width=Wd+'px';cv.style.height=Hd+'px';cv.width=Math.round(Wd*d);cv.height=Math.round(Hd*d);ctx.setTransform(d,0,0,d,0,0);
+  TEX=makeTex();drawEnv();
 }
 window.addEventListener('resize',resize);
+
+/* ---------- zone environment: a frame around the board and a faint texture in the grid, all drawn in code ---------- */
+function motif(kind){const m=document.createElement('canvas'),g=m.getContext('2d');
+  const sz={plank:[64,16],brick:[32,16],subway:[24,12],velvet:[24,24],stone:[40,20],panel:[20,40],mardi:[24,24],deck:[48,14]}[kind]||[32,16];
+  m.width=sz[0];m.height=sz[1];const w=sz[0],h=sz[1],f=(c,x,y,a,b)=>{g.fillStyle=c;g.fillRect(x,y,a,b)};
+  if(kind==='plank'){f('#3b2a1a',0,0,w,h);g.strokeStyle='#2a1d12';g.lineWidth=1;for(const y of[4,9,13]){g.beginPath();g.moveTo(0,y);g.bezierCurveTo(20,y-1.5,40,y+1.5,w,y);g.stroke()}f('#1e140c',w-1,0,1,h);f('#4a3622',0,0,w,1)}
+  else if(kind==='brick'){f('#3a2a24',0,0,w,h);f('#8a3b26',1,1,30,6);f('#7a3322',0,9,15,6);f('#93452c',17,9,15,6);f('rgba(255,200,170,.18)',1,1,30,1);f('rgba(255,200,170,.18)',17,9,15,1)}
+  else if(kind==='subway'){f('#9aa8b3',0,0,w,h);f('#e9f0f4',1,1,22,4);f('#dbe8f0',0,7,11,4);f('#e9f0f4',13,7,11,4)}
+  else if(kind==='velvet'){f('#3a1052',0,0,w,h);g.strokeStyle='rgba(245,200,66,.45)';g.lineWidth=1;g.beginPath();g.moveTo(12,2);g.lineTo(22,12);g.lineTo(12,22);g.lineTo(2,12);g.closePath();g.stroke();f('rgba(245,200,66,.5)',11,11,2,2)}
+  else if(kind==='stone'){f('#3c4049',0,0,w,h);f('#555b66',1,1,24,8);f('#4d535d',27,1,12,8);f('#515762',0,11,12,8);f('#59606b',14,11,25,8)}
+  else if(kind==='panel'){f('#4a2a22',0,0,w,h);f('#24120e',w-1,0,1,h);g.strokeStyle='#5c3529';g.lineWidth=1;for(const x of[5,11,15]){g.beginPath();g.moveTo(x,0);g.bezierCurveTo(x-1.5,14,x+1.5,26,x,h);g.stroke()}}
+  else if(kind==='mardi'){const cs=['#6a2fb0','#2f9e44','#e0b13a'];for(let i=-3;i<6;i++){g.fillStyle=cs[((i%3)+3)%3];g.beginPath();g.moveTo(i*8,0);g.lineTo(i*8+8,0);g.lineTo(i*8+8-24,24);g.lineTo(i*8-24,24);g.closePath();g.fill()}}
+  else if(kind==='deck'){f('#d9d2c3',0,0,w,h);f('#a89f8e',0,h-1,w,1);f('#a89f8e',w-1,0,1,h);f('#8d8474',4,6,1.5,1.5)}
+  return m}
+function makeTex(){if(!MOTIF||cell<4)return null;const t=document.createElement('canvas'),s=Math.max(1,Math.round(cell-3));t.width=s;t.height=s;const g=t.getContext('2d');g.fillStyle=g.createPattern(MOTIF,'repeat');g.fillRect(0,0,s,s);return t}
+function drawEnv(){
+  const W=board.clientWidth,H=board.clientHeight,d=window.devicePixelRatio||1,F=FR;if(!W||!H||!MOTIF)return;
+  ev.width=Math.round(W*d);ev.height=Math.round(H*d);const g=ectx;g.setTransform(d,0,0,d,0,0);g.clearRect(0,0,W,H);
+  const k=Z.env,rr=(x,y,w,h,r)=>{g.roundRect?g.roundRect(x,y,w,h,r):g.rect(x,y,w,h)},hash=i=>{const v=Math.sin(i*127.1+Z.env.length*31.7)*43758.5;return v-Math.floor(v)};
+  g.fillStyle=Z.tile;g.fillRect(0,0,W,H); // inside the room
+  g.beginPath();rr(0,0,W,H,13);rr(F,F,W-F*2,H-F*2,6);g.fillStyle=g.createPattern(MOTIF,'repeat');g.fill('evenodd'); // the frame
+  g.fillStyle='rgba(0,0,0,.25)';g.beginPath();rr(0,0,W,H,13);rr(F,F,W-F*2,H-F*2,6);g.fill('evenodd');
+  g.strokeStyle=k==='deck'?'#b3261e':k==='velvet'||k==='mardi'?'#f5c842':'rgba(0,0,0,.6)';g.lineWidth=2;g.beginPath();rr(F,F,W-F*2,H-F*2,6);g.stroke();
+  const iw=W-F*2,ih=H-F*2;
+  if(k==='plank'){ // spanish moss hanging from the top, cattails along the bottom
+    g.strokeStyle='rgba(150,170,120,.7)';g.lineWidth=1.5;for(let x=F+6,i=0;x<W-F;x+=iw/16,i++){const len=F*(1.2+hash(i)*2.2);g.beginPath();g.moveTo(x,F);
+      for(let y=0;y<=len;y+=3)g.lineTo(x+Math.sin(y*.35+i)*3,F+y);g.stroke()}
+    for(let x=F+10,i=0;x<W-F;x+=iw/11,i++){const h2=F*(1.4+hash(i+40)*1.4);g.strokeStyle='#4f6b2e';g.lineWidth=1.5;g.beginPath();g.moveTo(x,H-F);g.lineTo(x+2,H-F-h2);g.stroke();
+      g.fillStyle='#5a3a1e';g.beginPath();g.ellipse(x+2,H-F-h2+F*.25,F*.13,F*.32,0,0,6.3);g.fill()}}
+  else if(k==='brick'){ // wrought-iron balcony railing across the top
+    const y2=F+F*2.6,step=Math.max(12,F*1.1);g.strokeStyle='#050405';g.fillStyle='#050405';g.lineWidth=3.5;g.beginPath();g.moveTo(F,y2);g.lineTo(W-F,y2);g.moveTo(F,F+3);g.lineTo(W-F,F+3);g.stroke();
+    g.lineWidth=2.2;for(let x=F+step/2;x<W-F;x+=step){g.beginPath();g.moveTo(x,F+3);g.lineTo(x,y2);g.stroke();g.beginPath();g.arc(x+step/2,(F+3+y2)/2,step*.22,0,6.3);g.stroke()}}
+  else if(k==='subway'){ // a shelf of mugs along the top and powdered sugar dusting the frame
+    g.fillStyle='rgba(255,255,255,.75)';for(let i=0;i<70;i++){const e=hash(i)*4|0,a=hash(i+99);const x=e<2?a*W:(e===2?hash(i+7)*F:W-hash(i+7)*F),y=e===0?hash(i+7)*F:e===1?H-hash(i+7)*F:a*H;g.beginPath();g.arc(x,y,1.1,0,6.3);g.fill()}
+    g.fillStyle='#7d8896';g.fillRect(F+4,F+F*1.3,iw-8,3);for(let x=F+14,i=0;x<W-F-14;x+=iw/9,i++){g.fillStyle=['#e8a33d','#9fe8ff','#f2ece2'][i%3];g.fillRect(x,F+F*.55,F*.6,F*.75);g.strokeStyle=g.fillStyle;g.lineWidth=1.5;g.beginPath();g.arc(x+F*.6,F+F*.92,F*.2,-1.4,1.4);g.stroke()}}
+  else if(k==='velvet'){ // candles along the bottom
+    for(let x=F+14,i=0;x<W-F-8;x+=iw/8,i++){const h2=F*(1+hash(i)*1.1),w2=F*.45,top=H-F-h2;
+      const gl=g.createRadialGradient(x,top-F*.25,0,x,top-F*.25,F*1.4);gl.addColorStop(0,'rgba(255,190,90,.45)');gl.addColorStop(1,'rgba(255,190,90,0)');g.fillStyle=gl;g.fillRect(x-F*1.4,top-F*1.7,F*2.8,F*2.8);
+      g.fillStyle='#efe2c4';g.fillRect(x-w2/2,top,w2,h2);g.fillStyle='#ffb347';g.beginPath();g.moveTo(x,top-F*.6);g.quadraticCurveTo(x+w2*.55,top-F*.1,x,top-1);g.quadraticCurveTo(x-w2*.55,top-F*.1,x,top-F*.6);g.fill()}}
+  else if(k==='stone'){ // tombs along the bottom and fog rising
+    for(let x=F+8,i=0;x<W-F-F;x+=iw/7,i++){const h2=F*(1.4+hash(i)*1.4),w2=F*(.9+hash(i+5)*.6),top=H-F-h2;g.fillStyle='#5d6470';g.strokeStyle='#2c3038';g.lineWidth=1.5;
+      g.beginPath();if(i%3===1){g.rect(x+w2*.4,top-F*.6,w2*.2,F*.9);g.rect(x+w2*.15,top-F*.35,w2*.7,F*.2)}g.moveTo(x,H-F);g.lineTo(x,top+w2/2);g.arc(x+w2/2,top+w2/2,w2/2,Math.PI,0);g.lineTo(x+w2,H-F);g.closePath();g.fill();g.stroke()}
+    const fg=g.createLinearGradient(0,H,0,H-F*5);fg.addColorStop(0,'rgba(210,220,235,.35)');fg.addColorStop(1,'rgba(210,220,235,0)');g.fillStyle=fg;g.fillRect(F,H-F*5,iw,F*4)}
+  else if(k==='panel'){ // cobwebs in the corners
+    g.strokeStyle='rgba(225,225,235,.55)';g.lineWidth=1;const R2=F*3.2;for(const [cx,cy,a0] of[[F,F,0],[W-F,F,Math.PI/2],[W-F,H-F,Math.PI],[F,H-F,Math.PI*1.5]]){
+      for(let j=0;j<=4;j++){const a=a0+j*Math.PI/8;g.beginPath();g.moveTo(cx,cy);g.lineTo(cx+Math.cos(a)*R2,cy+Math.sin(a)*R2);g.stroke()}
+      for(const r of[.35,.6,.85]){g.beginPath();for(let j=0;j<=4;j++){const a=a0+j*Math.PI/8,x=cx+Math.cos(a)*R2*r,y=cy+Math.sin(a)*R2*r;j?g.quadraticCurveTo(cx+Math.cos(a-Math.PI/16)*R2*r*.85,cy+Math.sin(a-Math.PI/16)*R2*r*.85,x,y):g.moveTo(x,y)}g.stroke()}}}
+  else if(k==='mardi'){ // bead strands draped across the top
+    const cs=['#b45cff','#39d353','#f5c842'],spans=4;for(let s2=0;s2<spans*2;s2++){const lay=s2>=spans?1:0,x0=F+(iw/spans)*(s2%spans)+lay*iw/(spans*2),x1=Math.min(W-F,x0+iw/spans),sag=F*(1.2+hash(s2)*1),c2=cs[s2%3];
+      for(let j=0;j<=20;j++){const u=j/20,x=x0+(x1-x0)*u,y=F+4+sag*4*u*(1-u)+lay*3;g.fillStyle=c2;g.beginPath();g.arc(x,y,Math.max(1.8,F*.14),0,6.3);g.fill();g.fillStyle='rgba(255,255,255,.5)';g.fillRect(x-1,y-1.2,1,1)}}}
+  else if(k==='deck'){ // river along the bottom and a paddlewheel in the corner
+    for(let b=0;b<3;b++){g.strokeStyle=['rgba(90,176,255,.55)','rgba(60,130,210,.5)','rgba(40,90,160,.5)'][b];g.lineWidth=2;g.beginPath();for(let x=F;x<=W-F;x+=4){const y=H-F-F*.5-b*F*.5+Math.sin(x/(F*.9)+b)*F*.18;x===F?g.moveTo(x,y):g.lineTo(x,y)}g.stroke()}
+    const pr=F*2.2,px=W-F-pr*.4,py=H-F-pr*.4;g.strokeStyle='#b3261e';g.lineWidth=3;g.beginPath();g.arc(px,py,pr,Math.PI,Math.PI*1.5);g.stroke();g.lineWidth=2;for(let j=0;j<=4;j++){const a=Math.PI+j*Math.PI/8;g.beginPath();g.moveTo(px,py);g.lineTo(px+Math.cos(a)*pr,py+Math.sin(a)*pr);g.stroke()}}
+}
 
 /* ---------- drawing ---------- */
 function arms(mask,r,w,color){ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap='butt';
@@ -449,6 +509,7 @@ function draw(t){
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){const i=y*n+x,px=gutL+x*cell,py=y*cell;
     const water=mixSet.has(i)?'m':st.hot[i]?'h':st.cold[i]?'c':'';
     ctx.fillStyle=water==='h'?'#2a1214':water==='c'?'#101a2c':water==='m'?'#24102e':C.tile;ctx.fillRect(px+1.5,py+1.5,cell-3,cell-3);
+    if(TEX){ctx.globalAlpha=.11;ctx.drawImage(TEX,px+1.5,py+1.5,cell-3,cell-3);ctx.globalAlpha=1}
     let a=0;const an=anims[i];if(an){const dir=an<0?-1:1,p=Math.min(1,(t-Math.abs(an))/140);a=-dir*Math.PI/2*(1-(1-(1-p)*(1-p)));if(p>=1)delete anims[i]}
     const hidden=ghost[i]&&!seen[i]&&!solved;
     if(hidden){ctx.globalAlpha=.13;drawPipe(px+cell/2,py+cell/2,cur[i],a,'',t);ctx.globalAlpha=1;ctx.fillStyle='rgba(200,210,230,.08)';ctx.fillRect(px+1.5,py+1.5,cell-3,cell-3)}
@@ -477,6 +538,9 @@ function draw(t){
     const cy=(ys[0]+ys[ys.length-1])/2,s=cell*(f.rows.length>1?1.05:.78);
     if(f.rows.length>1){ctx.strokeStyle=ok?'#d5dde6':'#5a5266';ctx.lineWidth=cell*.1;ctx.beginPath();ctx.moveTo(ex+gutR*.18,ys[0]);ctx.lineTo(fx,ys[0]);ctx.lineTo(fx,ys[1]);ctx.lineTo(ex+gutR*.18,ys[1]);ctx.stroke()}
     drawFixture(f.type,fx+gutR*.18,cy,s,ok,t);
+    const fs=Math.max(9,Math.min(13,cell*.16));ctx.font='800 '+fs+'px Nunito, sans-serif';ctx.textAlign='center';ctx.lineJoin='round'; // what the fixture is
+    ctx.strokeStyle='rgba(6,4,10,.85)';ctx.lineWidth=3;ctx.strokeText(NAMES[f.type],fx+gutR*.18,cy+s*.5+fs*.95);
+    ctx.fillStyle=ok?'#f2ece2':'#a39ab0';ctx.fillText(NAMES[f.type],fx+gutR*.18,cy+s*.5+fs*.95);
     pi+=f.rows.length;
   }
   ctx.restore();
