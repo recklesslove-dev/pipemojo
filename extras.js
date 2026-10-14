@@ -71,3 +71,14 @@ function sync(){if(window.PMLB&&PMLB.account())PMLB.cloudLoad('whack').then(c=>{
 window.PMX={award,tick,merge,push,sync,has:id=>load().x.includes(id),list:()=>load().x,days:()=>load().days,seasonNow,nextSeason,
   SEASONS,SECRETS,DAILY,set onAward(fn){onAward=fn}};
 })();
+
+/* game pages: no double-tap zoom and no long-press text selection or magnifier (Flow, Whack-a-Pipe, Locker) */
+(function(){
+  try{
+    const s=document.createElement('style');
+    s.textContent='html,body{touch-action:manipulation}body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}'+
+      'input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}';
+    (document.head||document.documentElement).appendChild(s);
+    document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
+  }catch(e){}
+})();

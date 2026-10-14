@@ -17,8 +17,8 @@
 <style>
 :root{--black:#060606;--panel:#120c1a;--ink:#f2ece2;--muted:#a39ab0;--hot:#ff4a3d;--cold:#2f8cff;--gold:#f5c842;--mix:#b84dff;--zone:#8fd14f;color-scheme:dark}
 *,*::before,*::after{box-sizing:border-box}
-html{height:100%}
-body{margin:0;min-height:100%;color:var(--ink);font-family:Nunito,system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent;background:var(--black);background-attachment:fixed;transition:background .8s;
+html{height:100%;touch-action:manipulation}
+body{margin:0;min-height:100%;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;color:var(--ink);font-family:Nunito,system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent;background:var(--black);background-attachment:fixed;transition:background .8s;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 .wrap{max-width:600px;margin:0 auto;padding:12px max(8px,env(safe-area-inset-right,0px)) 28px max(8px,env(safe-area-inset-left,0px))}
 .toprow{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
@@ -143,7 +143,7 @@ button:focus-visible,.back:focus-visible,.pill:focus-visible{outline:3px solid v
   </div>
   <div class="actions"><button id="restart">Restart job</button><button id="newb">New board</button></div>
   <p class="hint">Tap a pipe to turn it. The water heater sends hot water (red) and the street main sends cold (blue). Get every fixture its water. Showers, tubs, sinks and washers need both. If hot and cold ever meet, that's a crossover.</p>
-  <p class="ver">Hot &amp; Cold v0.8 · prototype</p>
+  <p class="ver">Hot &amp; Cold v0.9 · prototype</p>
 </main>
 <div class="insfx" id="insFx" hidden aria-label="Inspection day">
   <video id="insBg" muted playsinline preload="none" aria-hidden="true"></video>
@@ -245,6 +245,7 @@ try{Snd.on=localStorage.getItem('pm-sound')!=='off'}catch(e){}
 const syncSound=()=>{$('sound').textContent=Snd.on?'Sound on':'Sound off';$('sound').setAttribute('aria-pressed',String(Snd.on))};syncSound();
 $('sound').addEventListener('click',()=>{Snd.on=!Snd.on;syncSound();Snd.unlock();try{localStorage.setItem('pm-sound',Snd.on?'on':'off')}catch(e){}});
 document.addEventListener('pointerdown',()=>Snd.unlock(),{passive:true});
+document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 (function(){ // full screen on iPad, Android and desktop
   const el=document.documentElement,b=$('fs'),can=!!(document.fullscreenEnabled||document.webkitFullscreenEnabled);
   if(!can||navigator.standalone||matchMedia('(display-mode: standalone)').matches)return;
@@ -394,9 +395,17 @@ function drawEnv(){
   g.fillStyle='rgba(0,0,0,.25)';g.beginPath();rr(0,0,W,H,13);rr(F,F,W-F*2,H-F*2,6);g.fill('evenodd');
   g.strokeStyle=k==='deck'?'#b3261e':k==='velvet'||k==='mardi'?'#f5c842':'rgba(0,0,0,.6)';g.lineWidth=2;g.beginPath();rr(F,F,W-F*2,H-F*2,6);g.stroke();
   const iw=W-F*2,ih=H-F*2;
-  if(k==='plank'){ // spanish moss hanging from the top, cattails along the bottom
-    g.strokeStyle='rgba(150,170,120,.7)';g.lineWidth=1.5;for(let x=F+6,i=0;x<W-F;x+=iw/16,i++){const len=F*(1.2+hash(i)*2.2);g.beginPath();g.moveTo(x,F);
-      for(let y=0;y<=len;y+=3)g.lineTo(x+Math.sin(y*.35+i)*3,F+y);g.stroke()}
+  if(k==='plank'){ // cypress limbs draped with spanish moss, cattails along the bottom
+    const limb=(x0,y0,cx1,cy1,cx2,cy2,x1,y1,w0,w1,seed)=>{const P=u=>{const v=1-u;return[v*v*v*x0+3*v*v*u*cx1+3*v*u*u*cx2+u*u*u*x1,v*v*v*y0+3*v*v*u*cy1+3*v*u*u*cy2+u*u*u*y1]};
+      g.lineCap='round';for(let q=0;q<24;q++){const a=P(q/24),b=P((q+1)/24),ww=w0+(w1-w0)*q/24;g.strokeStyle='#22170e';g.lineWidth=ww;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();
+        g.strokeStyle='rgba(120,90,60,.45)';g.lineWidth=Math.max(1,ww*.25);g.beginPath();g.moveTo(a[0],a[1]-ww*.25);g.lineTo(b[0],b[1]-ww*.25);g.stroke()}
+      for(let c=0;c<7;c++){const u=.12+c*.13+hash(seed+c)*.05;if(u>.97)break;const [bx,by]=P(u),sc=1-u*.45; // a clump of moss
+        for(let m=0;m<16;m++){const h=hash(seed*31+c*17+m),ox=(h-.5)*F*1.5*sc,len=F*(1.3+hash(seed+c*7+m*3)*2.8)*sc,sw=hash(m+c)*6.3;
+          g.strokeStyle=['#a3b08f','#8a9877','#bcc5ad'][m%3];g.lineWidth=m%4?1:1.6;let px=bx+ox*.4,py=by;
+          for(let sgm=0;sgm<6;sgm++){const nx=bx+ox*(.4+sgm*.12)+Math.sin(sgm*1.3+sw)*F*.12,ny=by+len*(sgm+1)/6;g.globalAlpha=.75-sgm*.11;g.beginPath();g.moveTo(px,py);g.lineTo(nx,ny);g.stroke();px=nx;py=ny}}}
+      g.globalAlpha=1};
+    limb(F-4,F+F*.3,W*.2,F*2.3,W*.38,F*.9,W*.62,F*1.7,F*.75,F*.18,3);
+    limb(W-F+4,F+F*.6,W*.86,F*2.1,W*.78,F*.8,W*.66,F*1.4,F*.6,F*.15,9);
     for(let x=F+10,i=0;x<W-F;x+=iw/11,i++){const h2=F*(1.4+hash(i+40)*1.4);g.strokeStyle='#4f6b2e';g.lineWidth=1.5;g.beginPath();g.moveTo(x,H-F);g.lineTo(x+2,H-F-h2);g.stroke();
       g.fillStyle='#5a3a1e';g.beginPath();g.ellipse(x+2,H-F-h2+F*.25,F*.13,F*.32,0,0,6.3);g.fill()}}
   else if(k==='brick'){ // wrought-iron balcony railing across the top
@@ -538,9 +547,10 @@ function draw(t){
     const cy=(ys[0]+ys[ys.length-1])/2,s=cell*(f.rows.length>1?1.05:.78);
     if(f.rows.length>1){ctx.strokeStyle=ok?'#d5dde6':'#5a5266';ctx.lineWidth=cell*.1;ctx.beginPath();ctx.moveTo(ex+gutR*.18,ys[0]);ctx.lineTo(fx,ys[0]);ctx.lineTo(fx,ys[1]);ctx.lineTo(ex+gutR*.18,ys[1]);ctx.stroke()}
     drawFixture(f.type,fx+gutR*.18,cy,s,ok,t);
-    const fs=Math.max(9,Math.min(13,cell*.16));ctx.font='800 '+fs+'px Nunito, sans-serif';ctx.textAlign='center';ctx.lineJoin='round'; // what the fixture is
-    ctx.strokeStyle='rgba(6,4,10,.85)';ctx.lineWidth=3;ctx.strokeText(NAMES[f.type],fx+gutR*.18,cy+s*.5+fs*.95);
-    ctx.fillStyle=ok?'#f2ece2':'#a39ab0';ctx.fillText(NAMES[f.type],fx+gutR*.18,cy+s*.5+fs*.95);
+    const lx=fx+gutR*.18,lab=NAMES[f.type];let fs=Math.max(9,Math.min(13,cell*.16));ctx.font='800 '+fs+'px Nunito, sans-serif'; // what the fixture is
+    const tw=ctx.measureText(lab).width,room=2*Math.min(Wd-lx-2,lx-ex-2);if(tw>room){fs=Math.max(7,fs*room/tw);ctx.font='800 '+fs+'px Nunito, sans-serif'}
+    ctx.textAlign='center';ctx.lineJoin='round';ctx.strokeStyle='rgba(6,4,10,.85)';ctx.lineWidth=3;ctx.strokeText(lab,lx,cy+s*.5+fs*.95);
+    ctx.fillStyle=ok?'#f2ece2':'#a39ab0';ctx.fillText(lab,lx,cy+s*.5+fs*.95);
     pi+=f.rows.length;
   }
   ctx.restore();
