@@ -52,12 +52,15 @@ h1 .h{color:var(--hot);text-shadow:0 0 16px rgba(255,74,61,.5)} h1 .c{color:var(
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .win{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:rgba(6,6,6,.88);border-radius:14px;padding:20px;z-index:6;overflow:auto}
 .win[hidden]{display:none}
-.win img{width:80px;height:auto}
+.art{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:flex-end;margin-bottom:6px}
+.crit{display:block;width:auto;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
+.crit.emo{line-height:1}
+.art .pass{width:min(220px,62%);height:auto}
 .win h2{font-family:"Pirata One",Georgia,serif;font-weight:400;font-size:2.6rem;margin:0;background:linear-gradient(90deg,var(--hot),#fff,var(--cold));-webkit-background-clip:text;background-clip:text;color:transparent}
 .win p{margin:8px 0 18px;max-width:32ch;line-height:1.45}
 .zoneup h2{background:none;color:var(--zone);text-shadow:0 0 22px var(--zone)}
 .zoneup .kick{margin:0;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-size:.8rem;color:var(--gold)}
-.zoneup .zi{font-size:3.4rem;line-height:1;margin-bottom:4px;animation:slam .6s cubic-bezier(.2,1.5,.4,1) both}
+.zoneup .zi{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:flex-end;margin-bottom:6px;animation:slam .6s cubic-bezier(.2,1.5,.4,1) both}
 .insfx{position:fixed;inset:0;z-index:30;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .insfx[hidden]{display:none}
 .insfx video{position:absolute;inset:0;width:100%;height:100%}
@@ -66,11 +69,13 @@ h1 .h{color:var(--hot);text-shadow:0 0 16px rgba(255,74,61,.5)} h1 .c{color:var(
   white-space:nowrap;color:#fff;text-shadow:0 0 24px #e8281e,0 5px 0 #4a0805;-webkit-text-stroke:2px #4a0805;pointer-events:none}
 .insfx .stamp.on{animation:istamp .45s cubic-bezier(.2,1.6,.4,1) forwards}
 @keyframes istamp{to{transform:translateX(-50%) rotate(-6deg) scale(1);opacity:1}}
-.insfx .icap{position:absolute;left:50%;bottom:calc(26% + env(safe-area-inset-bottom,0px));transform:translateX(-50%);margin:0;max-width:90%;text-align:center;font-weight:800;font-size:clamp(1rem,4.6vw,1.5rem);
-  color:#fff;background:rgba(0,0,0,.6);padding:8px 14px;border-radius:10px;opacity:0;transition:opacity .3s}
+.insfx .icap{position:absolute;left:50%;top:calc(62px + env(safe-area-inset-top,0px));transform:translateX(-50%);margin:0;max-width:80%;text-align:center;font-weight:700;font-size:.85rem;
+  color:#fff;background:rgba(0,0,0,.55);padding:5px 10px;border-radius:8px;opacity:0;transition:opacity .3s;pointer-events:none}
 .insfx .icap.on{opacity:1}
 .insfx .skip{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:calc(14px + env(safe-area-inset-right,0px));z-index:2;background:rgba(0,0,0,.55);color:#fff;border:1.5px solid rgba(255,255,255,.4);font-size:.95rem;padding:9px 16px}
 .redtag{background:radial-gradient(circle,rgba(120,10,6,.85),rgba(10,2,2,.95))!important;border:2px solid #e8281e}
+.redtag .tagimg{width:min(260px,72%);height:auto;margin-bottom:8px}
+.redtag .tagimg.thump{animation:shake .35s}
 .redtag .tagstamp{font-family:"Pirata One",Georgia,serif;font-size:clamp(2.2rem,10vw,4.4rem);white-space:nowrap;color:#ff5a4f;border:5px solid #ff5a4f;padding:2px 18px;border-radius:10px;transform:rotate(-8deg);
   text-shadow:0 0 18px rgba(232,40,30,.6);animation:slam .5s cubic-bezier(.2,1.6,.4,1) both;margin-bottom:10px}
 .board.inspect{border:2px solid #e8281e!important;box-shadow:0 0 30px rgba(232,40,30,.35)}
@@ -86,9 +91,9 @@ button:focus-visible,.back:focus-visible,.pill:focus-visible{outline:3px solid v
   .board{grid-column:2;grid-row:1 / span 40;align-self:start;position:sticky;top:8px;min-height:0;
     height:calc(100vh - 16px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
     height:calc(100dvh - 16px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
-  .top img{width:44px}h1{font-size:2rem}.stats{gap:14px;margin:10px 0 6px}.win img{width:56px}
+  .top img{width:44px}h1{font-size:2rem}.stats{gap:14px;margin:10px 0 6px}.crit{max-height:60px}
 }
-@media (prefers-reduced-motion:reduce){.splash .sbig,.splash .slesson,.zoneup .zi{animation:none}}
+@media (prefers-reduced-motion:reduce){.splash .sbig,.splash .slesson,.zoneup .zi,.redtag .tagimg.thump{animation:none}}
 </style>
 </head>
 <body>
@@ -115,13 +120,14 @@ button:focus-visible,.back:focus-visible,.pill:focus-visible{outline:3px solid v
       <p class="slesson">Hot and cold lines got tied together. Plumbers call that a <b>crossover</b>: hot water pushes into the cold side and cold into the hot, so every tap runs lukewarm. Split the lines to pass inspection.</p>
     </div>
     <div class="win" id="win" hidden>
-      <img src="/assets/mojo-34.png" alt="">
-      <h2>Clean install</h2>
+      <div class="art" id="winArt"></div>
+      <h2 id="winH">Clean install</h2>
       <p id="winText"></p>
       <button class="go" id="next">Next job</button>
     </div>
     <div class="win redtag" id="redTag" hidden>
-      <div class="tagstamp">RED-TAGGED</div>
+      <img class="tagimg" id="tagImg" alt="Red-tagged" hidden>
+      <div class="tagstamp" id="tagTxt">RED-TAGGED</div>
       <p>Pass or fail, he's the judge, and he found a crossover. On inspection day one mistake fails the job. Start it over and keep hot and cold apart.</p>
       <button class="go" id="retry">Try again</button>
     </div>
@@ -135,7 +141,7 @@ button:focus-visible,.back:focus-visible,.pill:focus-visible{outline:3px solid v
   </div>
   <div class="actions"><button id="restart">Restart job</button><button id="newb">New board</button></div>
   <p class="hint">Tap a pipe to turn it. The water heater sends hot water (red) and the street main sends cold (blue). Get every fixture its water. Showers, tubs, sinks and washers need both. If hot and cold ever meet, that's a crossover.</p>
-  <p class="ver">Hot &amp; Cold v0.6 · prototype</p>
+  <p class="ver">Hot &amp; Cold v0.7 · prototype</p>
 </main>
 <div class="insfx" id="insFx" hidden aria-label="Inspection day">
   <video id="insBg" muted playsinline preload="none" aria-hidden="true"></video>
@@ -152,32 +158,33 @@ const rot=m=>((m<<1)|(m>>3))&15,rotK=(m,k)=>{for(let i=0;i<k;i++)m=rot(m);return
 const $=id=>document.getElementById(id);
 const HOT='#ff4a3d',HOTL='#ffc2b8',COLD='#2f8cff',COLDL='#c8e6ff',MIX='#b84dff';
 
-/* ---------- zones: a New Orleans job site every 25 jobs, each with its own look, pipe and twist ---------- */
+/* ---------- zones: a New Orleans job site every 25 jobs, each with its own look, pipe material, critter and twist ---------- */
+/* mat: cu = soldered (copper, brass, chrome) · galv = threaded fittings · lead = wiped joints · pex = colored tubing with crimp rings */
 const ZONES=[
- {name:'Bayou Manor',icon:'🏚️',accent:'#8fd14f',pipe:['#c97a3d','#8f4f22','rgba(255,214,170,.35)'],tile:'#151a12',
+ {name:'Bayou Manor',icon:'🏚️',accent:'#8fd14f',mat:'cu',pipe:['#c97a3d','#8f4f22','rgba(255,214,170,.35)'],tile:'#151a12',crit:['ganja'],
   bg:'radial-gradient(ellipse 80% 50% at 15% 10%,rgba(80,130,40,.28) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 90% 90%,rgba(47,140,255,.10) 0%,transparent 60%),#060806',
-  text:'An old manor out on the bayou. Copper lines, a tired water heater and customers waiting on every fixture.',sting:'frogs'},
- {name:'French Quarter',icon:'🎺',accent:'#e8a33d',pipe:['#c9a04a','#7d5f1e','rgba(255,240,190,.45)'],tile:'#1e110d',locked:.12,
+  text:'An old manor out on the bayou. Copper lines, a tired water heater and fixtures waiting on water.',sting:'frogs'},
+ {name:'French Quarter',icon:'🎺',accent:'#e8a33d',mat:'cu',pipe:['#d6b04c','#7d5f1e','rgba(255,245,200,.5)'],tile:'#1e110d',locked:.12,crit:['fly'],
   bg:'radial-gradient(ellipse 80% 50% at 20% 0%,rgba(170,60,30,.35) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 85% 95%,rgba(232,163,61,.14) 0%,transparent 60%),#0b0504',
   text:'Brick, mortar and wrought-iron balconies. Some old brass fittings are seized solid: bolted pipes won\'t turn.',sting:'horn'},
- {name:'Café Kitchen',icon:'☕',accent:'#9fe8ff',pipe:['#d5dde6','#7d8896','rgba(255,255,255,.8)'],tile:'#141a20',frozen:.12,
+ {name:'Café Kitchen',icon:'☕',accent:'#9fe8ff',mat:'cu',pipe:['#dfe5ec','#7d8896','rgba(255,255,255,.85)'],tile:'#141a20',frozen:.12,crit:['maggot'],
   bg:'radial-gradient(ellipse 80% 50% at 50% 0%,rgba(255,255,255,.14) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 10% 95%,rgba(159,232,255,.14) 0%,transparent 60%),#07090c',
   text:'Powdered sugar on everything and a walk-in freezer next door. Iced lines block the water until you tap them to thaw.',sting:'bell'},
- {name:'The Voodoo Queen\'s Parlor',icon:'🕯️',accent:'#b45cff',pipe:['#d9a73a','#8f6a1e','rgba(255,240,190,.5)'],tile:'#1a1026',cursed:.12,
+ {name:'The Voodoo Queen\'s Parlor',icon:'🕯️',accent:'#b45cff',mat:'galv',pipe:['#a7aeb3','#5d6469','rgba(255,255,255,.4)'],tile:'#1a1026',cursed:.12,crit:['moth'],
   bg:'radial-gradient(ellipse 80% 55% at 25% 10%,rgba(120,40,220,.42) 0%,transparent 62%),radial-gradient(ellipse 60% 40% at 85% 90%,rgba(245,200,66,.12) 0%,transparent 60%),#08040d',
   text:'Candles, charms and dolls on every shelf, a nod to the Voodoo Queen herself. Pinned pipes are cursed: they turn backwards.',sting:'drum'},
- {name:'St. Louis Cemetery No. 1',icon:'🪦',accent:'#cfd8e3',pipe:['#b8c0c8','#6b737b','rgba(255,255,255,.5)'],tile:'#14161c',ghost:.14,
+ {name:'St. Louis Cemetery No. 1',icon:'🪦',accent:'#cfd8e3',mat:'galv',rust:1,pipe:['#8f8a82','#5b4d42','rgba(255,240,220,.22)'],tile:'#14161c',ghost:.14,crit:['bat'],
   bg:'radial-gradient(ellipse 100% 55% at 50% 0%,rgba(160,175,200,.2) 0%,transparent 65%),radial-gradient(ellipse 60% 40% at 15% 95%,rgba(47,140,255,.08) 0%,transparent 60%),#07080b',
   text:'Above-ground tombs and thick fog. Pipes hide in the mist until water reaches the pipe next to them.',sting:'gate'},
- {name:'The Haunted Chateau',icon:'🕸️',accent:'#e05a5a',pipe:['#8a5a36','#5a3a22','rgba(220,170,120,.3)'],tile:'#1a0d10',vines:.08,ghost:.06,
+ {name:'The Haunted Chateau',icon:'🕸️',accent:'#e05a5a',mat:'lead',pipe:['#6e7480','#3e434c','rgba(205,215,235,.25)'],tile:'#1a0d10',vines:.08,ghost:.06,crit:['spider'],
   bg:'radial-gradient(ellipse 80% 55% at 50% 0%,rgba(140,20,30,.35) 0%,transparent 62%),radial-gradient(ellipse 60% 40% at 20% 95%,rgba(120,120,140,.12) 0%,transparent 60%),#090304',
-  text:'Creaking floors and cobwebs everywhere. Webbed pipes are stuck together: turn one and its partner turns too.',sting:'creak'},
- {name:'Mardi Gras Float Warehouse',icon:'🎭',accent:'#39d353',pipe:['#7a3fc2','#f5c842','rgba(230,200,255,.4)'],tile:'#160d22',locked:.08,frozen:.06,cursed:.06,
+  text:'Creaking floors, old lead lines and cobwebs everywhere. Webbed pipes are stuck together: turn one and its partner turns too.',sting:'creak'},
+ {name:'Mardi Gras Float Warehouse',icon:'🎭',accent:'#39d353',mat:'pex',pipe:['#ece7dc','#a39d92','rgba(255,255,255,.6)'],tile:'#160d22',locked:.08,frozen:.06,cursed:.06,crit:['ganja','fly','maggot','crawfish'],
   bg:'radial-gradient(ellipse 80% 50% at 15% 10%,rgba(122,63,194,.38) 0%,transparent 60%),radial-gradient(ellipse 70% 45% at 85% 20%,rgba(245,200,66,.16) 0%,transparent 60%),radial-gradient(ellipse 80% 45% at 50% 100%,rgba(57,211,83,.16) 0%,transparent 60%),#07040b',
-  text:'Purple, green and gold, and beads on every pipe. Bolts, ice and curses, all in one warehouse.',sting:'fanfare'},
- {name:'The Riverboat',icon:'🛶',accent:'#5ab0ff',pipe:['#c97a3d','#8f4f22','rgba(255,214,170,.35)'],tile:'#0d1520',locked:.06,frozen:.06,cursed:.05,ghost:.06,vines:.05,
+  text:'Purple, green and gold, and the whole crew came for the parade. Bolts, ice and curses, all in one warehouse.',sting:'fanfare'},
+ {name:'The Riverboat',icon:'🛶',accent:'#5ab0ff',mat:'galv',pipe:['#35323a','#141217','rgba(255,255,255,.2)'],outline:'#6a6472',tile:'#0d1520',locked:.06,frozen:.06,cursed:.05,ghost:.06,vines:.05,crit:['crawfish'],
   bg:'radial-gradient(ellipse 90% 55% at 50% 100%,rgba(40,90,160,.35) 0%,transparent 62%),radial-gradient(ellipse 60% 40% at 20% 0%,rgba(140,90,50,.2) 0%,transparent 60%),#05080d',
-  text:'A paddlewheel steamboat on the Mississippi. Every trick from every job, rolling down the river.',sting:'whistle'}
+  text:'A paddlewheel steamboat on the Mississippi, plumbed in black iron. Every trick from every job, rolling down the river.',sting:'whistle'}
 ];
 const period=l=>Math.floor((l-1)/25);
 const isInspection=l=>l%25===0; // the last job in every zone
@@ -185,15 +192,23 @@ function zoneFor(l){const k=period(l),z=ZONES[k%ZONES.length],lap=Math.floor(k/Z
   if(!lap)return Object.assign({},z);
   return Object.assign({},z,{name:z.name+' · Prestige',locked:.06,frozen:.06,cursed:.05,ghost:.06,vines:.05})}
 
-/* fixtures: what each one needs, and who's waiting on it */
+/* critters that live in each zone: shown on the zone intro and win screen only */
+const CRIT={ganja:'Ganja',fly:'Zydeco',maggot:'Beignet',crawfish:'Roux',moth:'the moth',bat:'the bat',spider:'the spider'};
+const EMO={moth:'🦋',bat:'🦇',spider:'🕷️'};
+function critArt(el,list,h){el.innerHTML='';for(const k of list){const im=new Image();im.alt='';im.className='crit';im.style.height=h+'px';
+  im.onerror=()=>{const sp=document.createElement('span');sp.className='crit emo';sp.style.fontSize=Math.round(h*.75)+'px';sp.textContent=EMO[k]||'🐞';im.replaceWith(sp)};
+  im.src='/assets/'+k+'-front.png';el.appendChild(im)}}
+
+/* fixtures: what each one needs */
 const SINGLE={1:['toilet','icemaker','hosebibb'],0:['dishwasher','boiler']};
 const DOUBLE=['shower','tub','lav','washer'];
 const NAMES={toilet:'toilet',icemaker:'ice maker',hosebibb:'hose bibb',dishwasher:'dishwasher',boiler:'coffee urn',shower:'shower',tub:'tub',lav:'sink',washer:'washer'};
-const WHO={toilet:'ganja',lav:'fly',shower:'maggot',tub:'crawfish'};
-const IMG={};for(const k of['ganja','fly','maggot','crawfish']){const im=new Image();im.src='/assets/'+k+'-front.png';IMG[k]=im}
 const ready=im=>im&&im.complete&&im.naturalWidth>0;
+const FXI={};for(const k of['toilet','lav','shower','tub','washer','dishwasher','hosebibb','heater']){const im=new Image();im.src='/assets/fx-'+k+'.png';FXI[k]=im}
+const PASS=new Image();PASS.src='/assets/insp-pass.png';
+const TAG=[1,2,3].map(k=>{const im=new Image();im.src='/assets/insp-fail-'+k+'.png';return im});
 
-/* ---------- sound: copper water lines, built in code ---------- */
+/* ---------- sound: built in code ---------- */
 const Snd={ac:null,on:true,m:null,nb:null,
   unlock(){if(this.ac){if(this.ac.state==='suspended')this.ac.resume();return}const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
     this.ac=new AC();this.m=this.ac.createGain();this.m.gain.value=.55;this.m.connect(this.ac.destination);
@@ -205,11 +220,9 @@ const Snd={ac:null,on:true,m:null,nb:null,
     s.buffer=this.nb;bp.type='bandpass';bp.Q.value=q||1.2;bp.frequency.setValueAtTime(f1,t);bp.frequency.exponentialRampToValueAtTime(f2,t+dur);
     g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol||.25,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(bp);bp.connect(g);g.connect(this.m);s.start(t);s.stop(t+dur+.03)},
   ping(f,vol,delay){[[1,1],[2.76,.5],[5.4,.28],[8.93,.14]].forEach(([m,a])=>this.tone(f*m,.5/m+.12,'sine',vol*a,null,delay||0))},
-  clunk(){this.noise(.03,4200,2200,.14);this.ping(880+Math.random()*120,.07);this.tone(140,.07,'triangle',.08,90)},
+  tap(){this.tone(1240,.18,'sine',.06)}, // one soft ping per pipe turn
   thud(){this.tone(90,.12,'square',.1,60);this.noise(.05,600,300,.12)},
   crack(){this.noise(.12,5000,2200,.22,0,2);this.tone(1800,.06,'triangle',.08,900);this.noise(.18,2600,900,.12,.05,1.5)},
-  hot(k){const f=330+Math.min(k,14)*30;this.tone(f,.14,'sine',.16,f*1.8);this.noise(.14,3000,1500,.05)},
-  cold(k){const f=420+Math.min(k,14)*30;this.tone(f,.12,'triangle',.15,f*2.1)},
   fixture(){this.ping(1320,.06);[659,880].forEach((f,i)=>this.tone(f,.18,'triangle',.12,null,.05+i*.07));this.noise(.5,5000,2500,.05,.1,1.5)},
   hammer(){this.tone(48,.4,'square',.22,32);this.noise(.25,700,120,.3,0,.7);this.ping(420,.09,.02);this.ping(610,.06,.1);this.ping(380,.05,.22)},
   buzz(){this.tone(110,.35,'sawtooth',.12,90);this.tone(116,.35,'sawtooth',.1,95);this.noise(.3,600,300,.12)},
@@ -245,7 +258,8 @@ const board=$('board'),cv=$('game'),ctx=cv.getContext('2d');
 try{level=Math.max(1,parseInt(localStorage.getItem('pm-hc-level')||'1',10)||1);best=Math.max(level,parseInt(localStorage.getItem('pm-hc-best')||'1',10)||1)}catch(e){}
 
 function applyZone(){
-  Z=zoneFor(level);C={copper:Z.pipe[0],dark:Z.pipe[1],hl:Z.pipe[2],tile:Z.tile,outline:'#0b0710'};
+  Z=zoneFor(level);C={copper:Z.pipe[0],dark:Z.pipe[1],hl:Z.pipe[2],tile:Z.tile,outline:Z.outline||'#0b0710'};
+  for(const k of Z.crit||[]){const im=new Image();im.src='/assets/'+k+'-front.png'} // warm the cache for the win screen
   document.body.style.background=Z.bg;document.body.style.backgroundAttachment='fixed';document.documentElement.style.setProperty('--zone',Z.accent);
   board.style.borderColor=Z.accent+'55';
   $('zone').textContent=isInspection(level)?'📋 Inspection day · '+Z.name+' · no crossovers allowed':Z.icon+' '+Z.name+' · next zone at job '+((period(level)+1)*25+1);
@@ -356,14 +370,25 @@ function arms(mask,r,w,color){ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap=
   for(const d of DIRS){if(!(mask&d.b))continue;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(d.dx*r,d.dy*r);ctx.stroke()}
   ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,w/2,0,Math.PI*2);ctx.fill()}
 function drawPipe(cx,cy,mask,angle,water,t){
-  const r=cell/2,w=cell*.26;ctx.save();ctx.translate(cx,cy);ctx.rotate(angle);
-  arms(mask,r,w+cell*.06,C.outline);arms(mask,r,w,C.copper);
-  ctx.strokeStyle=C.dark;ctx.lineWidth=cell*.07;for(const d of DIRS){if(!(mask&d.b))continue;const at=r-cell*.06,px=-d.dy,py=d.dx,h=w*.5+cell*.05;
-    ctx.beginPath();ctx.moveTo(d.dx*at+px*h,d.dy*at+py*h);ctx.lineTo(d.dx*at-px*h,d.dy*at-py*h);ctx.stroke()}
-  if(water){const col=water==='m'?(Math.sin(t/90)>0?MIX:'#ff7af0'):water==='h'?HOT:COLD;arms(mask,r,w*.55,col);
-    if(water==='h'){ctx.strokeStyle='rgba(120,10,0,.55)';ctx.lineWidth=w*.16;for(const d of DIRS){if(!(mask&d.b))continue; // insulation wraps on hot lines
+  const r=cell/2,w=cell*.26,M=Z.mat||'cu',pex=M==='pex'&&!!water;
+  const wc=water==='m'?(Math.sin(t/90)>0?MIX:'#ff7af0'):water==='h'?HOT:COLD;
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(angle);
+  arms(mask,r,w+cell*.06,C.outline);arms(mask,r,w,pex?wc:C.copper); // PEX tubing itself shows red or blue once water is in it
+  const ends=(at,len,lw,col)=>{ctx.strokeStyle=col;ctx.lineWidth=lw;for(const d of DIRS){if(!(mask&d.b))continue;const px=-d.dy,py=d.dx;
+    ctx.beginPath();ctx.moveTo(d.dx*at+px*len,d.dy*at+py*len);ctx.lineTo(d.dx*at-px*len,d.dy*at-py*len);ctx.stroke()}};
+  if(M==='galv'){ // threaded pipe: a fitting in the middle, threads at the ends
+    const f=w*1.5;ctx.fillStyle=C.copper;ctx.strokeStyle=C.outline;ctx.lineWidth=Math.max(1.5,cell*.03);ctx.beginPath();
+    ctx.roundRect?ctx.roundRect(-f/2,-f/2,f,f,f*.22):ctx.rect(-f/2,-f/2,f,f);ctx.fill();ctx.stroke();
+    for(const k of[.035,.075,.115])ends(r-cell*k,w*.5,Math.max(1,cell*.018),C.dark)}
+  else if(M==='lead'){ctx.fillStyle=C.copper;ctx.strokeStyle=C.dark;ctx.lineWidth=Math.max(1.2,cell*.025);ctx.beginPath();ctx.arc(0,0,w*.8,0,6.3);ctx.fill();ctx.stroke()} // wiped joint
+  else if(M==='pex')ends(r-cell*.09,w*.62,cell*.075,'#b87333'); // copper crimp rings
+  else ends(r-cell*.06,w*.5+cell*.05,cell*.07,C.dark); // solder joints
+  if(Z.rust){const seed=Math.floor(cx*7+cy*13);ctx.fillStyle='rgba(150,72,28,.8)';for(const d of DIRS){if(!(mask&d.b)||(seed+d.b)%3)continue;
+    ctx.beginPath();ctx.ellipse(d.dx*r*.55,d.dy*r*.55,w*.3,w*.22,0,0,6.3);ctx.fill();ctx.beginPath();ctx.arc(d.dx*r*.3-d.dy*w*.2,d.dy*r*.3+d.dx*w*.2,w*.12,0,6.3);ctx.fill()}}
+  if(water){if(!pex)arms(mask,r,w*.55,wc);
+    if(water==='h'&&!pex){ctx.strokeStyle='rgba(120,10,0,.55)';ctx.lineWidth=w*.16;for(const d of DIRS){if(!(mask&d.b))continue; // insulation wraps on hot lines
       for(const s of[.32,.62]){const px=-d.dy,py=d.dx,cx2=d.dx*r*s,cy2=d.dy*r*s,h=w*.5;ctx.beginPath();ctx.moveTo(cx2+px*h,cy2+py*h);ctx.lineTo(cx2-px*h,cy2-py*h);ctx.stroke()}}}
-    if(water==='c'){ctx.fillStyle='rgba(220,240,255,.85)';for(const d of DIRS){if(!(mask&d.b))continue; // sweating cold lines
+    if(water==='c'&&!pex){ctx.fillStyle='rgba(220,240,255,.85)';for(const d of DIRS){if(!(mask&d.b))continue; // sweating cold lines
       const k=(Math.floor(t/600)+d.b)%3;ctx.beginPath();ctx.arc(d.dx*r*.5-d.dy*w*.55,d.dy*r*.5+d.dx*w*.55+((t/40+d.b*7)%(cell*.08)),cell*.022+k*.4,0,6.3);ctx.fill()}}
     if(solved){ctx.setLineDash([cell*.12,cell*.16]);ctx.lineDashOffset=-t*.04;ctx.strokeStyle=water==='h'?HOTL:COLDL;ctx.lineWidth=w*.2;ctx.lineCap='round';
       for(const d of DIRS){if(!(mask&d.b))continue;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(d.dx*r,d.dy*r);ctx.stroke()}ctx.setLineDash([])}}
@@ -379,11 +404,11 @@ function drawPin(px,py){const x2=px+cell*.86,y2=py+cell*.14;ctx.strokeStyle='#d9
 function drawBolts(px,py){const r=Math.max(2.5,cell*.07),o=cell*.15;for(const [bx,by] of [[o,o],[cell-o,o],[o,cell-o],[cell-o,cell-o]]){
   ctx.fillStyle='#0b0710';ctx.beginPath();ctx.arc(px+bx,py+by,r+1.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#8c8796';ctx.beginPath();ctx.arc(px+bx,py+by,r,0,Math.PI*2);ctx.fill()}}
 
-// the fixtures, drawn simply so they read at any size
+// code-drawn fixtures: used for the ice maker and coffee urn, and as a fallback if a fixture image hasn't loaded
 function fixtureArt(type,x,y,s,on,t){
   const ink='#0b0710',body=on?'#f2ece2':'#8c8796',drop='rgba(190,225,255,.9)';ctx.lineWidth=2;ctx.strokeStyle=ink;ctx.fillStyle=body;
   const rr=(a,b,w,h,r)=>{ctx.beginPath();ctx.roundRect?ctx.roundRect(a,b,w,h,r):ctx.rect(a,b,w,h);ctx.fill();ctx.stroke()};
-  const flow=(fx,fy,len)=>{if(!on||solved===false&&false)return;ctx.fillStyle=drop;for(let k=0;k<3;k++){const d=((t/7+k*len/3)%len);ctx.beginPath();ctx.arc(fx,fy+d,1.6,0,6.3);ctx.fill()}};
+  const flow=(fx,fy,len)=>{if(!on)return;ctx.fillStyle=drop;for(let k=0;k<3;k++){const d=((t/7+k*len/3)%len);ctx.beginPath();ctx.arc(fx,fy+d,1.6,0,6.3);ctx.fill()}};
   if(type==='toilet'){rr(x-s*.15,y-s*.55,s*.3,s*.3,3);ctx.fillStyle=body;ctx.beginPath();ctx.ellipse(x,y+s*.05,s*.32,s*.2,0,0,6.3);ctx.fill();ctx.stroke();rr(x-s*.15,y+s*.2,s*.3,s*.22,3)}
   else if(type==='icemaker'){rr(x-s*.28,y-s*.5,s*.56,s*.95,4);ctx.beginPath();ctx.moveTo(x-s*.28,y-s*.1);ctx.lineTo(x+s*.28,y-s*.1);ctx.stroke();if(on){ctx.fillStyle='#bff3ff';for(const [a,b] of[[-.1,-.32],[.08,-.3],[0,-.22]])ctx.fillRect(x+s*a-3,y+s*b-3,6,6)}}
   else if(type==='hosebibb'){ctx.fillStyle=on?'#c97a3d':'#6b5a4a';rr(x-s*.3,y-s*.08,s*.45,s*.16,3);rr(x+s*.1,y-s*.08,s*.12,s*.32,2);ctx.fillStyle='#e8281e';ctx.beginPath();ctx.arc(x-s*.1,y-s*.2,s*.11,0,6.3);ctx.fill();ctx.stroke();flow(x+s*.16,y+s*.26,s*.35)}
@@ -399,7 +424,18 @@ function fixtureArt(type,x,y,s,on,t){
   else if(type==='washer'){rr(x-s*.32,y-s*.45,s*.64,s*.9,5);ctx.fillStyle=on?'#9fd3ff':'#4a4656';ctx.beginPath();ctx.arc(x,y+s*.05,s*.22,0,6.3);ctx.fill();ctx.stroke();
     if(on){ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y+s*.05,s*.13,t/200,t/200+2.5);ctx.stroke()}}
 }
+function fitImg(im,x,y,bw,bh,a){const k=Math.min(bw/im.naturalWidth,bh/im.naturalHeight),w=im.naturalWidth*k,h=im.naturalHeight*k;
+  ctx.globalAlpha=a;ctx.drawImage(im,x-w/2,y-h/2,w,h);ctx.globalAlpha=1;return {w,h}}
+function drawFixture(type,x,y,s,on,t){ // real fixture art from /assets, dimmed until it gets the right water
+  const im=FXI[type];if(!ready(im)){fixtureArt(type,x,y,s,on,t);return}
+  const b=fitImg(im,x,y,s*.92,s,on?1:.45);
+  if(type==='shower'&&on){ctx.fillStyle='rgba(190,225,255,.9)';const top=y-b.h*.28,len=b.h*.62,dr=Math.max(1.2,s*.018); // spray drawn in code
+    for(let k=0;k<8;k++){const d=(t/5+k*11)%len;ctx.beginPath();ctx.arc(x+b.w*(-.12+(k%4)*.08),top+d,dr,0,6.3);ctx.fill()}}
+}
 function drawHeater(x,y,on,t){ // the water heater feeding the hot side
+  const im=FXI.heater;
+  if(ready(im)){const b=fitImg(im,x,y-cell*.1,cell*.78,cell*1.05,1);
+    if(on){ctx.fillStyle='rgba(255,255,255,.4)';ctx.beginPath();ctx.arc(x,y-cell*.1-b.h/2-(t/30%14),3,0,6.3);ctx.fill()}return}
   const w=cell*.5,h=cell*.95;ctx.fillStyle='#d5dde6';ctx.strokeStyle='#0b0710';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect?ctx.roundRect(x-w/2,y-h*.62,w,h,w*.25):ctx.rect(x-w/2,y-h*.62,w,h);ctx.fill();ctx.stroke();
   ctx.fillStyle=HOT;ctx.fillRect(x-w/2+2,y-h*.15,w-4,h*.12);
   if(on){const f=.6+.4*Math.sin(t/80);ctx.fillStyle='rgba(255,160,40,'+f+')';ctx.beginPath();ctx.moveTo(x-w*.2,y+h*.32);ctx.quadraticCurveTo(x,y+h*.05*f,x+w*.2,y+h*.32);ctx.fill();
@@ -429,7 +465,7 @@ function draw(t){
     ctx.strokeStyle=C.outline;ctx.lineWidth=w+cell*.06;ctx.beginPath();ctx.moveTo(gutL*.5,y);ctx.lineTo(gutL+1,y);ctx.stroke();ctx.strokeStyle=C.copper;ctx.lineWidth=w;ctx.stroke();
     ctx.strokeStyle=g?COLD:HOT;ctx.lineWidth=w*.55;ctx.stroke();
     if(g){drawMain(gutL*.42,y,on,t);tag(gutL*.42,y-cell*.4,'C',COLD,cell*.13)}else{drawHeater(gutL*.42,y,on,t);tag(gutL*.42+cell*.3,y-cell*.55,'H',HOT,cell*.13)}});
-  // fixtures on the right, with their customers
+  // fixtures on the right
   const ex=gutL+n*cell,fx=ex+gutR*.42;let pi=0;
   for(const f of fixtures){
     const ys=f.rows.map(r=>r*cell+cell/2),ok=f.rows.every((r,k)=>st.portOk[pi+k].ok);
@@ -440,9 +476,7 @@ function draw(t){
       if(po.wrong){ctx.strokeStyle=MIX;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(ex+2,y-cell*.15);ctx.lineTo(ex+gutR*.2,y+cell*.15);ctx.moveTo(ex+gutR*.2,y-cell*.15);ctx.lineTo(ex+2,y+cell*.15);ctx.stroke()}});
     const cy=(ys[0]+ys[ys.length-1])/2,s=cell*(f.rows.length>1?1.05:.78);
     if(f.rows.length>1){ctx.strokeStyle=ok?'#d5dde6':'#5a5266';ctx.lineWidth=cell*.1;ctx.beginPath();ctx.moveTo(ex+gutR*.18,ys[0]);ctx.lineTo(fx,ys[0]);ctx.lineTo(fx,ys[1]);ctx.lineTo(ex+gutR*.18,ys[1]);ctx.stroke()}
-    fixtureArt(f.type,fx+gutR*.18,cy,s,ok,t);
-    const who=WHO[f.type];if(who&&ready(IMG[who])){const im=IMG[who],h=cell*(f.rows.length>1?.9:.7),w=h*im.naturalWidth/im.naturalHeight;
-      const hop=ok?Math.abs(Math.sin(t/(solved?110:260)))*cell*(solved?.18:.06):0;ctx.globalAlpha=ok?1:.55;ctx.drawImage(im,Wd-w-2,cy+cell*.35-h-hop,w,h);ctx.globalAlpha=1}
+    drawFixture(f.type,fx+gutR*.18,cy,s,ok,t);
     pi+=f.rows.length;
   }
   ctx.restore();
@@ -453,40 +487,51 @@ function loop(t){draw(t);requestAnimationFrame(loop)}
 const LINES=['Crossover! Every tap\'s running lukewarm.','Hot and cold don\'t mix, rookie.','Inspector\'s gonna red-tag that.','Separate them lines!'];
 function warn(){const w=$('warn');w.textContent='⚠️ '+LINES[rnd(LINES.length)];w.classList.add('on');clearTimeout(warnT);warnT=setTimeout(()=>w.classList.remove('on'),2600)}
 function splash(){const sp=$('splash');sp.hidden=true;void sp.offsetWidth;sp.hidden=false;clearTimeout(splashT);splashT=setTimeout(()=>sp.hidden=true,3600)}
-function after(beforeH,beforeC,beforeGood){
+function showRedTag(){ // 3-frame stamp slam, falls back to the text stamp if the frames haven't loaded
+  const img=$('tagImg'),txt=$('tagTxt');
+  if(TAG.every(ready)){txt.hidden=true;img.hidden=false;img.classList.remove('thump');img.src=TAG[0].src;
+    setTimeout(()=>{img.src=TAG[1].src},110);setTimeout(()=>{img.src=TAG[2].src;void img.offsetWidth;img.classList.add('thump')},220)}
+  else{img.hidden=true;txt.hidden=false}
+  $('redTag').hidden=false;$('retry').focus();
+}
+function after(beforeGood){
   st=evaluate(cur);reveal();updateStats();
   const mix=st.mixed.length>0;
-  if(mix&&isInspection(level)){Snd.hammer();Snd.buzz();solved=true;setTimeout(()=>{$('redTag').hidden=false;$('retry').focus()},400);return} // one strike on inspection day
+  if(mix&&isInspection(level)){Snd.hammer();Snd.buzz();solved=true;setTimeout(showRedTag,400);return} // one strike on inspection day
   if(mix&&!lastMix){Snd.hammer();Snd.buzz();splash();setTimeout(warn,3600)}if(!mix)$('splash').hidden=true;lastMix=mix;
   if(st.good>beforeGood&&!mix)Snd.fixture();
-  else{const h=st.hot.reduce((a,b)=>a+b,0),c=st.cold.reduce((a,b)=>a+b,0);if(h>beforeH)Snd.hot(h);else if(c>beforeC)Snd.cold(c)}
   if(st.ok)win();
 }
 cv.addEventListener('pointerdown',e=>{
   if(solved)return;Snd.unlock();
   const r=cv.getBoundingClientRect(),x=Math.floor((e.clientX-r.left-gutL)/cell),y=Math.floor((e.clientY-r.top-padTop)/cell);
   if(x<0||y<0||x>=n||y>=n)return;
-  const i=y*n+x,bh=st.hot.reduce((a,b)=>a+b,0),bc=st.cold.reduce((a,b)=>a+b,0),bg=st.good;
+  const i=y*n+x,bg=st.good;
   if(locked[i]){bump=i;bumpAt=performance.now();Snd.thud();return}
-  if(frozen[i]){frozen[i]=0;moves++;meltAt[i]=performance.now();Snd.crack();after(bh,bc,bg);return}
+  if(frozen[i]){frozen[i]=0;moves++;meltAt[i]=performance.now();Snd.crack();after(bg);return}
   const turn=j=>{const now=performance.now();if(cursed[j]){cur[j]=rotK(cur[j],3);anims[j]=-now}else{cur[j]=rot(cur[j]);anims[j]=now}};
-  turn(i);if(vine[i]>=0)turn(vine[i]);moves++;Snd.clunk();after(bh,bc,bg);
+  turn(i);if(vine[i]>=0)turn(vine[i]);moves++;Snd.tap();after(bg);
 });
 function win(){
   solved=true;solvedAt=performance.now();Snd.win();
   if(level+1>best){best=level+1;try{localStorage.setItem('pm-hc-best',String(best))}catch(e){}}
-  const who=fixtures.map(f=>WHO[f.type]).filter(Boolean),names={ganja:'Ganja',fly:'Zydeco',maggot:'Beignet',crawfish:'Roux'};
-  const thanks=who.length?' '+[...new Set(who)].map(w=>names[w]).join(' and ')+(who.length>1?' are':' is')+' happy.':'';
-  if(isInspection(level)){try{localStorage.setItem('pm-hc-insp',String((+localStorage.getItem('pm-hc-insp')||0)+1))}catch(e){}}
-  $('winText').textContent=(isInspection(level)?'✅ PASSED INSPECTION. The inspector signs off. ':'')+'Job '+level+' passed inspection in '+moves+' taps. Par was '+par+'.'+(moves<=par?' Clean work.':'')+thanks;
+  const insp=isInspection(level),crew=Z.crit||[],who=crew.map(k=>CRIT[k]);
+  const list=who.length>1?who.slice(0,-1).join(', ')+' and '+who[who.length-1]:(who[0]||'');
+  const thanks=list?' '+list.charAt(0).toUpperCase()+list.slice(1)+(who.length>1?' are':' is')+' happy.':'';
+  if(insp){try{localStorage.setItem('pm-hc-insp',String((+localStorage.getItem('pm-hc-insp')||0)+1))}catch(e){}}
+  const art=$('winArt');
+  if(insp&&ready(PASS)){art.innerHTML='';const im=new Image();im.className='pass';im.alt='Passed inspection';im.src=PASS.src;art.appendChild(im)}
+  else critArt(art,crew,crew.length>2?60:80);
+  $('winH').textContent=insp?'Inspection passed':'Clean install';
+  $('winText').textContent=(insp?'✅ The inspector signs off. ':'')+'Job '+level+' passed inspection in '+moves+' taps. Par was '+par+'.'+(moves<=par?' Clean work.':'')+thanks;
   setTimeout(()=>{$('win').hidden=false;$('next').focus()},1100);
 }
-function showZone(){const z=zoneFor(level);$('zIcon').textContent=z.icon;$('zName').textContent=z.name;$('zText').textContent=z.text;$('zoneUp').hidden=false;Snd.sting(z.sting);setTimeout(()=>$('zGo').focus(),300)}
+function showZone(){const z=zoneFor(level),c=z.crit||[];critArt($('zIcon'),c,c.length>2?64:90);$('zName').textContent=z.icon+' '+z.name;$('zText').textContent=z.text;$('zoneUp').hidden=false;Snd.sting(z.sting);setTimeout(()=>$('zGo').focus(),300)}
 function playInspector(done){
   const fx=$('insFx'),v=$('insV'),bg=$('insBg'),st2=$('insStamp');let finished=false,tm=0;
   const finish=()=>{if(finished)return;finished=true;clearTimeout(tm);try{v.pause();bg.pause()}catch(e){}fx.hidden=true;st2.classList.remove('on');done&&done()};
   if(v.getAttribute('src')!=='/assets/inspector.mp4'){v.src='/assets/inspector.mp4';bg.src='/assets/inspector.mp4'}
-  const cap=$('insCap');cap.classList.remove('on');setTimeout(()=>{if(!finished)cap.classList.add('on')},800);
+  const cap=$('insCap');cap.classList.remove('on');if(!Snd.on)setTimeout(()=>{if(!finished)cap.classList.add('on')},800); // caption only when sound is off
   st2.classList.remove('on');fx.hidden=false;try{v.currentTime=0;bg.currentTime=0}catch(e){}v.muted=!Snd.on;
   v.onended=()=>setTimeout(finish,700);v.onerror=()=>{st2.classList.add('on');tm=setTimeout(finish,1800)};
   tm=setTimeout(()=>st2.classList.add('on'),4300);
