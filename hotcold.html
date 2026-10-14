@@ -6,6 +6,7 @@
 <title>Hot &amp; Cold | Pipe Mojo</title>
 <meta name="theme-color" content="#060606">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Hot & Cold">
 <link rel="icon" type="image/png" href="/logo.png">
@@ -49,12 +50,21 @@ button{font:inherit;font-weight:800;font-size:1rem;border:0;border-radius:10px;p
 button.go{background:linear-gradient(90deg,var(--hot),var(--cold));color:#fff}
 button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .hint{color:var(--muted);font-size:.88rem;margin:14px 2px 0;line-height:1.5}
+.topbtns{display:flex;gap:8px}.topbtns [hidden]{display:none}
+@media (orientation:landscape) and (min-width:600px){
+  .wrap{max-width:none;display:grid;grid-template-columns:minmax(230px,320px) minmax(0,1fr);column-gap:18px;align-items:start;padding-top:8px}
+  .wrap>*{grid-column:1}
+  .board{grid-column:2;grid-row:1 / span 40;align-self:start;position:sticky;top:8px;min-height:0;
+    height:calc(100vh - 16px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+    height:calc(100dvh - 16px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+  .top img{width:44px}h1{font-size:2rem}.stats{gap:14px;margin:10px 0 6px}.win img{width:56px}
+}
 .ver{margin:22px 0 0;text-align:center;font-size:.72rem;color:rgba(255,255,255,.28)}
 </style>
 </head>
 <body>
 <main class="wrap">
-  <div class="toprow"><a class="back" href="/play">‹ Games</a><button class="pill" id="sound" aria-pressed="true">Sound on</button></div>
+  <div class="toprow"><a class="back" href="/play">‹ Games</a><div class="topbtns"><button class="pill" id="fs" hidden>Full screen</button><button class="pill" id="sound" aria-pressed="true">Sound on</button></div></div>
   <header class="top">
     <img src="/assets/mojo-front.png" alt="">
     <div><h1>Pipe Mojo: <span class="h">Hot</span> &amp; <span class="c">Cold</span></h1>
@@ -78,7 +88,7 @@ button:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-o
   </div>
   <div class="actions"><button id="restart">Restart level</button><button id="newb">New board</button></div>
   <p class="hint">Tap a pipe to turn it. Hot water runs red, cold runs blue. If they ever meet it's a cross-connection, and the job won't pass until you split them. Shower valves need hot on one side and cold on the other.</p>
-  <p class="ver">Hot &amp; Cold v0.1 · prototype</p>
+  <p class="ver">Hot &amp; Cold v0.2 · prototype</p>
 </main>
 <script>
 (function(){
@@ -110,6 +120,19 @@ try{Snd.on=localStorage.getItem('pm-sound')!=='off'}catch(e){}
 const syncSound=()=>{$('sound').textContent=Snd.on?'Sound on':'Sound off';$('sound').setAttribute('aria-pressed',String(Snd.on))};syncSound();
 $('sound').addEventListener('click',()=>{Snd.on=!Snd.on;syncSound();Snd.unlock();try{localStorage.setItem('pm-sound',Snd.on?'on':'off')}catch(e){}});
 document.addEventListener('pointerdown',()=>Snd.unlock(),{passive:true});
+
+/* full screen on iPad, Android and desktop (iPhone Safari doesn't allow it, so the button stays hidden there) */
+(function(){
+  const el=document.documentElement,b=$('fs'),can=!!(document.fullscreenEnabled||document.webkitFullscreenEnabled);
+  const standalone=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
+  if(!can||standalone)return;
+  const isFs=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+  const sync=()=>{b.textContent=isFs()?'Exit full screen':'Full screen';setTimeout(resize,150)};
+  b.hidden=false;
+  b.addEventListener('click',()=>{if(isFs())(document.exitFullscreen||document.webkitExitFullscreen).call(document);
+    else{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(r&&r.catch)r.catch(()=>{})}});
+  document.addEventListener('fullscreenchange',sync);document.addEventListener('webkitfullscreenchange',sync);
+})();
 
 /* ---------- state ---------- */
 let level=1,n,sol,cur,startCur,src=[0,0],ports=[],fixtures=[],path=new Set(),moves=0,par=0,anims={},solved=false,solvedAt=0,st=null,lastMix=false,warnT=0;
@@ -189,7 +212,8 @@ function updateStats(){$('lvl').textContent=level;$('taps').textContent=moves;$(
   const f=$('fx');f.textContent=st.good+'/'+ports.length;f.classList.toggle('done',st.good===ports.length&&!st.mixed.length)}
 
 function resize(){
-  const GUT=.7,PAD=.25;let c=(board.clientWidth-6)/(n+GUT*2);cell=Math.max(12,Math.min(c,110));gut=cell*GUT;padTop=cell*PAD;
+  const GUT=.7,PAD=.25,wide=matchMedia('(orientation: landscape) and (min-width: 600px)').matches;let c=(board.clientWidth-6)/(n+GUT*2);
+  if(wide)c=Math.min(c,(board.clientHeight-14)/(n+PAD*2));cell=Math.max(12,Math.min(c,140));gut=cell*GUT;padTop=cell*PAD;
   Wd=gut*2+cell*n;Hd=cell*n+padTop*2;const d=window.devicePixelRatio||1;
   cv.style.width=Wd+'px';cv.style.height=Hd+'px';cv.width=Math.round(Wd*d);cv.height=Math.round(Hd*d);ctx.setTransform(d,0,0,d,0,0);
 }
