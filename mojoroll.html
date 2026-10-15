@@ -12,7 +12,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <title>Mojo Roll | Pipe Mojo</title>
 <!--
-  MOJO ROLL — Pack 1, v2.0 (Oct 14)
+  MOJO ROLL — Pack 1, v2.1 (Oct 14)
+  v2.1: squared-up 3/4 camera (grid lines up with the screen, up = roll away),
+  drag-to-tilt controls (pipe leans while you drag, release to roll, slide back
+  to cancel), arrow pad, landing diamonds removed.
   Roll the pipe end over end and stand it upright in the flange.
   40 levels in 5 New Orleans zones, 8 each, every zone adds one twist:
     1 Bayou Yard      (galvanized) cracked tiles X: fine lying down, break standing up
@@ -54,10 +57,11 @@
   button:active { background:#32205a; transform:translateY(1px); }
   .btns button { flex:1; white-space:nowrap; }
   .btns button.ic { flex:0 0 46px; font-size:16px; padding:7px 0; }
-  .pad { display:grid; grid-template-columns:repeat(2, 84px); grid-template-rows:repeat(2, 64px); gap:9px; justify-content:center; }
-  .pad button { font-size:26px; padding:0; border-radius:16px; background:#1e1336; border-width:2px; }
-  .pad .nw { color:#b8f26d; border-color:#5a7038; } .pad .ne { color:#ffd166; border-color:#7a6230; }
-  .pad .sw { color:#ff8fa3; border-color:#7a4250; } .pad .se { color:#6ee7ff; border-color:#33626e; }
+  .pad { display:grid; grid-template-columns:repeat(3, 76px); grid-template-rows:repeat(2, 58px); gap:8px; justify-content:center;
+    grid-template-areas:". up ." "lf dn rt"; }
+  .pad button { font-size:22px; padding:0; border-radius:16px; background:#1e1336; border-width:2px; border-color:#4a2c7d; color:var(--gold); }
+  .pad .up { grid-area:up; } .pad .lf { grid-area:lf; } .pad .dn { grid-area:dn; } .pad .rt { grid-area:rt; }
+  .pad button.hot { background:#3a2465; border-color:var(--gold); }
 
   /* landscape / iPad: board left, controls stacked on the right under the thumb */
   @media (orientation: landscape) and (min-width: 640px) {
@@ -66,13 +70,13 @@
     .side .pad { margin-top:auto; }
     .btns { display:grid; grid-template-columns:repeat(6, 1fr); }
     .btns button { grid-column:span 3; } .btns button.ic { grid-column:span 2; }
-    .pad { grid-template-columns:repeat(2, 112px); grid-template-rows:repeat(2, 92px); gap:12px; }
-    .pad button { font-size:34px; border-radius:20px; }
+    .pad { grid-template-columns:repeat(3, 78px); grid-template-rows:repeat(2, 78px); gap:10px; }
+    .pad button { font-size:28px; border-radius:20px; }
     header .mojo-head { height:62px; } h1 { font-size:38px; }
   }
   @media (orientation: landscape) and (max-height: 500px) {
     header .mojo-head { height:40px; } h1 { font-size:26px; } .eyebrow { display:none; }
-    .side { width:230px; } .pad { grid-template-columns:repeat(2, 86px); grid-template-rows:repeat(2, 62px); gap:8px; }
+    .side { width:230px; } .pad { grid-template-columns:repeat(3, 64px); grid-template-rows:repeat(2, 56px); gap:7px; }
     .bar b { font-size:15px; }
   }
   @media (max-width: 560px) {
@@ -85,8 +89,8 @@
     header .mojo-head { height:74px; } h1 { font-size:44px; } .lvinfo .ln { font-size:26px; } .lvinfo .zn { font-size:13px; }
     .side { flex-direction:row; align-items:center; gap:16px; }
     .side .info { flex:1; display:flex; flex-direction:column; gap:10px; }
-    .pad { grid-template-columns:repeat(2, 120px); grid-template-rows:repeat(2, 92px); gap:12px; }
-    .pad button { font-size:36px; border-radius:20px; }
+    .pad { grid-template-columns:repeat(3, 96px); grid-template-rows:repeat(2, 84px); gap:12px; }
+    .pad button { font-size:30px; border-radius:20px; }
     .bar b { font-size:22px; } .bar div { font-size:11px; }
     button { font-size:14px; padding:12px 10px; }
   }
@@ -173,10 +177,10 @@
       </div>
     </div>
     <div class="pad">
-      <button class="nw" data-dir="W" type="button" aria-label="Roll up-left">&#8598;</button>
-      <button class="ne" data-dir="N" type="button" aria-label="Roll up-right">&#8599;</button>
-      <button class="sw" data-dir="S" type="button" aria-label="Roll down-left">&#8601;</button>
-      <button class="se" data-dir="E" type="button" aria-label="Roll down-right">&#8600;</button>
+      <button class="up" data-dir="N" type="button" aria-label="Roll up">&#9650;</button>
+      <button class="lf" data-dir="W" type="button" aria-label="Roll left">&#9664;</button>
+      <button class="dn" data-dir="S" type="button" aria-label="Roll down">&#9660;</button>
+      <button class="rt" data-dir="E" type="button" aria-label="Roll right">&#9654;</button>
     </div>
   </div>
 </div>
@@ -192,9 +196,9 @@
   <div class="kicker">HOW TO ROLL</div>
   <h2>MOJO ROLL</h2>
   <ul>
-    <li><i>↗</i>Tap the <b>diamond pad</b>, use arrow keys, or swipe the board. Each button points where the pipe goes on screen.</li>
+    <li><i>👆</i><b>Drag or swipe</b> anywhere on the board. The pipe leans the way it's about to go. Let go to roll, or slide back to cancel.</li>
+    <li><i>▲</i>Or use the <b>arrow pad</b> and arrow keys. Up rolls away from you, down rolls toward you.</li>
     <li><i>⭕</i><b>Stand the pipe straight up in the flange</b> to clear the level.</li>
-    <li><i>◇</i>Faint <b>colored diamonds</b> show where each roll will land. No diamond means that roll drops you, and an ✕ means it cracks the tile.</li>
     <li><i>🔧</i>Hit <b>par</b> for 3 wrenches. Every zone brings a new twist.</li>
     <li><i>⛶</i>On iPad, tap <b>⛶</b> for full screen. On iPhone, use Share → Add to Home Screen.</li>
   </ul>
@@ -603,15 +607,32 @@ const sfx = {
    ============================================================ */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-const C30 = Math.cos(Math.PI / 6), S30 = 0.5, SLAB = 0.35;
+const SLAB = 0.35;
+/* v2.1 camera: squared-up 3/4 view (like the newer block-rolling games).
+   Board grid lines up with the screen: up = roll away (N), right = E.
+   A small yaw shows the right-hand side of each tile for depth. */
+const CAM_PITCH = 0.92, CAM_YAW = 0.13;
+const CAM_V = [Math.sin(CAM_YAW) * Math.cos(CAM_PITCH), Math.sin(CAM_PITCH), Math.cos(CAM_YAW) * Math.cos(CAM_PITCH)]; // toward camera
+const CAM_R = [Math.cos(CAM_YAW), 0, -Math.sin(CAM_YAW)];                                                            // screen right
+const CAM_U = [CAM_V[1] * CAM_R[2] - CAM_V[2] * CAM_R[1], CAM_V[2] * CAM_R[0] - CAM_V[0] * CAM_R[2], CAM_V[0] * CAM_R[1] - CAM_V[1] * CAM_R[0]]; // screen up
+const EX = 0.8165, EYF = 1.633 * Math.sin(CAM_PITCH);   // old iso ellipse radii -> this camera
+const viewDot = p => p[0] * CAM_V[0] + p[1] * CAM_V[1] + p[2] * CAM_V[2];
 let view = { s: 30, ox: 0, oy: 0 };
 
-function proj(x, y, z) { return [(x - z) * C30, (x + z) * S30 - y]; }
+function proj(x, y, z) {
+  return [x * CAM_R[0] + y * CAM_R[1] + z * CAM_R[2], -(x * CAM_U[0] + y * CAM_U[1] + z * CAM_U[2])];
+}
 
 function computeView(w, h) {
   let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
-  const corners = [[0, -SLAB, 0], [COLS, -SLAB, 0], [0, -SLAB, ROWS], [COLS, -SLAB, ROWS],
-                   [0, 2.1, 0], [COLS, 0, ROWS], [0, 0, ROWS], [COLS, 2.1, 0]];
+  // fit the PLAYABLE area (non-void tiles) plus standing-pipe height
+  let x0 = COLS, x1 = 0, z0 = ROWS, z1 = 0;
+  for (let z = 0; z < ROWS; z++) for (let x = 0; x < COLS; x++) if (MAP[z][x] !== ".") {
+    x0 = Math.min(x0, x); x1 = Math.max(x1, x + 1); z0 = Math.min(z0, z); z1 = Math.max(z1, z + 1);
+  }
+  x0 -= 0.3; z0 -= 0.3; x1 += 0.3; z1 += 0.3;
+  const corners = [];
+  for (const x of [x0, x1]) for (const z of [z0, z1]) for (const y of [-SLAB, 2.1]) corners.push([x, y, z]);
   for (const c of corners) {
     const p = proj(c[0], c[1], c[2]);
     minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]);
@@ -702,7 +723,7 @@ function drawTile(cx, cz, broken, now) {
     ctx.fillStyle = "rgba(220,225,235,.45)";
     for (const [rx, rz] of [[0.1, 0.1], [0.9, 0.1], [0.9, 0.9], [0.1, 0.9]]) {
       const r = Q(cx + rx, 0.012, cz + rz);
-      ctx.beginPath(); ctx.ellipse(r[0], r[1], view.s * 0.035, view.s * 0.02, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(r[0], r[1], view.s * 0.035 * EX, view.s * 0.02 * EYF, 0, 0, Math.PI * 2); ctx.fill();
     }
   } else if (isGhost) {
     const pulse = 0.25 + 0.15 * Math.sin(now * 0.004 + cx + cz);
@@ -756,44 +777,44 @@ function drawTile(cx, cz, broken, now) {
     const gg = ctx.createRadialGradient(ctr[0], ctr[1], 2, ctr[0], ctr[1], view.s * 0.62);
     gg.addColorStop(0, "rgba(255,176,92," + pulse.toFixed(3) + ")"); gg.addColorStop(1, "rgba(255,176,92,0)");
     ctx.fillStyle = gg;
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.62, view.s * 0.31, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.46, view.s * 0.23, 0, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.62 * EX, view.s * 0.31 * EYF, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.46 * EX, view.s * 0.23 * EYF, 0, 0, Math.PI * 2);
     ctx.fillStyle = "#0a0d12"; ctx.fill();
     ctx.lineWidth = view.s * 0.11; ctx.strokeStyle = "#d98d4e"; ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.40, view.s * 0.20, 0, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.40 * EX, view.s * 0.20 * EYF, 0, 0, Math.PI * 2);
     ctx.lineWidth = view.s * 0.03; ctx.strokeStyle = "#f4c48c"; ctx.stroke();
     ctx.fillStyle = "#8a4f24";
     for (let b = 0; b < 4; b++) {
       const ang = b * Math.PI / 2 + Math.PI / 4;
       const bp = Q(cx + 0.5 + Math.cos(ang) * 0.335, 0.012, cz + 0.5 + Math.sin(ang) * 0.335);
-      ctx.beginPath(); ctx.ellipse(bp[0], bp[1], view.s * 0.045, view.s * 0.028, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(bp[0], bp[1], view.s * 0.045 * EX, view.s * 0.028 * EYF, 0, 0, Math.PI * 2); ctx.fill();
     }
   } else if (t === "S") {
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.40, view.s * 0.20, 0, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.40 * EX, view.s * 0.20 * EYF, 0, 0, Math.PI * 2);
     ctx.lineWidth = view.s * 0.045; ctx.strokeStyle = "rgba(217,141,78,.55)"; ctx.stroke();
   } else if (t === "V") {
     // red shutoff handwheel, spins a quarter turn each time it's thrown
     const spin = (tileFlip ? Math.PI / 6 : 0) + Math.PI / 6 * Math.max(0, 1 - (now - tileFlipT) / 300) * (tileFlip ? -1 : 1);
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1] + view.s * 0.03, view.s * 0.34, view.s * 0.17, 0, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1] + view.s * 0.03, view.s * 0.34 * EX, view.s * 0.17 * EYF, 0, 0, Math.PI * 2);
     ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fill();
     const h = Q(cx + 0.5, 0.14, cz + 0.5);
     ctx.lineWidth = view.s * 0.06; ctx.strokeStyle = "#5c1010";
     ctx.beginPath(); ctx.moveTo(ctr[0], ctr[1]); ctx.lineTo(h[0], h[1]); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(h[0], h[1], view.s * 0.30, view.s * 0.15, 0, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.ellipse(h[0], h[1], view.s * 0.30 * EX, view.s * 0.15 * EYF, 0, 0, Math.PI * 2);
     ctx.lineWidth = view.s * 0.075; ctx.strokeStyle = "#d32b22"; ctx.stroke();
     ctx.lineWidth = view.s * 0.025; ctx.strokeStyle = "#ff8a72";
-    ctx.beginPath(); ctx.ellipse(h[0], h[1] - view.s * 0.012, view.s * 0.30, view.s * 0.15, 0, Math.PI * 1.05, Math.PI * 1.9); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(h[0], h[1] - view.s * 0.012, view.s * 0.30 * EX, view.s * 0.15 * EYF, 0, Math.PI * 1.05, Math.PI * 1.9); ctx.stroke();
     ctx.lineWidth = view.s * 0.045; ctx.strokeStyle = "#b8231c";
     for (let k = 0; k < 3; k++) {
       const a = spin + k * Math.PI / 3;
-      ctx.beginPath(); ctx.moveTo(h[0] - Math.cos(a) * view.s * 0.28, h[1] - Math.sin(a) * view.s * 0.14);
-      ctx.lineTo(h[0] + Math.cos(a) * view.s * 0.28, h[1] + Math.sin(a) * view.s * 0.14); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(h[0] - Math.cos(a) * view.s * 0.28 * EX, h[1] - Math.sin(a) * view.s * 0.14 * EYF);
+      ctx.lineTo(h[0] + Math.cos(a) * view.s * 0.28 * EX, h[1] + Math.sin(a) * view.s * 0.14 * EYF); ctx.stroke();
     }
-    ctx.fillStyle = "#e9c46a"; ctx.beginPath(); ctx.ellipse(h[0], h[1], view.s * 0.06, view.s * 0.035, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#e9c46a"; ctx.beginPath(); ctx.ellipse(h[0], h[1], view.s * 0.06 * EX, view.s * 0.035 * EYF, 0, 0, Math.PI * 2); ctx.fill();
   } else if (t === "H") {
     // heavy cast valve: iron plate, hex nut, glowing ring (needs full weight)
     const pulse = 0.35 + 0.25 * Math.sin(now * 0.005);
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.44, view.s * 0.22, 0, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.44 * EX, view.s * 0.22 * EYF, 0, 0, Math.PI * 2);
     ctx.fillStyle = "#17110f"; ctx.fill();
     ctx.lineWidth = view.s * 0.05; ctx.strokeStyle = "rgba(255,110,40," + pulse.toFixed(3) + ")"; ctx.stroke();
     const hex = [];
@@ -806,15 +827,15 @@ function drawTile(cx, cz, broken, now) {
     const pulse = 0.3 + 0.2 * Math.sin(now * 0.004 + cx * 0.7);
     const gg = ctx.createRadialGradient(ctr[0], ctr[1], 2, ctr[0], ctr[1], view.s * 0.62);
     gg.addColorStop(0, "rgba(200,120,255," + pulse.toFixed(3) + ")"); gg.addColorStop(1, "rgba(200,120,255,0)");
-    ctx.fillStyle = gg; ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.62, view.s * 0.31, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.40, view.s * 0.20, 0, 0, Math.PI * 2);
+    ctx.fillStyle = gg; ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.62 * EX, view.s * 0.31 * EYF, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.40 * EX, view.s * 0.20 * EYF, 0, 0, Math.PI * 2);
     const bg2 = ctx.createLinearGradient(0, ctr[1] - view.s * 0.2, 0, ctr[1] + view.s * 0.2);
     bg2.addColorStop(0, "#f2d27a"); bg2.addColorStop(1, "#8a6a1e");
     ctx.fillStyle = bg2; ctx.fill(); ctx.lineWidth = view.s * 0.03; ctx.strokeStyle = "#5a4310"; ctx.stroke();
     const sq = [Q(cx + 0.38, 0.03, cz + 0.38), Q(cx + 0.62, 0.03, cz + 0.38), Q(cx + 0.62, 0.03, cz + 0.62), Q(cx + 0.38, 0.03, cz + 0.62)];
     poly(sq, "#c9a13e", "#6b500f");
     ctx.lineWidth = view.s * 0.02; ctx.strokeStyle = "rgba(120,220,110,.8)";
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.47, view.s * 0.235, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.47 * EX, view.s * 0.235 * EYF, 0, 0, Math.PI * 2); ctx.stroke();
   }
   ctx.restore();
 }
@@ -987,7 +1008,7 @@ function pipeRenderables(box, o) {
   return out;
 }
 const LIGHT_W = (() => { const L = Math.hypot(-0.35, 1, 0.3); return [-0.35 / L, 1 / L, 0.3 / L]; })();
-const VIEW_W = [1 / Math.sqrt(3), 1 / Math.sqrt(3), 1 / Math.sqrt(3)];
+const VIEW_W = CAM_V;
 function hull2(pts) {  // monotone-chain convex hull (screen space)
   const p = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
@@ -1195,10 +1216,10 @@ function drawBlock(s, opts) {
     if (hole) r.thole = hole.map(p => P(p[0], p[1], p[2]));
     let n = r.n;
     if (ang) n = rotPt(n, axis, [0, 0, 0], ang);
-    r.vis = (n[0] + n[1] + n[2]) > 0.02;
+    r.vis = viewDot(n) > 0.02;
     if (r.vis && r.capN) {  // bore parts only show through their own (facing) cap
       const cn = ang ? rotPt(r.capN, axis, [0, 0, 0], ang) : r.capN;
-      r.vis = (cn[0] + cn[1] + cn[2]) > 0.02;
+      r.vis = viewDot(cn) > 0.02;
     }
     if (r.boreWall) {
       const nl = Math.hypot(n[0], n[1], n[2]) || 1;
@@ -1206,7 +1227,7 @@ function drawBlock(s, opts) {
       r.fill = mixHex(SK.bore[1], SK.bore[0], 0.25 + 0.55 * lum);
     }
     const c = centroid(pts);
-    r.depth = c[0] + c[1] + c[2];
+    r.depth = viewDot(c);
   }
   rend = rend.filter(r => !r.barrel && r.vis).sort((a, b) => a.depth - b.depth);
   ctx.save();
@@ -1265,9 +1286,10 @@ function drawShadow(s) {
   let cx = 0, cz = 0;
   for (const c of cells) { cx += c[0]; cz += c[1]; }
   const p = P(cx / cells.length + 0.5, 0.02, cz / cells.length + 0.5);
+  const rx = s.o === 1 ? 1.0 : 0.48, rz = s.o === 2 ? 1.0 : 0.48;
   ctx.beginPath();
-  ctx.ellipse(p[0], p[1], view.s * 0.5 * cells.length, view.s * 0.25 * cells.length, 0, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(0,0,0,.32)"; ctx.fill();
+  ctx.ellipse(p[0], p[1], view.s * rx, view.s * rz * Math.sin(CAM_PITCH), 0, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(0,0,0,.34)"; ctx.fill();
 }
 
 /* ============================================================
@@ -1391,7 +1413,11 @@ function tryMove(dir) {
   const w = { x: block.x, z: block.z, o: block.o, flip: flip, par: moves & 1 };
   const r = stepState(MAP, w, dir, TELE);
   status = "rolling";
-  anim = { kind: "roll", from: block, to: r.land, r: r, p: rollAnimParams(block, dir), t0: performance.now() };
+  const p = rollAnimParams(block, dir);
+  // continue smoothly from wherever the drag-lean left the pipe
+  const e0 = (lean.last === dir) ? (p.slide ? 0.07 : 0.16) * lean.show : 0;
+  lean.show = 0; lean.last = null;
+  anim = { kind: "roll", from: block, to: r.land, r: r, p: p, e0: e0, t0: performance.now() };
   moves++; hud();
   sfx.clack();
 }
@@ -1471,18 +1497,13 @@ function draw(now) {
   const sh = ctx.createRadialGradient(bc[0], bc[1], 4, bc[0], bc[1], view.s * COLS * 0.52);
   sh.addColorStop(0, "rgba(0,0,0,.42)"); sh.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = sh;
-  ctx.beginPath(); ctx.ellipse(bc[0], bc[1] + view.s * 0.4, view.s * COLS * 0.52, view.s * ROWS * 0.52, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(bc[0], bc[1] + view.s * 0.3, view.s * COLS * 0.6, view.s * ROWS * 0.6 * Math.sin(CAM_PITCH), 0, 0, Math.PI * 2); ctx.fill();
   const broken = (anim && anim.kind === "break") ? anim : null;
-  for (let sum = 0; sum <= ROWS + COLS; sum++)
-    for (let z = 0; z < ROWS; z++) {
-      const x = sum - z;
-      if (x < 0 || x >= COLS) continue;
-      drawTile(x, z, !!(broken && x === broken.bx && z === broken.bz), now);
-    }
+  for (const [x, z] of TILE_ORDER) drawTile(x, z, !!(broken && x === broken.bx && z === broken.bz), now);
 
   if (status === "rolling" && anim) {
     const t = Math.min(1, (now - anim.t0) / ROLL_MS);
-    const e = easeInOut(t);
+    const e = anim.e0 + (1 - anim.e0) * easeInOut(t);
     if (anim.r.res !== "fall") drawShadow(anim.to);
     if (anim.p.slide) drawBlock(anim.from, { offX: anim.p.dx * e, offZ: anim.p.dz * e });
     else drawBlock(anim.from, { axis: anim.p.axis, pivot: anim.p.pivot, ang: anim.p.ang * e });
@@ -1513,13 +1534,20 @@ function draw(now) {
     drawBlock(block, { yOff: -(t * t) * 1.9, alpha: t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1 });
     if (t >= 1) showWin();
   } else if (status === "play") {
-    drawGhosts(); drawShadow(block); drawBlock(block);
+    drawShadow(block); drawBlock(block, leanOpts());
   }
   stepParts(dt);
   requestAnimationFrame(draw);
 }
 const TELE_MS = 620;
+let TILE_ORDER = [];
+function buildTileOrder() {
+  TILE_ORDER = [];
+  for (let z = 0; z < ROWS; z++) for (let x = 0; x < COLS; x++) if (MAP[z][x] !== ".") TILE_ORDER.push([x, z]);
+  TILE_ORDER.sort((a, b) => viewDot([a[0] + 0.5, 0, a[1] + 0.5]) - viewDot([b[0] + 0.5, 0, b[1] + 0.5]));
+}
 function resize() {
+  buildTileOrder();
   const w = Math.max(200, board.clientWidth || 300), h = Math.max(160, board.clientHeight || 240);
   const dpr = Math.min(2.5, window.devicePixelRatio || 1);
   canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
@@ -1607,6 +1635,35 @@ document.addEventListener("fullscreenchange", syncFull);
 document.addEventListener("webkitfullscreenchange", syncFull);
 
 /* ============================================================
+   DRAG-TO-TILT: finger down + drag = the pipe leans that way.
+   Release past the threshold to roll; slide back to cancel.
+   A quick flick rolls straight away.
+   ============================================================ */
+let lean = { dir: null, amt: 0, show: 0 };
+function leanOpts() {
+  // ease the displayed lean toward the target so it feels springy
+  const target = lean.dir ? lean.amt : 0;
+  lean.show += (target - lean.show) * 0.35;
+  if (!lean.dir && lean.show < 0.01) { lean.show = 0; return {}; }
+  const d = lean.dir || lean.last;
+  if (!d) return {};
+  const p = rollAnimParams(block, d);
+  if (p.slide) return { offX: p.dx * 0.07 * lean.show, offZ: p.dz * 0.07 * lean.show };
+  return { axis: p.axis, pivot: p.pivot, ang: p.ang * 0.16 * lean.show };
+}
+const padBtns = {};
+document.querySelectorAll(".pad button").forEach(b => { padBtns[b.dataset.dir] = b; });
+function setLean(dir, amt) {
+  if (lean.dir !== dir) {
+    Object.values(padBtns).forEach(b => b.classList.remove("hot"));
+    if (dir) { padBtns[dir].classList.add("hot"); lean.last = dir; }
+  }
+  lean.dir = dir; lean.amt = amt;
+}
+const ROLL_DIST = 26;
+function dirOf(dx, dy) { return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "E" : "W") : (dy > 0 ? "S" : "N"); }
+
+/* ============================================================
    INPUT
    ============================================================ */
 const KEYMAP = { ArrowUp: "N", ArrowDown: "S", ArrowLeft: "W", ArrowRight: "E",
@@ -1620,17 +1677,27 @@ document.addEventListener("keydown", e => {
 document.querySelectorAll(".pad button").forEach(b => {
   b.addEventListener("pointerdown", e => { e.preventDefault(); tryMove(b.dataset.dir); });
 });
-// swipe: matches the diamond pad (up-right = N, down-right = E, down-left = S, up-left = W)
 let swipe = null;
-canvas.addEventListener("pointerdown", e => { audioInit(); swipe = { x: e.clientX, y: e.clientY }; });
-canvas.addEventListener("pointerup", e => {
+canvas.addEventListener("pointerdown", e => {
+  audioInit();
+  swipe = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId };
+  try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+});
+canvas.addEventListener("pointermove", e => {
+  if (!swipe || e.pointerId !== swipe.id) return;
+  const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y, d = Math.hypot(dx, dy);
+  if (d < 10 || status !== "play") { setLean(null, 0); return; }
+  setLean(dirOf(dx, dy), Math.min(1, d / (ROLL_DIST * 2.2)));
+});
+function endSwipe(e, cancel) {
   if (!swipe) return;
   const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
-  swipe = null;
-  if (Math.hypot(dx, dy) < 24) return;
-  tryMove(dx >= 0 ? (dy < 0 ? "N" : "E") : (dy < 0 ? "W" : "S"));
-});
-canvas.addEventListener("pointercancel", () => { swipe = null; });
+  swipe = null; setLean(null, 0);
+  if (cancel || Math.hypot(dx, dy) < ROLL_DIST) return;
+  tryMove(dirOf(dx, dy));
+}
+canvas.addEventListener("pointerup", e => endSwipe(e, false));
+canvas.addEventListener("pointercancel", e => endSwipe(e, true));
 document.addEventListener("touchmove", e => { if (e.target === canvas) e.preventDefault(); }, { passive: false });
 
 $("btnRestart").addEventListener("click", () => { audioInit(); if (status !== "rolling") reset(); });
