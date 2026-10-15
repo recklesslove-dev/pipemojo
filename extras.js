@@ -1,4 +1,4 @@
-/* Pipe Mojo extras: daily streak, seasonal and secret trophies. Shared by Flow, Whack-a-Pipe, Mojo Roll and the Locker.
+/* Pipe Mojo extras: daily streak, seasonal and secret trophies. Shared by Flow, Whack-a-Pipe, Mojo Roll, Hot & Cold and the Locker.
    Saved on this device and, when signed in, to your name (inside the Whack-a-Pipe cloud save). */
 (function(){
 const acctKey=()=>{const a=window.PMLB&&PMLB.account();return a?String(a.name).toLowerCase().replace(/ /g,''):''};
@@ -39,6 +39,8 @@ const SECRETS=[
   {id:'night',name:'Night Shift',art:'🌙',desc:'Cleared a Flow level between midnight and 4am'},
   {id:'double',name:'Double Duty',art:'🎖️',desc:'Held an Army rank in both games'},
   {id:'triple',name:'Triple Threat',art:'🎖️🎖️',desc:'Held an Army rank in all three games'},
+  {id:'jack',name:'Jack of All Trades',art:'🧰',desc:'Held a rank in Flow, Whack-a-Pipe, Mojo Roll and Hot & Cold'},
+  {id:'king',name:'King of the Krewe',art:'👑',desc:'Held #1 on every leaderboard at the same time'},
   {id:'golden',name:'Golden Touch',art:'✨',desc:'Caught every golden pipe in a bonus round'},
   {id:'marathon',name:'Marathon',art:'⏱️',desc:'Lasted 5 minutes in one Whack-a-Pipe round'}
 ];
@@ -51,6 +53,17 @@ function tick(){ // call once when a game starts: daily streak and holiday badge
   if(d.days.last!==today){d.days.streak=d.days.last===yest?d.days.streak+1:1;d.days.last=today;d.days.best=Math.max(d.days.best,d.days.streak);store(d)}
   for(const t of DAILY)if(d.days.streak>=t.n)award(t.id,'🔥 '+t.name+': '+t.n+'-day streak');
   const s=seasonNow();if(s)award(s.key,s.art+' '+s.name+' '+s.year);
+  checkKing(false);
+}
+/* King of the Krewe: your name at #1 on every game's board at once. Checked after each posted score, and now and then when a game starts */
+const KING_GAMES=['flow','whack','roll','hotcold'];let kingBusy=false;
+function checkKing(force){
+  const me=acctKey();if(!me||kingBusy||!(window.PMLB&&PMLB.top)||load().x.includes('king'))return;
+  try{const last=+localStorage.getItem('pm-king-at')||0;if(!force&&Date.now()-last<6e5)return;localStorage.setItem('pm-king-at',String(Date.now()))}catch(e){}
+  kingBusy=true;
+  Promise.all(KING_GAMES.map(g=>PMLB.top(g))).then(tops=>{kingBusy=false;
+    if(tops.every(t=>t&&t.length&&String(t[0].name).toLowerCase().replace(/ /g,'')===me))award('king','👑 KING OF THE KREWE: #1 on every board!');
+  }).catch(()=>{kingBusy=false});
 }
 /* cloud: ride along inside the Whack-a-Pipe save so every device agrees */
 function merge(c){
@@ -69,11 +82,11 @@ function push(){
   }),800);
 }
 function sync(){if(window.PMLB&&PMLB.account())PMLB.cloudLoad('whack').then(c=>{if(c){merge(c)}}).catch(()=>{})}
-window.PMX={award,tick,merge,push,sync,has:id=>load().x.includes(id),list:()=>load().x,days:()=>load().days,seasonNow,nextSeason,
+window.PMX={award,tick,merge,push,sync,checkKing,has:id=>load().x.includes(id),list:()=>load().x,days:()=>load().days,seasonNow,nextSeason,
   SEASONS,SECRETS,DAILY,set onAward(fn){onAward=fn}};
 })();
 
-/* game pages: no double-tap zoom and no long-press text selection or magnifier (Flow, Whack-a-Pipe, Locker) */
+/* game pages: no double-tap zoom and no long-press text selection or magnifier (Flow, Whack-a-Pipe, Mojo Roll, Hot & Cold, Locker) */
 (function(){
   try{
     const s=document.createElement('style');

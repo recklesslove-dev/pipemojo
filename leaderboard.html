@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Mojo Board">
-<meta name="description" content="Pipe Mojo leaderboard: top Whack-a-Pipe scores, Flow levels and Mojo Roll wrenches. Think you can beat Pipe Mojo?">
+<meta name="description" content="Pipe Mojo leaderboard: top Whack-a-Pipe scores, Flow levels, Mojo Roll wrenches and Hot & Cold jobs. Think you can beat Pipe Mojo?">
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Leaderboard | Pipe Mojo</title>
@@ -49,6 +49,10 @@ h1{font-family:var(--title);font-weight:400;font-size:clamp(3rem,13vw,4.4rem);li
 .roll h2{color:var(--gold)}
 .roll li .s{color:var(--gold)}
 .roll .play{background:var(--gold);color:#241128}
+.card.hotcold{border-color:rgba(255,74,61,.45)}
+.hotcold h2{background:linear-gradient(90deg,#ff4a3d,#ffffff,#2f8cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hotcold li .s{color:#ff8a7f}
+.hotcold .play{background:linear-gradient(90deg,#ff4a3d,#2f8cff);color:#fff}
 .card header{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
 .card h2{font-family:var(--title);font-weight:400;font-size:2.1rem;line-height:1}
 .whack h2{color:#ff5a4f}
@@ -119,6 +123,11 @@ li.msg{color:rgba(255,255,255,.55);font-weight:600}
       <ol id="list-roll"><li class="msg">Loading…</li></ol>
       <a class="play" href="/mojoroll">Play Mojo Roll</a>
     </section>
+    <section class="card hotcold" aria-labelledby="hc">
+      <header><h2 id="hc">Hot &amp; Cold</h2><span>Jobs passed</span></header>
+      <ol id="list-hotcold"><li class="msg">Loading…</li></ol>
+      <a class="play" href="/hotcold">Play Hot &amp; Cold</a>
+    </section>
   </div>
 
   <p class="you" id="you"></p>
@@ -126,7 +135,7 @@ li.msg{color:rgba(255,255,255,.55);font-weight:600}
   <section class="faq" aria-labelledby="faqh">
     <h2 id="faqh">Questions</h2>
     <details><summary>How do I get on the board?</summary>
-      <p>Play a round. In Whack-a-Pipe, claim a name on the Cursed screen when the round ends. In Flow, claim one in the leaderboard section under the board. In Mojo Roll, open the menu and tap Rank &amp; Board. Your score posts right away, and every game after that posts on its own.</p></details>
+      <p>Play a round. In Whack-a-Pipe, claim a name on the Cursed screen when the round ends. In Flow, claim one in the leaderboard section under the board. In Mojo Roll, open the menu and tap Rank &amp; Board. In Hot &amp; Cold, claim one in the leaderboard section under the board. Your score posts right away, and every game after that posts on its own.</p></details>
     <details><summary>Is there a password?</summary>
       <p>No passwords and no email. When you claim a name, you get a one-time <b>recovery code</b>. Save it in Notes. It's the only way to sign back in to your name, and nobody can look it up for you, not even us.</p></details>
     <details><summary>How do I play on another phone or iPad?</summary>
@@ -138,11 +147,11 @@ li.msg{color:rgba(255,255,255,.55);font-weight:600}
     <details><summary>Why didn't my score post?</summary>
       <p>You need to be signed in to a name, and you need a connection. Whack-a-Pipe scores are also checked against how long the round actually lasted, so fake scores get turned away.</p></details>
     <details><summary>What's the insignia next to a name?</summary>
-      <p>That's the player's Army rank. Flow players are officers: every boss beaten (every 100 levels) is a promotion, from Second Lieutenant up to five-star General of the Army. Mojo Roll players are warrant officers: every 24 wrenches is a promotion, from Warrant Officer 1 up to Chief Warrant Officer 5. Whack-a-Pipe players are enlisted: every 100 points of their best score is a promotion, from Private up to Sergeant Major of the Army. After the top rank come Silver, Gold and Diamond finishes. Tap or hover an insignia to see the rank.</p></details>
+      <p>That's the player's rank. Flow players are officers: every boss beaten (every 100 levels) is a promotion, from Second Lieutenant up to five-star General of the Army. Mojo Roll players are warrant officers: every 24 wrenches is a promotion, from Warrant Officer 1 up to Chief Warrant Officer 5. Whack-a-Pipe players are enlisted: every 100 points of their best score is a promotion, from Private up to Sergeant Major of the Army. Hot &amp; Cold players go by the trade: every inspection passed (every 25 jobs) is a promotion, from Helper through Apprentice, Journeyman, Foreman and Superintendent up to Master Plumber and Plumbing Contractor. After the top rank come Silver, Gold and Diamond finishes. Tap or hover an insignia to see the rank.</p></details>
     <details><summary>What's the 1K badge?</summary>
-      <p>The 1K Club. It's only for Flow players who have cleared level 1000. Clear 2000 and it becomes 2K, and so on.</p></details>
+      <p>The 1K Club. It's only for Flow players who have cleared level 1000 and Hot &amp; Cold players who have passed job 1000. Clear 2000 and it becomes 2K, and so on.</p></details>
     <details><summary>What's the 🔥 next to a name?</summary>
-      <p>That's the player's best Flow par streak: the most levels in a row they've cleared on par or better. It's their best ever, so it stays even after a streak ends.</p></details>
+      <p>That's the player's best par streak in Flow or Hot &amp; Cold: the most levels in a row they've cleared on par or better. It's their best ever, so it stays even after a streak ends.</p></details>
     <details><summary>Does Flow save my progress?</summary>
       <p>Yes. Every move saves on your device. If you're signed in, your run also saves to your name each time you clear a level or leave the game, so you can pick it up on another device.</p></details>
   </section>
@@ -293,8 +302,51 @@ function armyWarrant(r){
   else{const gap=152/r;for(let k=0;k<r;k++){const cy=24+gap*(k+.5);s+='<rect x="84" y="'+(cy-16).toFixed(1)+'" width="32" height="32" rx="3" fill="#15171c"/>'}}
   return s+'</svg>';
 }
-/* the insignia next to a name: officers in Flow, enlisted in Whack-a-Pipe, warrant officers in Mojo Roll */
+/* Trade rank (Hot & Cold): a promotion for every inspection passed (every 25 jobs) */
+const TRADE=['Helper','Apprentice I','Apprentice II','Apprentice III','Apprentice IV','Journeyman','Lead Journeyman','Foreman','Superintendent','Master Plumber','Plumbing Contractor'];
+const tradeTier=r=>r>=20?3:r>=17?2:r>=14?1:0;
+function tradeName(r){if(r<1)return 'No rank yet';if(r<11)return TRADE[r-1];return ['','Silver ','Gold ','Diamond '][tradeTier(r)]+'Plumbing Contractor'}
+const TR_M={copper:{light:'#f3c08a',mid:'#c4813f',dark:'#6e3f17',edge:'#3b1f08'},silver:{light:'#ffffff',mid:'#c9ced6',dark:'#6b7280',edge:'#2b2f36'},
+  gold:{light:'#fff1a8',mid:'#e9b93a',dark:'#8a5f10',edge:'#3d2804'},diamond:{light:'#ffffff',mid:'#9fe8ff',dark:'#3aa7d6',edge:'#0b3550'}};
+let tgN=0;
+function tradeStar(cx,cy,R,fill,edge){let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?R*.45:R;d+=(i?'L':'M')+(cx+rr*Math.cos(a)).toFixed(1)+' '+(cy+rr*Math.sin(a)).toFixed(1)}
+  return '<path d="'+d+'Z" fill="'+fill+'" stroke="'+edge+'" stroke-width="2" stroke-linejoin="round"/>'}
+function tradeBadge(r){
+  if(r<1)return '';
+  const tier=tradeTier(r),m=r>=14?TR_M[['','silver','gold','diamond'][tier]]:r>=8?TR_M.gold:r>=6?TR_M.silver:TR_M.copper,id='tb'+(tgN++),F='url(#'+id+')',E=m.edge;
+  const crest=r>=8;
+  let s='<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+m.light+'"/><stop offset=".5" stop-color="'+m.mid+'"/><stop offset="1" stop-color="'+m.dark+'"/></linearGradient>'+
+    '<linearGradient id="'+id+'c" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f3c08a"/><stop offset=".5" stop-color="#c97a3d"/><stop offset="1" stop-color="#8f4f22"/></linearGradient></defs>';
+  let g=tier?'<path d="M100 30 L166 50 L166 108 Q166 162 100 192 Q34 162 34 108 L34 50Z" transform="translate(100 111) scale(1.07) translate(-100 -111)" fill="none" stroke="'+F+'" stroke-width="4" stroke-linejoin="round"/>':'';
+  g+='<path d="M100 30 L166 50 L166 108 Q166 162 100 192 Q34 162 34 108 L34 50Z" fill="'+F+'" stroke="'+E+'" stroke-width="5" stroke-linejoin="round"/>'+
+    '<path d="M100 42 L154 58 L154 108 Q154 154 100 180 Q46 154 46 108 L46 58Z" fill="#1a1424" stroke="'+E+'" stroke-width="2.5" stroke-linejoin="round"/>';
+  // a copper line crossed behind the wrench, from Journeyman up
+  if(r>=6)g+='<g transform="rotate(38 100 96)"><rect x="93" y="52" width="14" height="88" rx="2" fill="url(#'+id+'c)" stroke="#3b1f08" stroke-width="2.5"/>'+
+    '<rect x="89" y="50" width="22" height="10" rx="2" fill="#8f4f22" stroke="#3b1f08" stroke-width="2"/><rect x="89" y="132" width="22" height="10" rx="2" fill="#8f4f22" stroke="#3b1f08" stroke-width="2"/></g>';
+  // the pipe wrench: red handle, steel jaws
+  g+='<g transform="rotate(-38 100 96)"><rect x="94" y="84" width="12" height="54" rx="4" fill="#d6322a" stroke="#2b0a08" stroke-width="2.5"/>'+
+    '<rect x="91" y="60" width="18" height="30" rx="3" fill="#c9ced6" stroke="#2b2f36" stroke-width="2.5"/>'+
+    '<path d="M88 52 L122 52 L122 62 L109 62 L109 66 L88 66Z" fill="#dfe5ec" stroke="#2b2f36" stroke-width="2.5" stroke-linejoin="round"/>'+
+    '<rect x="105" y="74" width="17" height="8" rx="2" fill="#dfe5ec" stroke="#2b2f36" stroke-width="2.5"/>'+
+    '<circle cx="100" cy="76" r="4.5" fill="#6b7280" stroke="#2b2f36" stroke-width="2"/></g>';
+  // apprentice bars
+  if(r>=2&&r<=5){const W=[58,50,40,28];for(let i=0;i<r-1;i++)g+='<rect x="'+(100-W[i]/2)+'" y="'+(139+i*10)+'" width="'+W[i]+'" height="7" rx="3.5" fill="'+F+'" stroke="'+E+'" stroke-width="1.5"/>'}
+  // stars
+  if(r===7||r===9||r===10)g+=tradeStar(100,154,14,F,E);
+  if(r>=11)g+=tradeStar(77,146,10,F,E)+tradeStar(100,157,12,F,E)+tradeStar(123,146,10,F,E);
+  // crest: hard hat for Foreman and Superintendent, crown from Master Plumber up
+  if(r===8||r===9)g+='<path d="M74 36 Q74 8 100 8 Q126 8 126 36Z" fill="#f5c842" stroke="#3d2804" stroke-width="3" stroke-linejoin="round"/>'+
+    '<rect x="96" y="9" width="8" height="26" rx="3" fill="#e0a92a" stroke="#3d2804" stroke-width="2"/><rect x="64" y="33" width="72" height="8" rx="4" fill="#f5c842" stroke="#3d2804" stroke-width="3"/>';
+  if(r>=10)g+='<path d="M70 40 L70 14 L85 28 L100 6 L115 28 L130 14 L130 40Z" fill="'+F+'" stroke="'+E+'" stroke-width="3" stroke-linejoin="round"/>'+
+    '<rect x="68" y="36" width="64" height="9" rx="2" fill="'+F+'" stroke="'+E+'" stroke-width="3"/>'+
+    '<circle cx="100" cy="40.5" r="3.5" fill="#e8281e"/><circle cx="84" cy="40.5" r="3" fill="#2f8cff"/><circle cx="116" cy="40.5" r="3" fill="#2f8cff"/>'+
+    (tier===3?'<path d="M100 0 L104 6 L100 12 L96 6Z" fill="#fff"/>':'');
+  if(!crest)g='<g transform="translate(0 -10)">'+g+'</g>';
+  return '<svg viewBox="0 0 200 200">'+s+g+'</svg>';
+}
+/* the insignia next to a name: officers in Flow, enlisted in Whack-a-Pipe, warrant officers in Mojo Roll, trade ranks in Hot & Cold */
 function rankHTML(game,best){
+  if(game==='hotcold'){const r=Math.floor(best/25);return r?'<span class="ri" title="'+tradeName(r)+'">'+tradeBadge(r)+'</span>':''}
   if(game==='roll'){const r=Math.min(5,Math.floor(best/24));return r?'<span class="ri" title="'+warrantName(r)+'">'+armyWarrant(r)+'</span>':''}
   if(best<100)return '';const n=Math.floor(best/100);
   return '<span class="ri" title="'+(game==='flow'?officerName(n):enlistedName(n))+'">'+(game==='flow'?armyOfficer(n):armyEnlisted(n))+'</span>';
@@ -333,10 +385,10 @@ async function load(game,unit){
     const r=await fetch(API+'/top?game='+game);const d=await r.json();
     const top=d.top||[];
     if(!top.length){ol.innerHTML='<li class="msg">No scores yet. Be the first.</li>';return}
-    ol.innerHTML=top.map((x,i)=>'<li'+(me&&key(x.name)===key(me)?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+rankHTML(game,x.best)+'<span class="nm">'+esc(x.name)+'</span>'+(game==='flow'&&x.best>=1000?'<span class="k1" title="'+Math.floor(x.best/1000)+'K Club">'+badgeK(Math.floor(x.best/1000))+'</span>':'')+(x.streak>=2?' <span class="fl" title="Best par streak">🔥'+x.streak+'</span>':'')+'</span><span class="s">'+unit+x.best+'</span></li>').join('');
+    ol.innerHTML=top.map((x,i)=>'<li'+(me&&key(x.name)===key(me)?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+rankHTML(game,x.best)+'<span class="nm">'+esc(x.name)+'</span>'+((game==='flow'||game==='hotcold')&&x.best>=1000?'<span class="k1" title="'+Math.floor(x.best/1000)+'K Club">'+badgeK(Math.floor(x.best/1000))+'</span>':'')+(x.streak>=2?' <span class="fl" title="Best par streak">🔥'+x.streak+'</span>':'')+'</span><span class="s">'+unit+x.best+'</span></li>').join('');
   }catch(e){ol.innerHTML='<li class="msg">Couldn\'t load the board. Try again in a bit.</li>'}
 }
-load('whack','');load('flow','Lv ');load('roll','🔧 ');
+load('whack','');load('flow','Lv ');load('roll','🔧 ');load('hotcold','Job ');
 })();
 </script>
 </body>

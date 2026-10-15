@@ -514,6 +514,7 @@ function armyEnlisted(r){
 
 function renderRank(){
   const stars=Math.max(0,Math.floor((level-1)/100)),wr=Math.floor(WBEST/100),rs=+RSUM.s||0,ro=Math.min(5,Math.floor(rs/24));
+  const hp=hcPassed(),hr=Math.floor(hp/25),hn=hr<11?hr+1:hr<14?14:hr<17?17:hr<20?20:0;
   const next=(stars+1)*100,pct=Math.round(((level-1)%100)/100*100);
   const ladder=(n,fn,nameFn,cur)=>'<div class="ladder">'+Array.from({length:n},(_,i)=>'<div class="'+(cur===i+1||(i+1===n&&cur>n)?'on':cur>i+1?'':'dim')+'">'+fn(i+1)+nameFn(i+1)+'</div>').join('')+'</div>';
   $('p-rank').innerHTML='<div class="rank"><h3 class="sec">Flow · Officer</h3><div class="ins">'+(stars?armyOfficer(stars):'')+'</div><h3>'+officerName(stars)+'</h3>'+
@@ -525,7 +526,10 @@ function renderRank(){
     ladder(12,armyEnlisted,enlistedName,wr)+'<p class="note">After Sergeant Major of the Army: Silver at 1500, Gold at 1800, Diamond at 2100.</p>'+
     '<h3 class="sec" style="margin-top:22px">Mojo Roll · Warrant Officer</h3><div class="ins">'+(ro?armyWarrant(ro):'')+'</div><h3>'+warrantName(ro)+'</h3>'+
     '<p class="sub">'+rs+' wrenches · '+(ro>=5?'top rank':'next: '+warrantName(ro+1)+' at '+(ro+1)*24)+'</p>'+
-    ladder(5,armyWarrant,warrantName,ro)+'<p class="note">Every 24 wrenches is a promotion. Levels cleared with a hint don\'t count.</p></div>';
+    ladder(5,armyWarrant,warrantName,ro)+'<p class="note">Every 24 wrenches is a promotion. Levels cleared with a hint don\'t count.</p>'+
+    '<h3 class="sec" style="margin-top:22px">Hot &amp; Cold · Trade</h3><div class="ins">'+(hr?tB(hr):'')+'</div><h3>'+tN(hr)+'</h3>'+
+    '<p class="sub">'+hp+' jobs passed · '+(hn?'next: '+tN(hn)+' at job '+hn*25:'top finish')+'</p>'+
+    ladder(11,tB,tN,hr)+'<p class="note">Every inspection you pass (every 25 jobs) is a promotion. After Plumbing Contractor: Silver at 350, Gold at 425, Diamond at 500.</p></div>';
 }
 
 /* chevron rank (Whack-a-Pipe): a chevron for every 100 points of your best score */
@@ -568,6 +572,29 @@ const RTRO=[
 ];
 const RSEC=[{id:'gravity',name:'Gravity Check',desc:'Fell off 100 times',art:'🪂'},{id:'oops',name:'Oops',desc:'Fell on the very first move',art:'🙈'},
   {id:'bull',name:'Bullseye',desc:'Par on your first try at a level',art:'🎯'},{id:'annoy',name:'Annoyed Mojo',desc:'Tapped Mojo 30 times',art:'😤'}];
+/* Hot & Cold: the game saves your progress on this device (pm-hc-save, one per player) and to your name */
+const HKEY='pm-hc-save'+(WACC?':'+WACC:'');
+let HSUM=(()=>{try{return JSON.parse(localStorage.getItem(HKEY)||'null')||{}}catch(e){return {}}})();
+const hcPassed=()=>Math.max(0,Math.max(+HSUM.best||1,+HSUM.level||1)-1);
+const tB=r=>window.PMLB&&PMLB.tradeBadge?PMLB.tradeBadge(r):'',tN=r=>window.PMLB&&PMLB.tradeName?PMLB.tradeName(r):(r?'Rank '+r:'No rank yet');
+const hz=(id,name,zone,art)=>({id,name,desc:'Pass the '+zone+' inspection',art});
+const HTRO=[
+  hz('j25','Bayou Certified','Bayou Manor','🏚️'),hz('j50','Brass Tacks','French Quarter','🎺'),hz('j75','Powdered Sugar','Café Kitchen','☕'),
+  hz('j100','Hex Key','Voodoo Parlor','🕯️'),hz('j125','Tombstone Tough','Cemetery','🪦'),hz('j150','Lead Wiper','Haunted Chateau','🕸️'),
+  hz('j175','Throw Me Something','Mardi Gras','🎭'),hz('j200','Steamboat Captain','Riverboat','🛶'),
+  {id:'pres',name:'Prestige',desc:'Start the Prestige run (job 201)',art:'<span style="font-size:2rem;color:#f5c842">★</span>'},
+  {id:'mfly',name:'Met Zydeco',desc:'Zydeco tags along on a job',art:img('fly-front')},{id:'mmag',name:'Met Beignet',desc:'Beignet tags along on a job',art:img('maggot-front')},
+  {id:'mcraw',name:'Met Roux',desc:'Roux tags along on a job',art:img('crawfish-front')},{id:'crew',name:'Full Crew',desc:'Meet Zydeco, Beignet and Roux',art:'🤝'},
+  {id:'i5',name:'Code Compliant',desc:'Pass 5 inspections',art:'📋5'},{id:'i10',name:'Permit Pro',desc:'Pass 10 inspections',art:'📋10'},{id:'i20',name:'Inspector\'s Pet',desc:'Pass 20 inspections',art:'📋20'},
+  {id:'cl1',name:'Clean Inspector',desc:'Pass an inspection with no red tag',art:'✅'},{id:'cl5',name:'Spotless Record',desc:'Pass 5 inspections with no red tag',art:'✅5'},
+  {id:'p1',name:'Clean Work',desc:'Finish a job on par',art:'🔧'},{id:'p25',name:'Pipe Wizard',desc:'Finish 25 jobs on par',art:'🪄'},{id:'p100',name:'Master Craftsman',desc:'Finish 100 jobs on par',art:'🛠️'},
+  {id:'s5',name:'On a Roll',desc:'Par streak of 5',art:'🔥5'},{id:'s10',name:'Hot Hand',desc:'Par streak of 10',art:'🔥10'},{id:'s25',name:'Untouchable',desc:'Par streak of 25',art:'🔥25'}
+].concat([100,200,300,400,500,600,700,800,900].map(n=>({id:'c'+n,name:n+' Club',desc:'Clear job '+n,art:clubMini(n)})),[{id:'k1000',name:'1K Club',desc:'Clear job 1000',art:badgeK(1)}]);
+function hcHTML(){
+  const have=Array.isArray(HSUM.tro)?HSUM.tro:[],em=a=>a.charAt(0)==='<'?a:'<span style="font-size:1.4rem">'+a+'</span>';
+  return '<h3 class="sec">Hot &amp; Cold</h3><p class="note">'+HTRO.filter(t=>have.includes(t.id)).length+' of '+HTRO.length+' trophies · '+hcPassed()+' jobs passed.</p><div class="grid">'+
+    HTRO.map(t=>tile(have.includes(t.id),em(t.art),t.name,t.desc)).join('')+'</div>';
+}
 /* Warrant Officer rank (Mojo Roll): a promotion every 24 wrenches */
 const WARRANT=['Warrant Officer 1','Chief Warrant Officer 2','Chief Warrant Officer 3','Chief Warrant Officer 4','Chief Warrant Officer 5'];
 function warrantName(r){return r<1?'No rank yet':WARRANT[Math.min(5,r)-1]}
@@ -625,7 +652,7 @@ function renderTrophies(){
   const got=trophies.filter(t=>!/^b/.test(t)).length;
   $('p-trophies').innerHTML='<h3 class="sec">Flow</h3><p class="note">'+got+' of '+TROPHIES.length+' trophies. Boss trophies and crowns are earned in Flow.</p><div class="grid">'+h+'</div>'+
     '<h3 class="sec">Whack-a-Pipe</h3><p class="note">'+WTROS.length+' of '+WTRO.length+' trophies.</p><div class="grid">'+WTRO.map(t=>tile(WTROS.includes(t.id),t.art,t.name,t.desc)).join('')+'</div>'+
-    rollHTML()+extrasHTML();
+    rollHTML()+hcHTML()+extrasHTML();
 }
 
 /* pipe skins: shown now, equipping arrives with the next Flow update */
@@ -679,13 +706,15 @@ addEventListener('keydown',e=>{if(e.key==='Escape')closeLocker()});
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('[data-tab]').forEach(x=>{const on=x===b;x.setAttribute('aria-selected',String(on));$('p-'+x.dataset.tab).hidden=!on});Snd.pick();
 }));
-function checkDouble(){if(window.PMX&&STARS>=1&&WBEST>=100)PMX.award('double','🎖️ Secret trophy: Double Duty');if(window.PMX&&STARS>=1&&WBEST>=100&&(+RSUM.s||0)>=24)PMX.award('triple','🎖️ Secret trophy: Triple Threat')}
+function checkDouble(){if(window.PMX&&STARS>=1&&WBEST>=100)PMX.award('double','🎖️ Secret trophy: Double Duty');if(window.PMX&&STARS>=1&&WBEST>=100&&(+RSUM.s||0)>=24)PMX.award('triple','🎖️ Secret trophy: Triple Threat');
+  if(window.PMX&&STARS>=1&&WBEST>=100&&(+RSUM.s||0)>=24&&hcPassed()>=25)PMX.award('jack','🧰 Secret trophy: Jack of All Trades')}
 if(window.PMX){PMX.onAward=n=>{say(n);Snd.pick();if(opened)renderTrophies()};PMX.sync();setTimeout(()=>{PMX.tick();checkDouble();if(opened)renderTrophies()},1500)}
 function showDoorBadge(){const d=$('doorBadge');if(level>1000||trophies.includes('k1000')){d.innerHTML=badgeK(Math.max(1,Math.floor((level-1)/1000)));d.hidden=false}}
 showDoorBadge();
 /* signed in: pull your ranks from your name, so every device shows the same thing */
 if(window.PMLB&&PMLB.account()){
-  Promise.all([PMLB.cloudLoad('flow'),PMLB.cloudLoad('whack'),PMLB.cloudLoad('roll').catch(()=>null)]).then(([f,w,r])=>{
+  Promise.all([PMLB.cloudLoad('flow'),PMLB.cloudLoad('whack'),PMLB.cloudLoad('roll').catch(()=>null),PMLB.cloudLoad('hotcold').catch(()=>null)]).then(([f,w,r,h])=>{
+    if(h&&h.v===1){HSUM=Object.assign({},HSUM,{level:Math.max(+HSUM.level||1,+h.level||1),best:Math.max(+HSUM.best||1,+h.best||1),tro:[...new Set((HSUM.tro||[]).concat(h.tro||[]))]})}
     if(r&&r.sum){const t=[...new Set((RSUM.tro||[]).concat(r.sum.tro||[]))];if((+r.sum.s||0)>=(+RSUM.s||0))RSUM=Object.assign({},r.sum);RSUM.tro=t;try{localStorage.setItem('pm-roll-sum',JSON.stringify(RSUM))}catch(e){}}
     if(f&&f.v===1){const fl=f.solved?f.level+1:f.level;if(fl>level){level=fl;if(Array.isArray(f.trophies))trophies=f.trophies;STARS=Math.max(0,Math.floor((level-1)/100))}}
     if(w){WBEST=Math.max(WBEST,+w.best||0);try{localStorage.setItem('pm-whack-best',String(WBEST))}catch(e){}

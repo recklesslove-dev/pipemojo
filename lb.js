@@ -1,4 +1,4 @@
-/* Pipe Mojo leaderboard — shared by whack.html, flow.html and mojoroll.html */
+/* Pipe Mojo leaderboard — shared by whack.html, flow.html, mojoroll.html and hotcold.html */
 (function(){
 const API='https://pipemojo-leaderboard.fvidaurri.workers.dev';
 const KEY='pm-lb';
@@ -232,8 +232,51 @@ function armyWarrant(r){
   else{const gap=152/r;for(let k=0;k<r;k++){const cy=24+gap*(k+.5);s+='<rect x="84" y="'+(cy-16).toFixed(1)+'" width="32" height="32" rx="3" fill="#15171c"/>'}}
   return s+'</svg>';
 }
-/* the insignia next to a name: officers in Flow, enlisted in Whack-a-Pipe, warrant officers in Mojo Roll */
+/* Trade rank (Hot & Cold): a promotion for every inspection passed (every 25 jobs) */
+const TRADE=['Helper','Apprentice I','Apprentice II','Apprentice III','Apprentice IV','Journeyman','Lead Journeyman','Foreman','Superintendent','Master Plumber','Plumbing Contractor'];
+const tradeTier=r=>r>=20?3:r>=17?2:r>=14?1:0;
+function tradeName(r){if(r<1)return 'No rank yet';if(r<11)return TRADE[r-1];return ['','Silver ','Gold ','Diamond '][tradeTier(r)]+'Plumbing Contractor'}
+const TR_M={copper:{light:'#f3c08a',mid:'#c4813f',dark:'#6e3f17',edge:'#3b1f08'},silver:{light:'#ffffff',mid:'#c9ced6',dark:'#6b7280',edge:'#2b2f36'},
+  gold:{light:'#fff1a8',mid:'#e9b93a',dark:'#8a5f10',edge:'#3d2804'},diamond:{light:'#ffffff',mid:'#9fe8ff',dark:'#3aa7d6',edge:'#0b3550'}};
+let tgN=0;
+function tradeStar(cx,cy,R,fill,edge){let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?R*.45:R;d+=(i?'L':'M')+(cx+rr*Math.cos(a)).toFixed(1)+' '+(cy+rr*Math.sin(a)).toFixed(1)}
+  return '<path d="'+d+'Z" fill="'+fill+'" stroke="'+edge+'" stroke-width="2" stroke-linejoin="round"/>'}
+function tradeBadge(r){
+  if(r<1)return '';
+  const tier=tradeTier(r),m=r>=14?TR_M[['','silver','gold','diamond'][tier]]:r>=8?TR_M.gold:r>=6?TR_M.silver:TR_M.copper,id='tb'+(tgN++),F='url(#'+id+')',E=m.edge;
+  const crest=r>=8;
+  let s='<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+m.light+'"/><stop offset=".5" stop-color="'+m.mid+'"/><stop offset="1" stop-color="'+m.dark+'"/></linearGradient>'+
+    '<linearGradient id="'+id+'c" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f3c08a"/><stop offset=".5" stop-color="#c97a3d"/><stop offset="1" stop-color="#8f4f22"/></linearGradient></defs>';
+  let g=tier?'<path d="M100 30 L166 50 L166 108 Q166 162 100 192 Q34 162 34 108 L34 50Z" transform="translate(100 111) scale(1.07) translate(-100 -111)" fill="none" stroke="'+F+'" stroke-width="4" stroke-linejoin="round"/>':'';
+  g+='<path d="M100 30 L166 50 L166 108 Q166 162 100 192 Q34 162 34 108 L34 50Z" fill="'+F+'" stroke="'+E+'" stroke-width="5" stroke-linejoin="round"/>'+
+    '<path d="M100 42 L154 58 L154 108 Q154 154 100 180 Q46 154 46 108 L46 58Z" fill="#1a1424" stroke="'+E+'" stroke-width="2.5" stroke-linejoin="round"/>';
+  // a copper line crossed behind the wrench, from Journeyman up
+  if(r>=6)g+='<g transform="rotate(38 100 96)"><rect x="93" y="52" width="14" height="88" rx="2" fill="url(#'+id+'c)" stroke="#3b1f08" stroke-width="2.5"/>'+
+    '<rect x="89" y="50" width="22" height="10" rx="2" fill="#8f4f22" stroke="#3b1f08" stroke-width="2"/><rect x="89" y="132" width="22" height="10" rx="2" fill="#8f4f22" stroke="#3b1f08" stroke-width="2"/></g>';
+  // the pipe wrench: red handle, steel jaws
+  g+='<g transform="rotate(-38 100 96)"><rect x="94" y="84" width="12" height="54" rx="4" fill="#d6322a" stroke="#2b0a08" stroke-width="2.5"/>'+
+    '<rect x="91" y="60" width="18" height="30" rx="3" fill="#c9ced6" stroke="#2b2f36" stroke-width="2.5"/>'+
+    '<path d="M88 52 L122 52 L122 62 L109 62 L109 66 L88 66Z" fill="#dfe5ec" stroke="#2b2f36" stroke-width="2.5" stroke-linejoin="round"/>'+
+    '<rect x="105" y="74" width="17" height="8" rx="2" fill="#dfe5ec" stroke="#2b2f36" stroke-width="2.5"/>'+
+    '<circle cx="100" cy="76" r="4.5" fill="#6b7280" stroke="#2b2f36" stroke-width="2"/></g>';
+  // apprentice bars
+  if(r>=2&&r<=5){const W=[58,50,40,28];for(let i=0;i<r-1;i++)g+='<rect x="'+(100-W[i]/2)+'" y="'+(139+i*10)+'" width="'+W[i]+'" height="7" rx="3.5" fill="'+F+'" stroke="'+E+'" stroke-width="1.5"/>'}
+  // stars
+  if(r===7||r===9||r===10)g+=tradeStar(100,154,14,F,E);
+  if(r>=11)g+=tradeStar(77,146,10,F,E)+tradeStar(100,157,12,F,E)+tradeStar(123,146,10,F,E);
+  // crest: hard hat for Foreman and Superintendent, crown from Master Plumber up
+  if(r===8||r===9)g+='<path d="M74 36 Q74 8 100 8 Q126 8 126 36Z" fill="#f5c842" stroke="#3d2804" stroke-width="3" stroke-linejoin="round"/>'+
+    '<rect x="96" y="9" width="8" height="26" rx="3" fill="#e0a92a" stroke="#3d2804" stroke-width="2"/><rect x="64" y="33" width="72" height="8" rx="4" fill="#f5c842" stroke="#3d2804" stroke-width="3"/>';
+  if(r>=10)g+='<path d="M70 40 L70 14 L85 28 L100 6 L115 28 L130 14 L130 40Z" fill="'+F+'" stroke="'+E+'" stroke-width="3" stroke-linejoin="round"/>'+
+    '<rect x="68" y="36" width="64" height="9" rx="2" fill="'+F+'" stroke="'+E+'" stroke-width="3"/>'+
+    '<circle cx="100" cy="40.5" r="3.5" fill="#e8281e"/><circle cx="84" cy="40.5" r="3" fill="#2f8cff"/><circle cx="116" cy="40.5" r="3" fill="#2f8cff"/>'+
+    (tier===3?'<path d="M100 0 L104 6 L100 12 L96 6Z" fill="#fff"/>':'');
+  if(!crest)g='<g transform="translate(0 -10)">'+g+'</g>';
+  return '<svg viewBox="0 0 200 200">'+s+g+'</svg>';
+}
+/* the insignia next to a name: officers in Flow, enlisted in Whack-a-Pipe, warrant officers in Mojo Roll, trade ranks in Hot & Cold */
 function rankHTML(game,best){
+  if(game==='hotcold'){const r=Math.floor(best/25);return r?'<span class="ri" title="'+tradeName(r)+'">'+tradeBadge(r)+'</span>':''}
   if(game==='roll'){const r=Math.min(5,Math.floor(best/24));return r?'<span class="ri" title="'+warrantName(r)+'">'+armyWarrant(r)+'</span>':''}
   if(best<100)return '';const n=Math.floor(best/100);
   return '<span class="ri" title="'+(game==='flow'?officerName(n):enlistedName(n))+'">'+(game==='flow'?armyOfficer(n):armyEnlisted(n))+'</span>';
@@ -277,7 +320,7 @@ Board.prototype.render=function(){
   else{
     h+='<ol>'+this.top.map((r,i)=>{
       const mine=me&&r.name.toLowerCase().replace(/ /g,'')===me;
-      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+rankHTML(this.game,r.best)+'<span class="nm">'+esc(r.name)+'</span>'+(this.game==='flow'&&r.best>=1000?'<span class="k1" title="'+Math.floor(r.best/1000)+'K Club">'+badgeK(Math.floor(r.best/1000))+'</span>':'')+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
+      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+rankHTML(this.game,r.best)+'<span class="nm">'+esc(r.name)+'</span>'+((this.game==='flow'||this.game==='hotcold')&&r.best>=1000?'<span class="k1" title="'+Math.floor(r.best/1000)+'K Club">'+badgeK(Math.floor(r.best/1000))+'</span>':'')+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
     }).join('')+'</ol>';
   }
   h+='</div>';
@@ -304,6 +347,7 @@ Board.prototype.submit=async function(){
   try{
     const d=await call('/score',Object.assign({token:a.token,game:this.game,score:this.pending,run:this.pendingRun},this.extra||{}));
     this.pending=0;this.pendingRun=null;this.rank=d.rank||0;this.top=d.top||[];this.err='';
+    if(window.PMX&&PMX.checkKing)setTimeout(()=>PMX.checkKing(true),600); // #1 on every board?
   }catch(e){
     if(e.status===401){save(null);this.mode='recover';}
     if(e.status===400){this.pending=0;this.pendingRun=null}
@@ -379,5 +423,5 @@ const flush=()=>{for(const g in queued){clearTimeout(timers[g]);sendSave(g,true)
 window.addEventListener('pagehide',flush);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush()});
 
-window.PMLB={armyWarrant,warrantName,mount:(el,o)=>{addCss();return new Board(el,o)},account:load,cloudSave,cloudLoad,switchPlayer,onChange:fn=>listeners.push(fn)};
+window.PMLB={armyWarrant,warrantName,tradeBadge,tradeName,top:game=>call('/top?game='+game).then(d=>d.top||[]),mount:(el,o)=>{addCss();return new Board(el,o)},account:load,cloudSave,cloudLoad,switchPlayer,onChange:fn=>listeners.push(fn)};
 })();
