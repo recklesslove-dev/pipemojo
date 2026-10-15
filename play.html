@@ -81,6 +81,10 @@ h1{font-family:var(--title);font-weight:400;font-size:clamp(2.8rem,12vw,4rem);li
 .game.hotcold h2{background:linear-gradient(90deg,#ff4a3d,#ffffff,#2f8cff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .hotcold .go{background:linear-gradient(90deg,#ff4a3d,#2f8cff);color:#fff}
 .hotcold .top3 .s{color:#ff8a7f}
+.game.roll{border-color:rgba(245,200,66,.45)}
+.game.roll h2{color:var(--gold)}
+.roll .go{background:var(--gold);color:#241128}
+.roll .top3 .s{color:var(--gold)}
 .board{display:flex;align-items:center;gap:14px;margin-top:16px;padding:16px 18px;border-radius:14px;
   background:linear-gradient(90deg,rgba(245,200,66,.14),rgba(245,200,66,.04));border:2px solid rgba(245,200,66,.45)}
 .board > span:first-child{font-size:1.8rem}
@@ -160,6 +164,25 @@ footer{text-align:center;color:rgba(255,255,255,.3);font-size:.8rem;margin-top:3
       <span class="go">Play</span>
     </a>
 
+    <a class="game roll" href="/mojoroll">
+      <svg viewBox="0 0 96 96" aria-hidden="true">
+        <rect x="0" y="0" width="96" height="96" rx="12" fill="#14100a"/>
+        <path d="M8 70 L48 54 L88 70 L48 86Z" fill="#2a2216" stroke="#5a4a2a" stroke-width="2"/>
+        <path d="M8 70 L48 86 L48 92 L8 76Z" fill="#1c160d"/><path d="M48 86 L88 70 L88 76 L48 92Z" fill="#241c10"/>
+        <ellipse cx="62" cy="70" rx="9" ry="4" fill="#120a1a" stroke="#f5c842" stroke-width="2"/>
+        <rect x="24" y="24" width="18" height="42" rx="3" fill="#c97a3d" stroke="#120a1a" stroke-width="2"/>
+        <rect x="21" y="22" width="24" height="7" rx="2" fill="#8f4f22"/><rect x="21" y="60" width="24" height="7" rx="2" fill="#8f4f22"/>
+        <path d="M50 30 Q62 22 70 34" fill="none" stroke="#f5c842" stroke-width="3" stroke-linecap="round"/><path d="M70 34 L71 26 M70 34 L63 32" stroke="#f5c842" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <h2>Mojo Roll</h2>
+        <p>Roll the pipe end over end and stand it up in the flange.</p>
+        <span class="best" id="rollBest"></span>
+        <ol class="top3" id="top-roll" aria-label="Mojo Roll top 3"></ol>
+      </div>
+      <span class="go">Play</span>
+    </a>
+
     <a class="game locker" href="/locker">
       <span class="lk-thumb" aria-hidden="true"><img src="/assets/mojo-front.png" alt=""></span>
       <div>
@@ -184,6 +207,8 @@ try{
   if(f>1)document.getElementById('flowBest').textContent='Furthest: level '+f;
   var h=parseInt(localStorage.getItem('pm-hc-best')||'1',10);
   if(h>1)document.getElementById('hcBest').textContent='Furthest: job '+h;
+  var rs=JSON.parse(localStorage.getItem('pm-roll-sum')||'null')||{},rw=+(rs.w||rs.s||0);
+  if(rw>0)document.getElementById('rollBest').textContent='Wrenches: '+rw+' / 120';
 }catch(e){}
 (function(){
   var API='https://pipemojo-leaderboard.fvidaurri.workers.dev';
@@ -196,7 +221,7 @@ try{
       }).join('');
     }).catch(function(){});
   }
-  load('whack','');load('flow','Lv ');load('hotcold','Job ');
+  load('whack','');load('flow','Lv ');load('hotcold','Job ');load('roll','🔧 ');
 })();
 </script>
 </body>
