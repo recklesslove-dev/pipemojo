@@ -8,10 +8,16 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mojo Roll">
+<link rel="apple-touch-icon" href="/mojoroll-icon.png">
+<link rel="manifest" href="/mojoroll.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <title>Mojo Roll | Pipe Mojo</title>
 <!--
+  MOJO ROLL — Pack 1, v3.0 (Oct 15)
+  v3.0: Bloxorz-style perspective camera from the near corner, arrow-pentagon
+  corner buttons rotated to each roll's real screen direction, drags pick the
+  closest on-screen direction, home-screen app mode for true full screen on iPhone.
   MOJO ROLL — Pack 1, v2.3 (Oct 14)
   v2.3: landscape-only (rotate screen in portrait), full-screen board with
   floating HUD, ☰ menu, thumb buttons (◀ ▶ left, ▲ ▼ right), rolling sound.
@@ -61,11 +67,15 @@
   /* thumb buttons: left = ◀ ▶, right = ▲ ▼ (stacked) */
   .thumb { position:absolute; z-index:3; display:flex; gap:12px; bottom:calc(14px + var(--sb)); }
   .thumb.left { left:calc(16px + var(--sl)); }
-  .thumb.right { right:calc(16px + var(--sr)); flex-direction:column; }
+  .thumb.right { right:calc(16px + var(--sr)); }
+  .thumb { flex-direction:column; }
   .thumb button { width:76px; height:76px; border-radius:50%; padding:0; font-size:26px; color:#fff;
     background:rgba(255,255,255,.10); border:2px solid rgba(255,255,255,.55); box-shadow:0 4px 14px rgba(0,0,0,.35);
     -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
-  .thumb button:active, .thumb button.hot { background:rgba(245,200,66,.35); border-color:var(--gold); color:var(--gold); }
+  .thumb button svg { width:62%; height:62%; display:block; margin:auto; transition:transform .2s; }
+  .thumb button svg path { fill:rgba(225,225,232,.88); stroke:rgba(255,255,255,.9); stroke-width:3; stroke-linejoin:round; }
+  .thumb button:active, .thumb button.hot { background:rgba(245,200,66,.30); border-color:var(--gold); }
+  .thumb button:active svg path, .thumb button.hot svg path { fill:var(--gold); }
   @media (max-height: 430px) { .thumb button { width:62px; height:62px; font-size:21px; } .thumb { gap:9px; bottom:calc(10px + var(--sb)); }
     .hb { width:40px; height:36px; } .hc .ln { font-size:19px; } }
   @media (min-height: 700px) { .thumb button { width:92px; height:92px; font-size:32px; } .thumb { gap:16px; }
@@ -148,12 +158,12 @@
       </div>
     </div>
     <div class="thumb left">
-      <button data-dir="W" type="button" aria-label="Roll left">&#9664;</button>
-      <button data-dir="E" type="button" aria-label="Roll right">&#9654;</button>
+      <button data-dir="W" type="button" aria-label="Roll up-left"><svg viewBox="-50 -50 100 100" aria-hidden="true"><path d="M0,-40 L28,-10 L28,30 L-28,30 L-28,-10 Z"/></svg></button>
+      <button data-dir="S" type="button" aria-label="Roll down-left"><svg viewBox="-50 -50 100 100" aria-hidden="true"><path d="M0,-40 L28,-10 L28,30 L-28,30 L-28,-10 Z"/></svg></button>
     </div>
     <div class="thumb right">
-      <button data-dir="N" type="button" aria-label="Roll up">&#9650;</button>
-      <button data-dir="S" type="button" aria-label="Roll down">&#9660;</button>
+      <button data-dir="N" type="button" aria-label="Roll up-right"><svg viewBox="-50 -50 100 100" aria-hidden="true"><path d="M0,-40 L28,-10 L28,30 L-28,30 L-28,-10 Z"/></svg></button>
+      <button data-dir="E" type="button" aria-label="Roll down-right"><svg viewBox="-50 -50 100 100" aria-hidden="true"><path d="M0,-40 L28,-10 L28,30 L-28,30 L-28,-10 Z"/></svg></button>
     </div>
     <div class="ov" id="overlay">
       <h2 id="ovTitle">LEVEL CLEAR!</h2>
@@ -194,10 +204,10 @@
   <h2>MOJO ROLL</h2>
   <ul>
     <li><i>👆</i><b>Drag or swipe</b> anywhere on the board. The pipe leans the way it's about to go. Let go to roll, or slide back to cancel.</li>
-    <li><i>◀</i>Or use the <b>thumb buttons</b>: ◀ ▶ on the left, ▲ ▼ on the right. Up rolls away from you, down rolls toward you. Arrow keys work too.</li>
+    <li><i>⬟</i>Or tap the <b>thumb buttons</b> in the corners. Each one points the way the pipe will roll on the board.</li>
     <li><i>⭕</i><b>Stand the pipe straight up in the flange</b> to clear the level.</li>
     <li><i>🔧</i>Hit <b>par</b> for 3 wrenches. Every zone brings a new twist.</li>
-    <li><i>☰</i>The <b>menu</b> has levels, sound, and full screen (iPad). On iPhone, use Share → Add to Home Screen to hide Safari's bars.</li>
+    <li><i>☰</i>The <b>menu</b> has levels, sound, and full screen. On iPhone, full screen means adding Mojo Roll to your home screen.</li>
   </ul>
   <button class="go" id="helpGo" type="button">LET'S ROLL</button>
 </div></div>
@@ -208,6 +218,17 @@
   <h2 id="zName"></h2>
   <p id="zText"></p>
   <button class="go" id="zGo" type="button"></button>
+</div></div>
+
+<div class="modal" id="mFull"><div class="card">
+  <div class="kicker">FULL SCREEN ON IPHONE</div>
+  <h2>ADD TO HOME SCREEN</h2>
+  <ul>
+    <li><i>1</i>Tap Safari's <b>Share</b> button <b>⬆︎</b>.</li>
+    <li><i>2</i>Scroll down and tap <b>Add to Home Screen</b>, then <b>Add</b>.</li>
+    <li><i>3</i>Open <b>Mojo Roll</b> from your home screen. It runs full screen like an app, with no Safari bars, and keeps your progress.</li>
+  </ul>
+  <button class="go" id="fullGo" type="button">GOT IT</button>
 </div></div>
 
 <div id="rotate">
@@ -681,19 +702,36 @@ const sfx = {
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const SLAB = 0.35;
-/* v2.1 camera: squared-up 3/4 view (like the newer block-rolling games).
-   Board grid lines up with the screen: up = roll away (N), right = E.
-   A small yaw shows the right-hand side of each tile for depth. */
-const CAM_PITCH = 0.92, CAM_YAW = 0.13;
+/* v3 camera: Bloxorz-style. Perspective, looking diagonally across the board
+   from the near corner, so you see the whole level in 3D with real depth.
+   N rolls up-right, E down-right, S down-left, W up-left; the thumb buttons
+   are rotated to the exact on-screen direction of each roll. */
+const CAM_YAW = Math.PI / 4, CAM_PITCH = 0.84;
 const CAM_V = [Math.sin(CAM_YAW) * Math.cos(CAM_PITCH), Math.sin(CAM_PITCH), Math.cos(CAM_YAW) * Math.cos(CAM_PITCH)]; // toward camera
-const CAM_R = [Math.cos(CAM_YAW), 0, -Math.sin(CAM_YAW)];                                                            // screen right
-const CAM_U = [CAM_V[1] * CAM_R[2] - CAM_V[2] * CAM_R[1], CAM_V[2] * CAM_R[0] - CAM_V[0] * CAM_R[2], CAM_V[0] * CAM_R[1] - CAM_V[1] * CAM_R[0]]; // screen up
-const EX = 0.8165, EYF = 1.633 * Math.sin(CAM_PITCH);   // old iso ellipse radii -> this camera
-const viewDot = p => p[0] * CAM_V[0] + p[1] * CAM_V[1] + p[2] * CAM_V[2];
+const CAM_R = [Math.cos(CAM_YAW), 0, -Math.sin(CAM_YAW)];
+const CAM_U = [CAM_V[1] * CAM_R[2] - CAM_V[2] * CAM_R[1], CAM_V[2] * CAM_R[0] - CAM_V[0] * CAM_R[2], CAM_V[0] * CAM_R[1] - CAM_V[1] * CAM_R[0]];
+const CAM_FH = [Math.sin(CAM_YAW), 0, Math.cos(CAM_YAW)];   // ground direction toward the camera
+let camPos = [0, 10, 10], camD = 20;
 let view = { s: 30, ox: 0, oy: 0 };
-
+function setCamera() {
+  let x0 = COLS, x1 = 0, z0 = ROWS, z1 = 0;
+  for (let z = 0; z < ROWS; z++) for (let x = 0; x < COLS; x++) if (MAP[z][x] !== ".") {
+    x0 = Math.min(x0, x); x1 = Math.max(x1, x + 1); z0 = Math.min(z0, z); z1 = Math.max(z1, z + 1);
+  }
+  const tx = (x0 + x1) / 2, tz = (z0 + z1) / 2, diag = Math.hypot(x1 - x0, z1 - z0);
+  camD = diag * 1.55 + 9;                 // far enough for gentle, Bloxorz-like perspective
+  camPos = [tx + CAM_V[0] * camD, CAM_V[1] * camD, tz + CAM_V[2] * camD];
+}
+const sub3 = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+function toCam(p) { return sub3(camPos, p); }
+function viewDot(p) { return dot3(p, CAM_V); }
 function proj(x, y, z) {
-  return [x * CAM_R[0] + y * CAM_R[1] + z * CAM_R[2], -(x * CAM_U[0] + y * CAM_U[1] + z * CAM_U[2])];
+  const rx = x - camPos[0], ry = y - camPos[1], rz = z - camPos[2];
+  const xr = rx * CAM_R[0] + ry * CAM_R[1] + rz * CAM_R[2];
+  const yr = rx * CAM_U[0] + ry * CAM_U[1] + rz * CAM_U[2];
+  const zr = Math.max(0.5, -(rx * CAM_V[0] + ry * CAM_V[1] + rz * CAM_V[2]));
+  return [xr / zr * camD, -yr / zr * camD];
 }
 
 function computeView(w, h) {
@@ -705,7 +743,7 @@ function computeView(w, h) {
   }
   x0 -= 0.3; z0 -= 0.3; x1 += 0.3; z1 += 0.3;
   const corners = [];
-  for (const x of [x0, x1]) for (const z of [z0, z1]) for (const y of [-SLAB, 2.1]) corners.push([x, y, z]);
+  for (const x of [x0, x1]) for (const z of [z0, z1]) for (const y of [-SLAB, 0.5]) corners.push([x, y, z]);   // fit the tiles; tall pipes may rise under the HUD
   for (const c of corners) {
     const p = proj(c[0], c[1], c[2]);
     minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]);
@@ -750,6 +788,11 @@ function drawTile(cx, cz, broken, now) {
   const t = tileAt(MAP, cx, cz);
   if (t === ".") return;
   const vis = tileVis(t, now);
+  // local screen scale here (perspective: near tiles are bigger)
+  const c0 = P(cx + 0.5, 0, cz + 0.5);
+  const cxp = P(cx + 0.5 + CAM_R[0], 0, cz + 0.5 + CAM_R[2]), czp = P(cx + 0.5 + CAM_FH[0], 0, cz + 0.5 + CAM_FH[2]);
+  const LSX = Math.hypot(cxp[0] - c0[0], cxp[1] - c0[1]), LSY = Math.hypot(czp[0] - c0[0], czp[1] - c0[1]);
+  const LS = LSX, KX = 0.8165 * LSX, KY = 1.633 * LSY;
   const isBridge = t === "b" || t === "B", isGhost = t === "G" || t === "g";
   const dy = isBridge ? -0.9 * (1 - vis) : 0;
   const Q = (x, y, z) => P(x, y + dy, z);
@@ -758,7 +801,7 @@ function drawTile(cx, cz, broken, now) {
     // the empty slot: a dashed outline where the tile WILL be
     const ghostTop = [P(cx, 0, cz), P(cx + 1, 0, cz), P(cx + 1, 0, cz + 1), P(cx, 0, cz + 1)];
     ctx.save();
-    ctx.setLineDash([view.s * 0.08, view.s * 0.07]);
+    ctx.setLineDash([LS * 0.08, LS * 0.07]);
     ctx.globalAlpha = 0.55 * (1 - vis);
     poly(ghostTop, isGhost ? "rgba(150,230,255,.07)" : "rgba(255,180,90,.05)", isGhost ? "rgba(160,235,255,.75)" : "rgba(255,190,110,.7)");
     ctx.restore();
@@ -780,7 +823,7 @@ function drawTile(cx, cz, broken, now) {
   else if (isGhost) { g.addColorStop(0, "#9fc9d8"); g.addColorStop(0.55, "#58798a"); g.addColorStop(1, "#2a3c48"); }
   else { g.addColorStop(0, THEME.top[0]); g.addColorStop(0.55, THEME.top[1]); g.addColorStop(1, THEME.top[2]); }
   poly(top, g, "rgba(30,42,58,.55)");
-  ctx.lineWidth = Math.max(1, view.s * 0.035);
+  ctx.lineWidth = Math.max(1, LS * 0.035);
   ctx.beginPath(); ctx.moveTo(top[3][0], top[3][1]); ctx.lineTo(top[0][0], top[0][1]); ctx.lineTo(top[1][0], top[1][1]);
   ctx.strokeStyle = "rgba(255,255,255,.16)"; ctx.stroke();
   ctx.beginPath(); ctx.moveTo(top[3][0], top[3][1]); ctx.lineTo(top[2][0], top[2][1]); ctx.lineTo(top[1][0], top[1][1]);
@@ -788,7 +831,7 @@ function drawTile(cx, cz, broken, now) {
   const ctr = Q(cx + 0.5, 0.01, cz + 0.5);
   if (isBridge) {
     // steel grate deck: bars across the tile + rivets
-    ctx.strokeStyle = "rgba(15,18,24,.55)"; ctx.lineWidth = Math.max(1, view.s * 0.04);
+    ctx.strokeStyle = "rgba(15,18,24,.55)"; ctx.lineWidth = Math.max(1, LS * 0.04);
     for (let k = 1; k <= 4; k++) {
       const a = Q(cx + k * 0.2, 0.012, cz + 0.08), b = Q(cx + k * 0.2, 0.012, cz + 0.92);
       ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
@@ -796,15 +839,15 @@ function drawTile(cx, cz, broken, now) {
     ctx.fillStyle = "rgba(220,225,235,.45)";
     for (const [rx, rz] of [[0.1, 0.1], [0.9, 0.1], [0.9, 0.9], [0.1, 0.9]]) {
       const r = Q(cx + rx, 0.012, cz + rz);
-      ctx.beginPath(); ctx.ellipse(r[0], r[1], view.s * 0.035 * EX, view.s * 0.02 * EYF, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(r[0], r[1], 0.035 * KX, 0.02 * KY, 0, 0, Math.PI * 2); ctx.fill();
     }
   } else if (isGhost) {
     const pulse = 0.25 + 0.15 * Math.sin(now * 0.004 + cx + cz);
-    const gg = ctx.createRadialGradient(ctr[0], ctr[1], 1, ctr[0], ctr[1], view.s * 0.6);
+    const gg = ctx.createRadialGradient(ctr[0], ctr[1], 1, ctr[0], ctr[1], LS * 0.6);
     gg.addColorStop(0, "rgba(190,245,255," + (pulse * vis).toFixed(3) + ")"); gg.addColorStop(1, "rgba(190,245,255,0)");
     ctx.fillStyle = gg; poly(top, gg);
     // tiny tombstone cross so ghosts read even when solid
-    ctx.strokeStyle = "rgba(230,250,255,.55)"; ctx.lineWidth = Math.max(1, view.s * 0.04);
+    ctx.strokeStyle = "rgba(230,250,255,.55)"; ctx.lineWidth = Math.max(1, LS * 0.04);
     const a = Q(cx + 0.5, 0.012, cz + 0.32), b = Q(cx + 0.5, 0.012, cz + 0.68), c = Q(cx + 0.36, 0.012, cz + 0.45), d = Q(cx + 0.64, 0.012, cz + 0.45);
     ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.moveTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.stroke();
   } else if (t !== "X" && t !== "O") {
@@ -819,7 +862,7 @@ function drawTile(cx, cz, broken, now) {
         ctx.lineTo(pk[0], pk[1]);
       }
       ctx.strokeStyle = v ? "rgba(255,255,255,.05)" : "rgba(120,135,160,.06)";
-      ctx.lineWidth = Math.max(1, view.s * 0.02);
+      ctx.lineWidth = Math.max(1, LS * 0.02);
       ctx.stroke();
     }
   }
@@ -828,68 +871,68 @@ function drawTile(cx, cz, broken, now) {
     for (let i = 0; i < 4; i++) {
       const fx = cx + 0.15 + hash2(cx * 3 + i, cz) * 0.7, fz = cz + 0.15 + hash2(cx, cz * 3 + i) * 0.7;
       const sp = Q(fx, 0.01, fz);
-      ctx.fillRect(sp[0], sp[1], view.s * 0.045, view.s * 0.045);
+      ctx.fillRect(sp[0], sp[1], LS * 0.045, LS * 0.045);
     }
   }
   if (t === "X") {
-    ctx.strokeStyle = "rgba(43,30,18,.8)"; ctx.lineWidth = Math.max(1, view.s * 0.028);
+    ctx.strokeStyle = "rgba(43,30,18,.8)"; ctx.lineWidth = Math.max(1, LS * 0.028);
     const cracks = broken ? 4 : 2;
     for (let i = 0; i < cracks; i++) {
       const a = hash2(cx + i * 7, cz - i) * Math.PI * 2;
       ctx.beginPath(); ctx.moveTo(ctr[0], ctr[1]);
       let px = ctr[0], py = ctr[1];
       for (let k = 1; k <= 3; k++) {
-        px += Math.cos(a + (hash2(cx + k, cz + i) - 0.5)) * view.s * 0.16;
-        py += Math.sin(a + (hash2(cx - i, cz + k) - 0.5)) * view.s * 0.08;
+        px += Math.cos(a + (hash2(cx + k, cz + i) - 0.5)) * LS * 0.16;
+        py += Math.sin(a + (hash2(cx - i, cz + k) - 0.5)) * LS * 0.08;
         ctx.lineTo(px, py);
       }
       ctx.stroke();
     }
   } else if (t === "O") {
     const pulse = 0.16 + 0.10 * Math.sin(now * 0.0032);
-    const gg = ctx.createRadialGradient(ctr[0], ctr[1], 2, ctr[0], ctr[1], view.s * 0.62);
+    const gg = ctx.createRadialGradient(ctr[0], ctr[1], 2, ctr[0], ctr[1], LS * 0.62);
     gg.addColorStop(0, "rgba(255,176,92," + pulse.toFixed(3) + ")"); gg.addColorStop(1, "rgba(255,176,92,0)");
     ctx.fillStyle = gg;
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.62 * EX, view.s * 0.31 * EYF, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.46 * EX, view.s * 0.23 * EYF, 0, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], 0.62 * KX, 0.31 * KY, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], 0.46 * KX, 0.23 * KY, 0, 0, Math.PI * 2);
     ctx.fillStyle = "#0a0d12"; ctx.fill();
-    ctx.lineWidth = view.s * 0.11; ctx.strokeStyle = "#d98d4e"; ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.40 * EX, view.s * 0.20 * EYF, 0, 0, Math.PI * 2);
-    ctx.lineWidth = view.s * 0.03; ctx.strokeStyle = "#f4c48c"; ctx.stroke();
+    ctx.lineWidth = LS * 0.11; ctx.strokeStyle = "#d98d4e"; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], 0.40 * KX, 0.20 * KY, 0, 0, Math.PI * 2);
+    ctx.lineWidth = LS * 0.03; ctx.strokeStyle = "#f4c48c"; ctx.stroke();
     ctx.fillStyle = "#8a4f24";
     for (let b = 0; b < 4; b++) {
       const ang = b * Math.PI / 2 + Math.PI / 4;
       const bp = Q(cx + 0.5 + Math.cos(ang) * 0.335, 0.012, cz + 0.5 + Math.sin(ang) * 0.335);
-      ctx.beginPath(); ctx.ellipse(bp[0], bp[1], view.s * 0.045 * EX, view.s * 0.028 * EYF, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(bp[0], bp[1], 0.045 * KX, 0.028 * KY, 0, 0, Math.PI * 2); ctx.fill();
     }
   } else if (t === "S") {
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.40 * EX, view.s * 0.20 * EYF, 0, 0, Math.PI * 2);
-    ctx.lineWidth = view.s * 0.045; ctx.strokeStyle = "rgba(217,141,78,.55)"; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], 0.40 * KX, 0.20 * KY, 0, 0, Math.PI * 2);
+    ctx.lineWidth = LS * 0.045; ctx.strokeStyle = "rgba(217,141,78,.55)"; ctx.stroke();
   } else if (t === "V") {
     // red shutoff handwheel, spins a quarter turn each time it's thrown
     const spin = (tileFlip ? Math.PI / 6 : 0) + Math.PI / 6 * Math.max(0, 1 - (now - tileFlipT) / 300) * (tileFlip ? -1 : 1);
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1] + view.s * 0.03, view.s * 0.34 * EX, view.s * 0.17 * EYF, 0, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1] + LS * 0.03, 0.34 * KX, 0.17 * KY, 0, 0, Math.PI * 2);
     ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fill();
     const h = Q(cx + 0.5, 0.14, cz + 0.5);
-    ctx.lineWidth = view.s * 0.06; ctx.strokeStyle = "#5c1010";
+    ctx.lineWidth = LS * 0.06; ctx.strokeStyle = "#5c1010";
     ctx.beginPath(); ctx.moveTo(ctr[0], ctr[1]); ctx.lineTo(h[0], h[1]); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(h[0], h[1], view.s * 0.30 * EX, view.s * 0.15 * EYF, 0, 0, Math.PI * 2);
-    ctx.lineWidth = view.s * 0.075; ctx.strokeStyle = "#d32b22"; ctx.stroke();
-    ctx.lineWidth = view.s * 0.025; ctx.strokeStyle = "#ff8a72";
-    ctx.beginPath(); ctx.ellipse(h[0], h[1] - view.s * 0.012, view.s * 0.30 * EX, view.s * 0.15 * EYF, 0, Math.PI * 1.05, Math.PI * 1.9); ctx.stroke();
-    ctx.lineWidth = view.s * 0.045; ctx.strokeStyle = "#b8231c";
+    ctx.beginPath(); ctx.ellipse(h[0], h[1], 0.30 * KX, 0.15 * KY, 0, 0, Math.PI * 2);
+    ctx.lineWidth = LS * 0.075; ctx.strokeStyle = "#d32b22"; ctx.stroke();
+    ctx.lineWidth = LS * 0.025; ctx.strokeStyle = "#ff8a72";
+    ctx.beginPath(); ctx.ellipse(h[0], h[1] - LS * 0.012, 0.30 * KX, 0.15 * KY, 0, Math.PI * 1.05, Math.PI * 1.9); ctx.stroke();
+    ctx.lineWidth = LS * 0.045; ctx.strokeStyle = "#b8231c";
     for (let k = 0; k < 3; k++) {
       const a = spin + k * Math.PI / 3;
-      ctx.beginPath(); ctx.moveTo(h[0] - Math.cos(a) * view.s * 0.28 * EX, h[1] - Math.sin(a) * view.s * 0.14 * EYF);
-      ctx.lineTo(h[0] + Math.cos(a) * view.s * 0.28 * EX, h[1] + Math.sin(a) * view.s * 0.14 * EYF); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(h[0] - Math.cos(a) * 0.28 * KX, h[1] - Math.sin(a) * 0.14 * KY);
+      ctx.lineTo(h[0] + Math.cos(a) * 0.28 * KX, h[1] + Math.sin(a) * 0.14 * KY); ctx.stroke();
     }
-    ctx.fillStyle = "#e9c46a"; ctx.beginPath(); ctx.ellipse(h[0], h[1], view.s * 0.06 * EX, view.s * 0.035 * EYF, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#e9c46a"; ctx.beginPath(); ctx.ellipse(h[0], h[1], 0.06 * KX, 0.035 * KY, 0, 0, Math.PI * 2); ctx.fill();
   } else if (t === "H") {
     // heavy cast valve: iron plate, hex nut, glowing ring (needs full weight)
     const pulse = 0.35 + 0.25 * Math.sin(now * 0.005);
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.44 * EX, view.s * 0.22 * EYF, 0, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], 0.44 * KX, 0.22 * KY, 0, 0, Math.PI * 2);
     ctx.fillStyle = "#17110f"; ctx.fill();
-    ctx.lineWidth = view.s * 0.05; ctx.strokeStyle = "rgba(255,110,40," + pulse.toFixed(3) + ")"; ctx.stroke();
+    ctx.lineWidth = LS * 0.05; ctx.strokeStyle = "rgba(255,110,40," + pulse.toFixed(3) + ")"; ctx.stroke();
     const hex = [];
     for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + (tileFlip ? Math.PI / 6 : 0); hex.push(Q(cx + 0.5 + Math.cos(a) * 0.24, 0.02, cz + 0.5 + Math.sin(a) * 0.24)); }
     poly(hex, "#3a3436", "rgba(255,140,70,.6)");
@@ -898,17 +941,17 @@ function drawTile(cx, cz, broken, now) {
   } else if (t === "T") {
     // brass cleanout plug with a square nut; the pair pulse in Mardi Gras colors
     const pulse = 0.3 + 0.2 * Math.sin(now * 0.004 + cx * 0.7);
-    const gg = ctx.createRadialGradient(ctr[0], ctr[1], 2, ctr[0], ctr[1], view.s * 0.62);
+    const gg = ctx.createRadialGradient(ctr[0], ctr[1], 2, ctr[0], ctr[1], LS * 0.62);
     gg.addColorStop(0, "rgba(200,120,255," + pulse.toFixed(3) + ")"); gg.addColorStop(1, "rgba(200,120,255,0)");
-    ctx.fillStyle = gg; ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.62 * EX, view.s * 0.31 * EYF, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.40 * EX, view.s * 0.20 * EYF, 0, 0, Math.PI * 2);
-    const bg2 = ctx.createLinearGradient(0, ctr[1] - view.s * 0.2, 0, ctr[1] + view.s * 0.2);
+    ctx.fillStyle = gg; ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], 0.62 * KX, 0.31 * KY, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], 0.40 * KX, 0.20 * KY, 0, 0, Math.PI * 2);
+    const bg2 = ctx.createLinearGradient(0, ctr[1] - LS * 0.2, 0, ctr[1] + LS * 0.2);
     bg2.addColorStop(0, "#f2d27a"); bg2.addColorStop(1, "#8a6a1e");
-    ctx.fillStyle = bg2; ctx.fill(); ctx.lineWidth = view.s * 0.03; ctx.strokeStyle = "#5a4310"; ctx.stroke();
+    ctx.fillStyle = bg2; ctx.fill(); ctx.lineWidth = LS * 0.03; ctx.strokeStyle = "#5a4310"; ctx.stroke();
     const sq = [Q(cx + 0.38, 0.03, cz + 0.38), Q(cx + 0.62, 0.03, cz + 0.38), Q(cx + 0.62, 0.03, cz + 0.62), Q(cx + 0.38, 0.03, cz + 0.62)];
     poly(sq, "#c9a13e", "#6b500f");
-    ctx.lineWidth = view.s * 0.02; ctx.strokeStyle = "rgba(120,220,110,.8)";
-    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], view.s * 0.47 * EX, view.s * 0.235 * EYF, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = LS * 0.02; ctx.strokeStyle = "rgba(120,220,110,.8)";
+    ctx.beginPath(); ctx.ellipse(ctr[0], ctr[1], 0.47 * KX, 0.235 * KY, 0, 0, Math.PI * 2); ctx.stroke();
   }
   ctx.restore();
 }
@@ -1081,7 +1124,7 @@ function pipeRenderables(box, o) {
   return out;
 }
 const LIGHT_W = (() => { const L = Math.hypot(-0.35, 1, 0.3); return [-0.35 / L, 1 / L, 0.3 / L]; })();
-const VIEW_W = CAM_V;
+let VIEW_W = CAM_V;
 function hull2(pts) {  // monotone-chain convex hull (screen space)
   const p = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
@@ -1093,6 +1136,8 @@ function hull2(pts) {  // monotone-chain convex hull (screen space)
 }
 function drawBarrel(b, SK) {
   const A = b.A, B = b.B, R = b.R, N = 96, TAU = Math.PI * 2;
+  { const m = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2, (A[2] + B[2]) / 2], v = toCam(m), l = Math.hypot(v[0], v[1], v[2]) || 1;
+    VIEW_W = [v[0] / l, v[1] / l, v[2] / l]; }
   const u = [B[0] - A[0], B[1] - A[1], B[2] - A[2]];
   const ul = Math.hypot(u[0], u[1], u[2]) || 1;
   u[0] /= ul; u[1] /= ul; u[2] /= ul;
@@ -1289,18 +1334,19 @@ function drawBlock(s, opts) {
     if (hole) r.thole = hole.map(p => P(p[0], p[1], p[2]));
     let n = r.n;
     if (ang) n = rotPt(n, axis, [0, 0, 0], ang);
-    r.vis = viewDot(n) > 0.02;
+    const c = centroid(pts), tc = toCam(c), tl = Math.hypot(tc[0], tc[1], tc[2]) || 1;
+    const nl0 = Math.hypot(n[0], n[1], n[2]) || 1;
+    r.vis = dot3(n, tc) / (nl0 * tl) > 0.02;
     if (r.vis && r.capN) {  // bore parts only show through their own (facing) cap
       const cn = ang ? rotPt(r.capN, axis, [0, 0, 0], ang) : r.capN;
-      r.vis = viewDot(cn) > 0.02;
+      r.vis = dot3(cn, tc) > 0.02;
     }
     if (r.boreWall) {
       const nl = Math.hypot(n[0], n[1], n[2]) || 1;
       const lum = 0.5 - 0.5 * (n[0] * LIGHT_W[0] + n[1] * LIGHT_W[1] + n[2] * LIGHT_W[2]) / nl;
       r.fill = mixHex(SK.bore[1], SK.bore[0], 0.25 + 0.55 * lum);
     }
-    const c = centroid(pts);
-    r.depth = viewDot(c);
+    r.depth = -tl;
   }
   rend = rend.filter(r => !r.barrel && r.vis).sort((a, b) => a.depth - b.depth);
   ctx.save();
@@ -1354,14 +1400,20 @@ function drawGhosts() {
     ctx.restore();
   }
 }
+function groundEllipse(cx, cz, rx, rz, y) {
+  ctx.beginPath();
+  for (let i = 0; i <= 40; i++) {
+    const a = i / 40 * Math.PI * 2, p = P(cx + Math.cos(a) * rx, y, cz + Math.sin(a) * rz);
+    i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]);
+  }
+  ctx.closePath();
+}
 function drawShadow(s) {
   const cells = cellsOf(s);
   let cx = 0, cz = 0;
   for (const c of cells) { cx += c[0]; cz += c[1]; }
-  const p = P(cx / cells.length + 0.5, 0.02, cz / cells.length + 0.5);
-  const rx = s.o === 1 ? 1.0 : 0.48, rz = s.o === 2 ? 1.0 : 0.48;
-  ctx.beginPath();
-  ctx.ellipse(p[0], p[1], view.s * rx, view.s * rz * Math.sin(CAM_PITCH), 0, 0, Math.PI * 2);
+  cx = cx / cells.length + 0.5; cz = cz / cells.length + 0.5;
+  groundEllipse(cx, cz, s.o === 1 ? 1.0 : 0.5, s.o === 2 ? 1.0 : 0.5, 0.02);
   ctx.fillStyle = "rgba(0,0,0,.34)"; ctx.fill();
 }
 
@@ -1542,7 +1594,7 @@ function draw(now) {
   const sh = ctx.createRadialGradient(bc[0], bc[1], 4, bc[0], bc[1], view.s * COLS * 0.52);
   sh.addColorStop(0, "rgba(0,0,0,.42)"); sh.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = sh;
-  ctx.beginPath(); ctx.ellipse(bc[0], bc[1] + view.s * 0.3, view.s * COLS * 0.6, view.s * ROWS * 0.6 * Math.sin(CAM_PITCH), 0, 0, Math.PI * 2); ctx.fill();
+  groundEllipse(COLS / 2, ROWS / 2, COLS * 0.62, ROWS * 0.62, -SLAB - 0.2); ctx.fill();
   const broken = (anim && anim.kind === "break") ? anim : null;
   for (const [x, z] of TILE_ORDER) drawTile(x, z, !!(broken && x === broken.bx && z === broken.bz), now);
 
@@ -1589,18 +1641,34 @@ let TILE_ORDER = [];
 function buildTileOrder() {
   TILE_ORDER = [];
   for (let z = 0; z < ROWS; z++) for (let x = 0; x < COLS; x++) if (MAP[z][x] !== ".") TILE_ORDER.push([x, z]);
-  TILE_ORDER.sort((a, b) => viewDot([a[0] + 0.5, 0, a[1] + 0.5]) - viewDot([b[0] + 0.5, 0, b[1] + 0.5]));
+  const dd = t => { const v = toCam([t[0] + 0.5, 0, t[1] + 0.5]); return v[0] * v[0] + v[1] * v[1] + v[2] * v[2]; };
+  TILE_ORDER.sort((a, b) => dd(b) - dd(a));   // far to near
+}
+// on-screen direction of each roll, measured at the board's center
+const SCREEN_DIR = {};
+function measureDirs() {
+  const tx = camPos[0] - CAM_V[0] * camD, tz = camPos[2] - CAM_V[2] * camD, c = P(tx, 0, tz);
+  const d = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };
+  for (const k in d) {
+    const p = P(tx + d[k][0], 0, tz + d[k][1]);
+    const vx = p[0] - c[0], vy = p[1] - c[1], l = Math.hypot(vx, vy) || 1;
+    SCREEN_DIR[k] = [vx / l, vy / l];
+    const b = document.querySelector('.thumb button[data-dir="' + k + '"] svg');
+    if (b) b.style.transform = "rotate(" + (Math.atan2(vy, vx) * 180 / Math.PI + 90).toFixed(1) + "deg)";
+  }
 }
 function resize() {
+  setCamera();
   buildTileOrder();
   const w = Math.max(200, board.clientWidth || 300), h = Math.max(160, board.clientHeight || 240);
   const dpr = Math.min(2.5, window.devicePixelRatio || 1);
   canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   view.w = w; view.h = h;
-  const top = h >= 700 ? 78 : h > 430 ? 62 : 52, bot = 10, side = w * 0.06;
+  const top = h >= 700 ? 84 : h > 430 ? 64 : 50, bot = 8, side = w * 0.05;
   computeView(w - side * 2, h - top - bot);
   view.ox += side; view.oy += top;
+  measureDirs();
 }
 window.addEventListener("resize", resize);
 window.addEventListener("orientationchange", () => setTimeout(resize, 250));
@@ -1610,7 +1678,7 @@ if (window.ResizeObserver) new ResizeObserver(resize).observe(board);
    MODALS: levels map, how-to, zone splash
    ============================================================ */
 const mLevels = $("mLevels"), mHelp = $("mHelp"), mZone = $("mZone"), mMenu = $("mMenu");
-function modalOpen() { return [mLevels, mHelp, mZone, mMenu].some(m => m.classList.contains("show")); }
+function modalOpen() { return [mLevels, mHelp, mZone, mMenu, $("mFull")].some(m => m.classList.contains("show")); }
 $("btnMenu").addEventListener("click", () => { audioInit(); sfx.ui(); mMenu.classList.add("show"); });
 $("btnResume").addEventListener("click", () => { sfx.ui(); mMenu.classList.remove("show"); });
 mMenu.addEventListener("click", e => { if (e.target === mMenu) mMenu.classList.remove("show"); });
@@ -1644,7 +1712,11 @@ $("btnLevels").addEventListener("click", () => { audioInit(); sfx.ui(); mMenu.cl
 $("lvClose").addEventListener("click", () => mLevels.classList.remove("show"));
 mLevels.addEventListener("click", e => { if (e.target === mLevels) mLevels.classList.remove("show"); });
 $("btnHelp").addEventListener("click", () => { mMenu.classList.remove("show"); mHelp.classList.add("show"); });
-$("helpGo").addEventListener("click", () => { audioInit(); mHelp.classList.remove("show"); store.set("mojoRoll2Help", "1"); maybeZoneSplash(); });
+$("helpGo").addEventListener("click", () => {
+  audioInit(); mHelp.classList.remove("show"); store.set("mojoRoll2Help", "1");
+  if (!canFull && !isApp && !store.get("mojoRoll2FullTip")) { $("mFull").classList.add("show"); return; }
+  maybeZoneSplash();
+});
 $("zImg").src = document.querySelector(".mojo-head").src;
 function maybeZoneSplash() {
   const zi = zoneOf(curLevel);
@@ -1669,9 +1741,13 @@ $("zGo").addEventListener("click", () => {
 const btnFull = $("btnFull"), root = document.documentElement;
 const canFull = !!(root.requestFullscreen || root.webkitRequestFullscreen);
 const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
-if (!canFull) btnFull.style.display = "none";
+const isApp = window.navigator.standalone === true || (window.matchMedia && (matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches));
+const mFull = $("mFull");
+if (isApp) btnFull.style.display = "none";
+$("fullGo").addEventListener("click", () => { sfx.ui(); mFull.classList.remove("show"); store.set("mojoRoll2FullTip", "1"); });
 btnFull.addEventListener("click", () => {
   audioInit();
+  if (!canFull) { mMenu.classList.remove("show"); mFull.classList.add("show"); return; }
   try {
     if (isFull()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
     else {
@@ -1711,7 +1787,15 @@ function setLean(dir, amt) {
   lean.dir = dir; lean.amt = amt;
 }
 const ROLL_DIST = 26;
-function dirOf(dx, dy) { return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "E" : "W") : (dy > 0 ? "S" : "N"); }
+function dirOf(dx, dy) {   // the roll whose on-screen direction best matches the drag
+  let best = "N", bd = -2; const l = Math.hypot(dx, dy) || 1;
+  for (const k of ["N", "E", "S", "W"]) {
+    const v = SCREEN_DIR[k]; if (!v) continue;
+    const d = (dx * v[0] + dy * v[1]) / l;
+    if (d > bd) { bd = d; best = k; }
+  }
+  return best;
+}
 
 /* ============================================================
    INPUT

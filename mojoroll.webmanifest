@@ -1,0 +1,23 @@
+{
+  "name": "Mojo Roll",
+  "short_name": "Mojo Roll",
+  "start_url": "/mojoroll",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0b0710",
+  "theme_color": "#0b0710",
+  "icons": [
+    {
+      "src": "/mojoroll-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/mojoroll-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
