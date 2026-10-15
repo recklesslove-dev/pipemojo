@@ -1,4 +1,4 @@
-/* Pipe Mojo leaderboard — shared by whack.html and flow.html */
+/* Pipe Mojo leaderboard — shared by whack.html, flow.html and mojoroll.html */
 (function(){
 const API='https://pipemojo-leaderboard.fvidaurri.workers.dev';
 const KEY='pm-lb';
@@ -220,6 +220,24 @@ const CSS=`
 let cssDone=false;
 function addCss(){if(cssDone)return;cssDone=true;const s=document.createElement('style');s.textContent=CSS;document.head.appendChild(s)}
 
+/* Warrant Officer rank (Mojo Roll): a promotion every 24 wrenches */
+const WARRANT=['Warrant Officer 1','Chief Warrant Officer 2','Chief Warrant Officer 3','Chief Warrant Officer 4','Chief Warrant Officer 5'];
+function warrantName(r){return r<1?'No rank yet':WARRANT[Math.min(5,r)-1]}
+let wgN=0;
+function armyWarrant(r){
+  if(r<1)return '';r=Math.min(5,r);const id='wg'+(wgN++);
+  let s='<svg viewBox="0 0 200 200"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#c9ced6"/><stop offset="1" stop-color="#6b7280"/></linearGradient></defs>'+
+    '<rect x="64" y="14" width="72" height="172" rx="10" fill="url(#'+id+')" stroke="#2b2f36" stroke-width="5"/><rect x="74" y="24" width="12" height="152" rx="6" fill="rgba(255,255,255,.55)"/>';
+  if(r===5)s+='<rect x="93" y="30" width="14" height="140" rx="3" fill="#15171c"/>';
+  else{const gap=152/r;for(let k=0;k<r;k++){const cy=24+gap*(k+.5);s+='<rect x="84" y="'+(cy-16).toFixed(1)+'" width="32" height="32" rx="3" fill="#15171c"/>'}}
+  return s+'</svg>';
+}
+/* the insignia next to a name: officers in Flow, enlisted in Whack-a-Pipe, warrant officers in Mojo Roll */
+function rankHTML(game,best){
+  if(game==='roll'){const r=Math.min(5,Math.floor(best/24));return r?'<span class="ri" title="'+warrantName(r)+'">'+armyWarrant(r)+'</span>':''}
+  if(best<100)return '';const n=Math.floor(best/100);
+  return '<span class="ri" title="'+(game==='flow'?officerName(n):enlistedName(n))+'">'+(game==='flow'?armyOfficer(n):armyEnlisted(n))+'</span>';
+}
 function Board(el,o){
   this.el=el;this.game=o.game;this.onSignIn=o.onSignIn||null;this.title=o.title||'Top 10';this.unit=o.unit||'';
   this.top=null;this.pending=0;this.run=null;this.pendingRun=null;this.rank=0;this.mode='claim';this.code=null;this.err='';this.busy=false;
@@ -259,7 +277,7 @@ Board.prototype.render=function(){
   else{
     h+='<ol>'+this.top.map((r,i)=>{
       const mine=me&&r.name.toLowerCase().replace(/ /g,'')===me;
-      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+(r.best>=100?'<span class="ri" title="'+(this.game==='flow'?officerName(Math.floor(r.best/100)):enlistedName(Math.floor(r.best/100)))+'">'+(this.game==='flow'?armyOfficer(Math.floor(r.best/100)):armyEnlisted(Math.floor(r.best/100)))+'</span>':'')+'<span class="nm">'+esc(r.name)+'</span>'+(this.game==='flow'&&r.best>=1000?'<span class="k1" title="'+Math.floor(r.best/1000)+'K Club">'+badgeK(Math.floor(r.best/1000))+'</span>':'')+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
+      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+rankHTML(this.game,r.best)+'<span class="nm">'+esc(r.name)+'</span>'+(this.game==='flow'&&r.best>=1000?'<span class="k1" title="'+Math.floor(r.best/1000)+'K Club">'+badgeK(Math.floor(r.best/1000))+'</span>':'')+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
     }).join('')+'</ol>';
   }
   h+='</div>';
@@ -361,5 +379,5 @@ const flush=()=>{for(const g in queued){clearTimeout(timers[g]);sendSave(g,true)
 window.addEventListener('pagehide',flush);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush()});
 
-window.PMLB={mount:(el,o)=>{addCss();return new Board(el,o)},account:load,cloudSave,cloudLoad,switchPlayer,onChange:fn=>listeners.push(fn)};
+window.PMLB={armyWarrant,warrantName,mount:(el,o)=>{addCss();return new Board(el,o)},account:load,cloudSave,cloudLoad,switchPlayer,onChange:fn=>listeners.push(fn)};
 })();

@@ -14,6 +14,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <title>Mojo Roll | Pipe Mojo</title>
 <!--
+  MOJO ROLL — Pack 1, v4.0 (Oct 15)
+  v4.0: re-ramped levels (easy start per zone, tricky ones last), Ask Mojo
+  (tile guide + hint bank), pipe fades over the flange/valves, zone effects,
+  mini Mojo, trophies, Warrant Officer ranks, Mojo Roll leaderboard + cloud
+  save through /lb.js, daily streak + holidays through /extras.js.
   MOJO ROLL — Pack 1, v3.1 (Oct 15)
   v3.1: light stone tile tops per zone, darker backdrops, crisp tile rims,
   hazard-trimmed bridges, brighter ghost tiles: gaps and holes read clearly.
@@ -101,6 +106,64 @@
   .menu-card .lvl { font-size:12px; font-weight:900; letter-spacing:2.5px; color:var(--zone); }
   .menu-card .card-inner { max-width:440px; margin:0 auto; }
   .modal .card { max-height:calc(100% - 4px); }
+  /* v4: mini Mojo, hint button, toasts, trophy/rank/ask modals, fanfare */
+  .mm { flex:none; width:46px; height:46px; padding:0; border:none; background:none; border-radius:50%; position:relative; }
+  .mm img { height:46px; width:auto; display:block; margin:0 auto; filter:drop-shadow(0 2px 4px rgba(0,0,0,.6)); pointer-events:none; }
+  .mm.wince img { animation:wince .55s ease-in-out; } .mm.hop img { animation:hop .7s cubic-bezier(.3,1.6,.5,1); }
+  @keyframes wince { 0%,100% { transform:none; } 20% { transform:translateX(-4px) rotate(-8deg); } 40% { transform:translateX(4px) rotate(7deg); } 60% { transform:translateX(-3px) rotate(-5deg); } 80% { transform:translateX(2px); } }
+  @keyframes hop { 0%,100% { transform:none; } 40% { transform:translateY(-12px) scale(1.08); } 70% { transform:translateY(0) scale(.96,1.04); } }
+  .hb.hint { position:relative; font-size:18px; }
+  .hb.hint i { position:absolute; right:-6px; top:-6px; min-width:18px; height:18px; padding:0 4px; border-radius:9px; background:var(--gold); color:#241128; font-style:normal; font-size:11px; font-weight:900; line-height:18px; }
+  .thumb button.hintme { animation:hintPulse .7s ease-in-out 5; border-color:var(--gold); }
+  .thumb button.hintme svg path { fill:var(--gold); }
+  @keyframes hintPulse { 50% { transform:scale(1.12); box-shadow:0 0 26px rgba(245,200,66,.75); } }
+  .toast { position:fixed; left:50%; bottom:calc(22px + var(--sb)); transform:translate(-50%,20px); z-index:60; opacity:0; pointer-events:none; transition:all .35s;
+    background:rgba(20,12,34,.94); border:1.5px solid var(--gold); color:#fff; border-radius:14px; padding:9px 16px; font-weight:800; font-size:14px; box-shadow:0 8px 30px rgba(0,0,0,.5); max-width:90vw; text-align:center; }
+  .toast.on { opacity:1; transform:translate(-50%,0); }
+  .menu-card .mgrid { grid-template-columns:1fr 1fr 1fr; }
+  .ask-card { max-width:620px; }
+  .ask-top { display:flex; gap:14px; align-items:center; text-align:left; }
+  .ask-top img { height:110px; width:auto; flex:none; cursor:pointer; filter:drop-shadow(0 4px 10px rgba(0,0,0,.6)); }
+  .ask-top img.poke { animation:hop .5s; }
+  .bubble { flex:1; background:#fff; color:#241128; border-radius:16px; padding:10px 14px; font-weight:800; font-size:14.5px; position:relative; line-height:1.35; }
+  .bubble::before { content:""; position:absolute; left:-9px; top:24px; border:9px solid transparent; border-right-color:#fff; border-left:0; }
+  .hintbox { margin:14px 0 6px; background:rgba(245,200,66,.08); border:1px solid rgba(245,200,66,.4); border-radius:12px; padding:10px 12px; display:flex; gap:10px; align-items:center; text-align:left; }
+  .hintbox p { margin:0; font-size:13px; color:#d6cdea; flex:1; }
+  .hintbox b { color:var(--gold); }
+  .tg { text-align:left; margin-top:10px; }
+  .tg h3 { font-size:11px; font-weight:900; letter-spacing:2.5px; margin:12px 0 4px; }
+  .tg .row { display:flex; gap:12px; align-items:center; padding:7px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+  .tg .row svg { width:54px; height:40px; flex:none; }
+  .tg .row b { color:#fff; display:block; font-size:14px; } .tg .row span { color:#cfc4e6; font-size:13px; line-height:1.35; }
+  .tgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(118px,1fr)); gap:8px; margin:8px 0 6px; }
+  .tro { background:#1d1233; border:1px solid #3d2466; border-radius:12px; padding:9px 6px; text-align:center; }
+  .tro .a { font-size:26px; line-height:1.2; display:block; min-height:32px; }
+  .tro b { display:block; font-size:12.5px; color:#fff; margin-top:2px; } .tro small { display:block; font-size:11px; color:#a99bc9; line-height:1.25; margin-top:2px; }
+  .tro.lock { opacity:.38; } .tro.lock .a { filter:grayscale(1); }
+  .tro.fan { cursor:pointer; border-color:var(--gold); }
+  .tsec { text-align:left; font-size:11px; font-weight:900; letter-spacing:2.5px; color:var(--gold); margin:14px 0 2px; }
+  .tsec small { color:#8d7fb0; letter-spacing:1px; margin-left:6px; }
+  .rank-top { display:flex; gap:14px; align-items:center; text-align:left; margin:8px 0 4px; }
+  .rank-top .ins { width:84px; height:84px; flex:none; } .rank-top .ins svg { width:100%; height:100%; }
+  .rank-top h3 { font-family:"Pirata One",Georgia,serif; font-weight:400; font-size:26px; color:#fff; line-height:1.05; }
+  .rank-top p { color:#cfc4e6; font-size:13.5px; margin:3px 0 0; }
+  .rbar { height:8px; border-radius:4px; background:rgba(255,255,255,.1); overflow:hidden; margin:6px 0 2px; } .rbar i { display:block; height:100%; background:var(--gold); border-radius:4px; }
+  .ladder { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin:12px 0 4px; }
+  .ladder div { text-align:center; font-size:10px; font-weight:800; color:#cfc4e6; line-height:1.2; }
+  .ladder div svg { width:44px; height:44px; display:block; margin:0 auto 3px; }
+  .ladder div.dim { opacity:.35; } .ladder div.on { color:var(--gold); }
+  .lbwrap { margin-top:12px; text-align:left; }
+  #mFan { background:radial-gradient(circle at 50% 45%, rgba(80,50,10,.96), rgba(8,4,14,.98) 70%); flex-direction:column; text-align:center; gap:6px; overflow:hidden; }
+  #mFan .rays { position:absolute; width:180vmax; height:180vmax; left:50%; top:45%; transform:translate(-50%,-50%);
+    background:repeating-conic-gradient(rgba(255,215,90,.10) 0 10deg, transparent 10deg 20deg); animation:spin 24s linear infinite; pointer-events:none; }
+  @keyframes spin { to { transform:translate(-50%,-50%) rotate(360deg); } }
+  #mFan .crown { font-size:110px; line-height:1; animation:beat 1.1s ease-in-out infinite; filter:drop-shadow(0 0 30px rgba(255,210,80,.9)); position:relative; }
+  @keyframes beat { 0%,100% { transform:scale(1); } 15% { transform:scale(1.16); } 30% { transform:scale(1.02); } 45% { transform:scale(1.12); } }
+  #mFan h2 { font-family:"Pirata One",Georgia,serif; font-weight:400; font-size:54px; letter-spacing:3px; position:relative;
+    background:linear-gradient(90deg,#b8862a,#fff1a8 40%,#f5c842 60%,#b8862a); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  #mFan p { color:#f3e6c4; font-size:16px; position:relative; max-width:440px; }
+  #mFan .go { position:relative; margin-top:10px; }
+  #fanConf { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
   /* ---- overlays ---- */
   .ov { position:absolute; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:18px; background:rgba(5,3,10,.74); z-index:5; }
   .ov.show { display:flex; }
@@ -152,7 +215,9 @@
       <div class="hl">
         <button class="hb" id="btnMenu" type="button" aria-label="Menu">☰</button>
         <button class="hb" id="btnRestart" type="button" aria-label="Restart">↺</button>
+        <button class="hb hint" id="btnHint" type="button" aria-label="Hint">💡<i id="hintN">3</i></button>
       </div>
+      <button class="mm" id="miniMojo" type="button" aria-label="Ask Mojo"><img id="mmImg" alt=""></button>
       <div class="hc"><div class="zn" id="zoneLbl">THE BAYOU YARD</div><div class="ln" id="lvlName">1 · First Day</div></div>
       <div class="hr">
         <div class="st">MOVES<b id="stMoves">0</b></div>
@@ -188,6 +253,9 @@
   <div class="mgrid">
     <button id="btnLevels" type="button">▦ LEVELS</button>
     <button id="btnRestart2" type="button">↺ RESTART</button>
+    <button id="btnGuide" type="button">🧭 TILE GUIDE</button>
+    <button id="btnTro" type="button">🏆 TROPHIES</button>
+    <button id="btnRank" type="button">🎖️ RANK &amp; BOARD</button>
     <button id="btnHelp" type="button">? HOW TO ROLL</button>
     <button id="btnSound" type="button">🔊 SOUND ON</button>
     <button id="btnFull" type="button">⛶ FULL SCREEN</button>
@@ -210,6 +278,7 @@
     <li><i>⬟</i>Or tap the <b>thumb buttons</b> in the corners. Each one points the way the pipe will roll on the board.</li>
     <li><i>⭕</i><b>Stand the pipe straight up in the flange</b> to clear the level.</li>
     <li><i>🔧</i>Hit <b>par</b> for 3 wrenches. Every zone brings a new twist.</li>
+    <li><i>💡</i>Stuck? Tap <b>Mojo</b> at the top for the Tile Guide, or <b>💡</b> for a hint that lights up your next move.</li>
     <li><i>☰</i>The <b>menu</b> has levels, sound, and full screen. On iPhone, full screen means adding Mojo Roll to your home screen.</li>
   </ul>
   <button class="go" id="helpGo" type="button">LET'S ROLL</button>
@@ -234,12 +303,48 @@
   <button class="go" id="fullGo" type="button">GOT IT</button>
 </div></div>
 
+<div class="modal" id="mAsk"><div class="card ask-card">
+  <div class="kicker">ASK MOJO</div>
+  <div class="ask-top"><img id="askImg" alt="Mojo"><div class="bubble" id="askSay">Here's how every tile works.</div></div>
+  <div class="hintbox"><p>💡 <b id="askHints">3 hints</b>. A hint lights up the button for your next move. Using one caps this level at 2 wrenches and keeps it off the leaderboard. Earn a hint for every new 3-wrench clear.</p>
+    <button class="go" id="askHint" type="button">USE A HINT</button></div>
+  <div class="tg" id="tileGuide"></div>
+  <button class="go" id="askClose" type="button" style="margin-top:12px">BACK TO ROLLING</button>
+</div></div>
+
+<div class="modal" id="mTro"><div class="card">
+  <h2>TROPHIES</h2>
+  <div class="total" id="troTotal"></div>
+  <div id="troList"></div>
+  <button class="go" id="troClose" type="button" style="margin-top:12px">CLOSE</button>
+</div></div>
+
+<div class="modal" id="mRank"><div class="card">
+  <div class="kicker">MOJO ROLL · WARRANT OFFICER</div>
+  <div class="rank-top"><div class="ins" id="rkIns"></div><div style="flex:1"><h3 id="rkName"></h3><p id="rkSub"></p><div class="rbar"><i id="rkBar"></i></div></div></div>
+  <div class="ladder" id="rkLadder"></div>
+  <p class="total" style="font-size:11.5px">Every 24 wrenches is a promotion. Only levels cleared without a hint count.</p>
+  <div class="lbwrap" id="lbRoll"></div>
+  <button class="go" id="rkClose" type="button" style="margin-top:12px">CLOSE</button>
+</div></div>
+
+<div class="modal" id="mFan"><div class="rays"></div><canvas id="fanConf"></canvas>
+  <div class="crown">👑</div>
+  <h2>MASTER ROLLER</h2>
+  <p>All 120 wrenches. Every level in every zone at par. Mojo tips his hat.</p>
+  <button class="go" id="fanGo" type="button">CARRY ON</button>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
 <div id="rotate">
   <div class="phone"></div>
   <h2>TURN IT SIDEWAYS</h2>
   <p>Mojo Roll plays in landscape so you can see the whole board.</p>
 </div>
 
+<script src="/lb.js"></script>
+<script src="/extras.js"></script>
 <script>
 "use strict";
 /* ============================================================
@@ -254,86 +359,46 @@
    ============================================================ */
 // === LOGIC START ===
 const LEVELS = [
-  {"id": "o0", "old": 0, "name": "First Day on the Job", 
-    "map": [".........", ".######..", ".#S##O#..", ".######..", "........."], "par": 2},
-  {"id": "o2", "old": 2, "name": "Ribbon Run", 
-    "map": ["........", "...#....", "..#O##..", ".#S####.", "..####..", "....##..", "........"], "par": 6},
-  {"id": "o3", "old": 3, "name": "The Notch", 
-    "map": [".......", "..O#...", ".##....", ".####..", ".#####.", "..#S##.", "...#...", "......."], "par": 8},
-  {"id": "o5", "old": 5, "name": "Galvanized Graduate", 
-    "map": [".........", ".##.#....", ".O######.", ".#.#####.", "....##...", "....#.#..", "...#####.", "....S###.", "........."], "par": 10},
-  {"id": "o6", "old": 6, "name": "Thin Ice", 
-    "map": ["......", "..#O..", "..##..", ".###..", ".###..", ".XX#S.", ".X##..", "..#...", "......"], "par": 9},
-  {"id": "o11", "old": 11, "name": "Hot Shot", 
-    "map": ["..........", ".O........", ".XX##.....", ".#####.#..", ".#.######.", "....#.X#S.", ".......##.", ".......##.", ".........."], "par": 13},
-  {"id": "o17", "old": 17, "name": "Whiteout", 
-    "map": ["............", "...####.....", "....######..", "....####X##.", "....###.##..", "..##.######.", ".#O###..#XS.", "..#.#...#.#.", "............"], "par": 14},
-  {"id": "o23", "old": 23, "name": "Mojo's Challenge", 
-    "map": [".............", "..........##.", "......######.", "...##.##.###.", "...#X##..##..", "..#####..##..", "..##X..###...", ".O###.S#X#...", "..###.##.....", "............."], "par": 20},
-  {"id": "v0", "name": "Shutoff Street", 
-    "map": ["......", "..#bO.", ".##bV.", "..#bS.", "......"], "par": 6},
-  {"id": "v1", "name": "Gallery Balcony", 
-    "map": ["..........", "..##V###..", ".###V###..", "..#######.", "..##S#bb..", "..#...O...", ".........."], "par": 8},
-  {"id": "v2", "name": "Royal Street Riser", 
-    "map": ["...........", "...###...O.", "..######bb.", ".#V#S#####.", ".####.###..", ".####......", ".###.......", "..........."], "par": 10},
-  {"id": "v3", "name": "Courtyard Fountain", 
-    "map": ["............", ".....S#V....", "......##....", "....##b#....", "....#######.", ".O..V######.", ".##########.", ".#####......", "............"], "par": 12},
-  {"id": "v4", "name": "Jackson Square", 
-    "map": ["..........", "....#####.", ".....#Ob#.", ".V#####...", ".##S##....", ".#V###....", ".##.##....", ".........."], "par": 15},
-  {"id": "v5", "name": "Bourbon Backflow", 
-    "map": [".........", ".....##O.", ".S#.#b#..", ".#.####..", ".#####...", ".######..", ".#..###..", ".##V####.", "........."], "par": 18},
-  {"id": "v6", "name": "Iron Lace", 
-    "map": ["...........", ".####V###..", "..####bb#..", "..###V..#..", "..S.....##.", "...O##..##.", "....######.", "..........."], "par": 21},
-  {"id": "v7", "name": "Pontalba Pressure", 
-    "map": ["...........", "..##.......", ".V#bO......", ".##b....#S.", "..########.", ".#########.", "..###.#....", "..........."], "par": 25},
-  {"id": "g0", "name": "Above Ground", 
-    "map": ["......", ".##S#.", ".OG#g.", ".g##g.", "......"], "par": 7},
-  {"id": "g1", "name": "Tomb Row", 
-    "map": ["..........", ".....#.##.", "...######.", "..G.##G##.", "...##S##..", "..#####...", ".OG####...", ".........."], "par": 9},
-  {"id": "g2", "name": "Marie's Crypt", 
-    "map": [".........", ".#G......", ".######g.", ".#######.", "...#####.", ".....S##.", "...####..", "...#g##..", "...O.....", "........."], "par": 11},
-  {"id": "g3", "name": "Ghost Line", 
-    "map": [".........", "..##O....", ".#g###.g.", "..##.###.", "..####G#.", "...#S###.", "...#####.", "....g###.", "........."], "par": 13},
-  {"id": "g4", "name": "Whispering Vault", 
-    "map": ["............", ".######.....", ".#XG#####...", ".#########..", ".######..##.", "..#...g..G#.", "......###SO.", "............"], "par": 16},
-  {"id": "g5", "name": "All Souls", 
-    "map": [".........", ".O#G.....", "..S#.....", ".###.###.", ".##.###g.", ".#####G#.", ".##g###..", "..###G#..", "........."], "par": 19},
-  {"id": "g6", "name": "Midnight Mass", 
-    "map": ["........", "...####.", "..###g#.", ".##S##G.", "..####..", "...##...", "....XO#.", "....##G.", "....###.", "........"], "par": 22},
-  {"id": "g7", "name": "Boneyard Bypass", 
-    "map": ["..........", "......g#..", "......G#..", "....##S##.", ".O...G#...", ".#.####...", ".#####....", ".G####....", ".........."], "par": 26},
-  {"id": "t0", "name": "Float Shop", 
-    "map": [".........", ".....##T.", ".....##O.", ".........", ".........", ".TS......", ".##......", ".##......", "........."], "par": 6},
-  {"id": "t1", "name": "Bead Toss", 
-    "map": ["...........", "......####.", "......####.", "..###.####.", ".#X##.###T.", ".T###.#..#.", ".###S.O....", ".#.........", "..........."], "par": 8},
-  {"id": "t2", "name": "Krewe Cleanout", 
-    "map": ["...........", ".S##.......", ".###T..###.", ".####..###.", ".####.T###.", "......#O##.", "......#.##.", "......##X#.", "..........."], "par": 10},
-  {"id": "t3", "name": "Second Line", 
-    "map": ["...........", "......###..", ".##S..###..", ".####..#T#.", ".####..###.", ".#T##.####.", "......###..", "........O..", "..........."], "par": 12},
-  {"id": "t4", "name": "King Cake", 
-    "map": ["...........", ".##...#O##.", ".#S##.####.", ".####.####.", ".###..#X##.", ".###..####.", ".#.T.....T.", "..........."], "par": 14},
-  {"id": "t5", "name": "Throw Me Something", 
-    "map": ["...........", "...##.###..", "...##.###..", "...O..###..", "...#..###S.", "...#..####.", ".####.####.", ".T###.##...", "...##.##T..", "..........."], "par": 17},
-  {"id": "t6", "name": "Parade Route", 
-    "map": ["..........", "......###.", "......###.", ".##...###.", ".##...##..", ".###T.##..", "..###.T##.", "..S##.##O.", ".........."], "par": 20},
-  {"id": "t7", "name": "Fat Tuesday", 
-    "map": [".........", ".....##T.", ".....##..", ".###.##X.", ".O#X.###.", ".###.###.", "..T.#..S.", "........."], "par": 24},
-  {"id": "h0", "name": "Brimstone Main", 
-    "map": [".....", "..#..", "..##.", "..##.", ".O#S.", ".##H.", ".#b#.", "....."], "par": 10},
-  {"id": "h1", "name": "Sulfur Stack", 
-    "map": [".........", ".####....", ".#H##....", ".######..", "..S#####.", "....#X##.", ".....b##.", "....Ob#..", "........."], "par": 12},
-  {"id": "h2", "name": "Forge Riser", 
-    "map": ["..........", ".Ob#......", "..######..", "....####..", "..X#####..", "..###X###.", "....H####.", "....#.##S.", ".........."], "par": 14},
-  {"id": "h3", "name": "Devil's Trap", 
-    "map": [".........", "..#####S.", ".#######.", ".####X##.", ".#H#.##..", ".###.X#..", ".##..#bO.", ".##......", "........."], "par": 17},
-  {"id": "h4", "name": "Molten Manifold", 
-    "map": [".........", "..#####..", ".S######.", ".#...#H#.", "..######.", "...#b###.", "...##....", "..###....", "..O##....", "........."], "par": 20},
-  {"id": "h5", "name": "Pit Boss", 
-    "map": ["..........", ".b#######.", ".#.###S##.", ".H.######.", ".###......", ".###......", ".##.......", ".O........", ".........."], "par": 24},
-  {"id": "h6", "name": "Hellfire Header", 
-    "map": ["...........", "..S##......", ".g#H##..O..", "..###.G##..", "...#..##X#.", "...####b##.", "...#G#####.", "..........."], "par": 28},
-  {"id": "h7", "name": "Mojo's Last Stand", 
-    "map": [".........", ".Vbb#X#..", ".#Hg###..", ".#.#X##S.", ".#G...#..", ".##......", ".XO#.....", "........."], "par": 33}
+  {"id": "o0", "old": 0, "name": "First Day on the Job", "map": [".........", ".######..", ".#S##O#..", ".######..", "........."], "par": 2},
+  {"id": "o1", "old": 1, "name": "Corner Pocket", "map": [".........", ".........", ".#S####..", ".....#...", ".....#...", "....#O#..", "........."], "par": 4},
+  {"id": "o2", "old": 2, "name": "Ribbon Run", "map": ["........", "...#....", "..#O##..", ".#S####.", "..####..", "....##..", "........"], "par": 6},
+  {"id": "o3", "old": 3, "name": "The Notch", "map": [".......", "..O#...", ".##....", ".####..", ".#####.", "..#S##.", "...#...", "......."], "par": 8},
+  {"id": "o6", "old": 6, "name": "Thin Ice", "map": ["......", "..#O..", "..##..", ".###..", ".###..", ".XX#S.", ".X##..", "..#...", "......"], "par": 9},
+  {"id": "o11", "old": 11, "name": "Hot Shot", "map": ["..........", ".O........", ".XX##.....", ".#####.#..", ".#.######.", "....#.X#S.", ".......##.", ".......##.", ".........."], "par": 13},
+  {"id": "o15", "old": 15, "name": "The Glue Maze", "map": ["...........", ".........#.", "....#.#O##.", "....##X###.", "....#....#.", "..##X#.....", "..####.....", ".#X##S#....", "...##......", "..........."], "par": 13},
+  {"id": "o17", "old": 17, "name": "Whiteout", "map": ["............", "...####.....", "....######..", "....####X##.", "....###.##..", "..##.######.", ".#O###..#XS.", "..#.#...#.#.", "............"], "par": 14},
+  {"id": "fq0", "name": "Shutoff Street", "map": ["........", ".S#O###.", ".##b###.", ".#V#.#..", ".....##.", "........"], "par": 4},
+  {"id": "fq1", "name": "Gallery Balcony", "map": ["..........", ".S##.B#...", ".#V..##...", ".#######O.", "..#bb####.", "....#####.", ".........."], "par": 8},
+  {"id": "fq2", "name": "Royal Street Riser", "map": ["......", "..###.", "..###.", ".S##V.", ".####.", ".#b##.", ".Vb#..", ".####.", "..O##.", "......"], "par": 9},
+  {"id": "fq3", "name": "Courtyard Fountain", "map": [".........", "....####.", ".O..####.", ".#..#SV#.", ".#######.", ".Vb#####.", "..b.##...", "........."], "par": 10},
+  {"id": "fq4", "name": "Jackson Square", "map": ["..........", "...S......", "..#####...", "..O####...", "..bb#.###.", ".######.#.", ".##V####..", ".........."], "par": 10},
+  {"id": "fq5", "name": "Bourbon Backflow", "map": ["..........", "....#.##..", "...######.", ".##bb####.", ".##S###...", ".O.##.....", "...#V.....", ".........."], "par": 12},
+  {"id": "fq6", "name": "Iron Lace", "map": ["..........", "..#######.", "..#bVO###.", ".##bS..##.", "...b.V....", ".........."], "par": 14},
+  {"id": "fq7", "name": "Pontalba Pressure", "map": ["........", "..#V....", ".O#####.", "...####.", "....b##.", "...S#B#.", "......#.", "......#.", "........"], "par": 18},
+  {"id": "cm0", "name": "Above Ground", "map": [".......", "...#...", ".g#O.#.", ".####G.", ".##g##.", ".###S..", "..##...", "......."], "par": 6},
+  {"id": "cm1", "name": "Tomb Row", "map": [".........", ".g#G##X..", ".##S###g.", ".###gO##.", "..g#G###.", "......g#.", "......#..", "........."], "par": 7},
+  {"id": "cm2", "name": "Marie's Crypt", "map": ["..........", ".....##S#.", "...######.", ".#g#g####.", ".###G####.", ".O....###.", "........#.", ".........."], "par": 11},
+  {"id": "cm3", "name": "Ghost Line", "map": [".........", "....#.##.", "..##g.gG.", "..###..O.", ".##G##g#.", ".##S####.", "..##g###.", "....###..", "....##...", "........."], "par": 11},
+  {"id": "cm4", "name": "Whispering Vault", "map": ["...........", ".....####..", "....####g#.", ".#Sg##G###.", ".#####.G.O.", ".X#.###G.#.", "....####.#.", "..........."], "par": 13},
+  {"id": "cm5", "name": "All Souls", "map": ["..........", ".###X.....", ".####..#..", ".g##G..O..", "..#g###S..", "..####g##.", "...#####..", ".....g....", ".....g....", ".........."], "par": 13},
+  {"id": "cm6", "name": "Midnight Mass", "map": [".........", "....#....", "...##G#..", ".g#g##g..", ".#G####S.", ".#G#O.##.", "..###.##.", "...#.....", "...#.....", "........."], "par": 15},
+  {"id": "cm7", "name": "Boneyard Bypass", "map": ["..........", "......G...", ".....#....", "..#..###..", ".###.###..", ".g###S###.", ".#O#..Gg#.", "......###.", ".........."], "par": 19},
+  {"id": "mg0", "name": "Float Shop", "map": [".........", "......#..", "......##.", "..O#..##.", ".###..ST.", "..##.....", "..T#.....", "........."], "par": 5},
+  {"id": "mg1", "name": "Bead Toss", "map": [".........", ".O##..S..", ".###..##.", ".####.##.", ".###..T..", ".T##.....", "........."], "par": 7},
+  {"id": "mg2", "name": "Krewe Cleanout", "map": ["..........", "......O##.", ".......##.", ".###.####.", ".##T.####.", ".##S.###..", "..##..###.", "...#..T##.", ".........."], "par": 10},
+  {"id": "mg3", "name": "Second Line", "map": ["...........", ".##X.......", ".###T......", ".####..###.", ".##X#.T###.", ".##O..##...", "......#S...", "..........."], "par": 11},
+  {"id": "mg4", "name": "King Cake", "map": [".........", ".....###.", ".....T##.", ".###.###.", ".###.O##.", ".###.###.", ".##S.....", ".T##.....", "........."], "par": 11},
+  {"id": "mg5", "name": "Throw Me Something", "map": ["...........", "......####.", "..#...####.", "..##..##O..", "..##..T###.", "..#S..####.", ".##........", ".##........", ".T.........", "..........."], "par": 13},
+  {"id": "mg6", "name": "Parade Route", "map": ["..........", "..##......", ".###......", ".#X#...##.", ".###..#.#.", ".#T...###.", ".##..##O#.", "..S..####.", ".....##XT.", ".........."], "par": 17},
+  {"id": "mg7", "name": "Fat Tuesday", "map": ["...........", ".###..##T..", ".###O.S###.", ".#.....###.", ".#..T..XX#.", ".#..#.#.#..", ".#..#......", ".####......", "..........."], "par": 18},
+  {"id": "hf0", "name": "Brimstone Main", "map": [".........", ".O##.###.", ".##b###..", ".###.....", ".#.......", ".H##S....", "........."], "par": 7},
+  {"id": "hf1", "name": "Sulfur Stack", "map": ["..........", "....#..#..", "..#######.", "..##X.X##.", "..#...###.", "..#O.##HS.", ".##b#####.", ".########.", ".........."], "par": 9},
+  {"id": "hf2", "name": "Forge Riser", "map": ["...........", "....X##....", "....#####S.", "..####X#.#.", "..#H###..#.", ".O#b#......", "..###......", "..........."], "par": 12},
+  {"id": "hf3", "name": "Devil's Trap", "map": ["............", ".###........", ".##S##......", ".#####......", "..#####.....", "..###H......", "..bbb##..#..", ".....#####O.", "............"], "par": 15},
+  {"id": "hf4", "name": "Molten Manifold", "map": ["........", ".b#O....", ".##..##.", ".##..##.", ".###XS#.", "..####H.", "..#####.", "........"], "par": 14},
+  {"id": "hf5", "name": "Pit Boss", "map": ["........", ".O###...", ".##b.##.", "..#b###.", "..Hb###.", "..#####.", "..##S...", "........"], "par": 18},
+  {"id": "hf6", "name": "Hellfire Header", "map": ["...........", ".......S##.", ".......#G#.", ".......GX#.", ".G..#####..", ".#..bH#g#..", ".O###.##...", ".#.........", "..........."], "par": 23},
+  {"id": "hf7", "name": "Mojo's Last Stand", "map": ["...........", ".......S...", "....#X.#...", ".##.##.#...", ".X#O##.#...", ".##V#.##g..", "...gbb###..", "...X#H####.", ".....###g#.", "..........."], "par": 25}
 ];
 
 function cellsOf(s) {
@@ -1465,12 +1530,251 @@ const $ = id => document.getElementById(id);
 const stLevel = $("stLevel"), stMoves = $("stMoves"), stPar = $("stPar"), stBest = $("stBest");
 const overlay = $("overlay"), ovText = $("ovText"), ovTitle = $("ovTitle"), btnNext = $("btnNext");
 const lvlName = $("lvlName"), zoneLbl = $("zoneLbl"), board = $("board");
+/* ============================================================
+   v4 PROGRESS: hints, trophies, Warrant Officer rank, cloud save
+   Everything below rides on the shared Pipe Mojo files when they're
+   there (/lb.js = names, cloud saves, leaderboard; /extras.js = daily
+   streak, holidays, cross-game secrets) and quietly works offline when not.
+   ============================================================ */
+const PKEY = "mojoRoll3";
+let PR = (() => { try { return JSON.parse(store.get(PKEY) || "null"); } catch (e) { return null; } })() || {};
+(function fixPR() {
+  if (typeof PR.hints !== "number") PR.hints = 3;
+  PR.tro = Array.isArray(PR.tro) ? PR.tro : [];
+  PR.c = Object.assign({ valve: 0, ghost: 0, tele: 0, heavy: 0, fall: 0 }, PR.c || {});
+  PR.hb = PR.hb || {}; PR.att = PR.att || {}; PR.clean = PR.clean || {}; PR.got3 = PR.got3 || {};
+  PR.streak = PR.streak || 0; PR.bestStreak = PR.bestStreak || 0; PR.taps = PR.taps || 0; PR.savedAt = PR.savedAt || 0;
+})();
+function levelId(i) { return LEVELS[i].id; }
+// wrenches you see: the best of a clean clear, or a hint clear capped at 2
+function levelWr(i) {
+  const a = wrenchesFor(i, getBest(i)), h = PR.hb[levelId(i)];
+  return Math.max(a, h == null ? 0 : Math.min(2, wrenchesFor(i, h)));
+}
+const totalWr = () => LEVELS.reduce((s, l, i) => s + levelWr(i), 0);
+// what the leaderboard and your rank count: clean clears only
+const boardScore = () => LEVELS.reduce((s, l, i) => s + wrenchesFor(i, getBest(i)), 0);
+
+/* ---------- Warrant Officer ranks: a promotion every 24 wrenches ---------- */
+const WARRANT = ["Warrant Officer 1", "Chief Warrant Officer 2", "Chief Warrant Officer 3", "Chief Warrant Officer 4", "Chief Warrant Officer 5"];
+const rankOf = w => Math.min(5, Math.floor(w / 24));
+const warrantName = r => r < 1 ? "No rank yet" : WARRANT[r - 1];
+let wgN = 0;
+function armyWarrant(r) {   // silver bar: black squares for WO1-CW4, a black stripe for CW5
+  if (r < 1) return "";
+  const id = "wg" + (wgN++);
+  let s = '<svg viewBox="0 0 200 200"><defs><linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#c9ced6"/><stop offset="1" stop-color="#6b7280"/></linearGradient></defs>' +
+    '<rect x="64" y="14" width="72" height="172" rx="10" fill="url(#' + id + ')" stroke="#2b2f36" stroke-width="5"/>' +
+    '<rect x="74" y="24" width="12" height="152" rx="6" fill="rgba(255,255,255,.55)"/>';
+  if (r === 5) s += '<rect x="93" y="30" width="14" height="140" rx="3" fill="#15171c"/>';
+  else { const gap = 152 / r; for (let k = 0; k < r; k++) { const cy = 24 + gap * (k + 0.5); s += '<rect x="84" y="' + (cy - 16).toFixed(1) + '" width="32" height="32" rx="3" fill="#15171c"/>'; } }
+  return s + "</svg>";
+}
+
+/* ---------- trophies (the Locker shows the same list) ---------- */
+const RT = [
+  { id: "z1", name: "Bayou Born", desc: "Clear the Bayou Yard", art: "🐊" },
+  { id: "z2", name: "Quarter Master", desc: "Clear the French Quarter", art: "⚜️" },
+  { id: "z3", name: "Grave Shift", desc: "Clear St. Louis Cemetery", art: "🪦" },
+  { id: "z4", name: "King of Carnival", desc: "Clear the Mardi Gras Warehouse", art: "🎭" },
+  { id: "z5", name: "Out of the Fire", desc: "Clear Hellfire", art: "🔥" },
+  { id: "p1", name: "Bayou Perfect", desc: "All 24 wrenches in the Bayou Yard", art: "🐊⭐" },
+  { id: "p2", name: "Quarter Perfect", desc: "All 24 wrenches in the French Quarter", art: "⚜️⭐" },
+  { id: "p3", name: "Cemetery Perfect", desc: "All 24 wrenches in the Cemetery", art: "🪦⭐" },
+  { id: "p4", name: "Carnival Perfect", desc: "All 24 wrenches in Mardi Gras", art: "🎭⭐" },
+  { id: "p5", name: "Hellfire Perfect", desc: "All 24 wrenches in Hellfire", art: "🔥⭐" },
+  { id: "w30", name: "Toolbox", desc: "Earn 30 wrenches", art: "🧰" },
+  { id: "w60", name: "Tool Belt", desc: "Earn 60 wrenches", art: "🔧" },
+  { id: "w90", name: "Service Truck", desc: "Earn 90 wrenches", art: "🚚" },
+  { id: "w120", name: "Master Roller", desc: "All 120 wrenches", art: "👑" },
+  { id: "clean", name: "Clean Run", desc: "Clear a whole zone without falling", art: "🧼" },
+  { id: "nohelp", name: "No Help Needed", desc: "Clear a whole zone without a hint", art: "🧠" },
+  { id: "ps5", name: "Smooth Roller", desc: "Par streak of 5", art: "🎯5" },
+  { id: "ps10", name: "Steady Hands", desc: "Par streak of 10", art: "🎯10" },
+  { id: "ps20", name: "Flawless", desc: "Par streak of 20", art: "🎯20" },
+  { id: "valve", name: "Shutoff Pro", desc: "Throw 50 valves", art: "🚰" },
+  { id: "ghost", name: "Ghost Walker", desc: "Roll over 50 ghost tiles", art: "👻" },
+  { id: "tele", name: "Down the Drain", desc: "Use cleanouts 25 times", art: "🌀" },
+  { id: "heavy", name: "Heavyweight", desc: "Stand on 25 heavy valves", art: "🏋️" }
+];
+const RS = [
+  { id: "gravity", name: "Gravity Check", desc: "Fell off 100 times", art: "🪂" },
+  { id: "oops", name: "Oops", desc: "Fell on the very first move", art: "🙈" },
+  { id: "bull", name: "Bullseye", desc: "Par on your first try at a level", art: "🎯" },
+  { id: "annoy", name: "Annoyed Mojo", desc: "Tapped Mojo 30 times", art: "😤" }
+];
+const ALLT = RT.concat(RS);
+
+/* ---------- toasts ---------- */
+const toastQ = []; let toastOn = false;
+function toast(msg) { toastQ.push(msg); if (!toastOn) nextToast(); }
+function nextToast() {
+  const t = $("toast"), m = toastQ.shift();
+  if (!m) { toastOn = false; return; }
+  toastOn = true; t.textContent = m; t.classList.add("on");
+  setTimeout(() => { t.classList.remove("on"); setTimeout(nextToast, 380); }, 2600);
+}
+function award(id) {
+  if (PR.tro.includes(id)) return false;
+  PR.tro.push(id);
+  const t = ALLT.find(x => x.id === id);
+  const secret = RS.some(x => x.id === id);
+  toast((secret ? "🤫 Secret trophy: " : "🏆 Trophy: ") + (t ? t.art + " " + t.name : id));
+  sfx.wrenches(1, false);
+  if (id === "w120") setTimeout(showFanfare, 1400);
+  return true;
+}
+function zoneLevels(zi) { const a = []; for (let k = 0; k < PER_ZONE; k++) a.push(zi * PER_ZONE + k); return a; }
+function checkTrophies() {
+  for (let zi = 0; zi < ZONES.length; zi++) {
+    const lv = zoneLevels(zi);
+    const cleared = lv.every(i => getBest(i) != null || PR.hb[levelId(i)] != null);
+    if (cleared) award("z" + (zi + 1));
+    if (lv.every(i => wrenchesFor(i, getBest(i)) === 3)) award("p" + (zi + 1));
+    if (cleared && lv.every(i => PR.clean[levelId(i)])) award("clean");
+    if (lv.every(i => getBest(i) != null)) award("nohelp");
+  }
+  const w = totalWr();
+  if (w >= 30) award("w30"); if (w >= 60) award("w60"); if (w >= 90) award("w90"); if (w >= 120) award("w120");
+  if (PR.bestStreak >= 5) award("ps5"); if (PR.bestStreak >= 10) award("ps10"); if (PR.bestStreak >= 20) award("ps20");
+  if (PR.c.valve >= 50) award("valve"); if (PR.c.ghost >= 50) award("ghost");
+  if (PR.c.tele >= 25) award("tele"); if (PR.c.heavy >= 25) award("heavy");
+  if (PR.c.fall >= 100) award("gravity");
+  checkTriple();
+}
+
+/* ---------- save: this device + your name (cloud) ---------- */
+function summary() { return { w: totalWr(), s: boardScore(), tro: PR.tro.slice(), streak: PR.bestStreak }; }
+let cloudT = 0;
+function savePR() {
+  PR.savedAt = Date.now();
+  store.set(PKEY, JSON.stringify(PR));
+  store.set("pm-roll-sum", JSON.stringify(summary()));   // the Locker reads this
+  if (window.PMLB && PMLB.account()) { clearTimeout(cloudT); cloudT = setTimeout(cloudPush, 900); }
+}
+function cloudObj() {
+  const b = {};
+  LEVELS.forEach((l, i) => { const m = getBest(i); if (m != null) b[l.id] = m; });
+  return { v: 1, b: b, u: unlocked, pr: PR, sum: summary(), savedAt: Date.now() };
+}
+function cloudPush(now) { try { if (window.PMLB && PMLB.account()) PMLB.cloudSave("roll", cloudObj(), now); } catch (e) {} }
+function cloudMerge(c) {
+  if (!c || c.v !== 1) return;
+  let changed = false;
+  LEVELS.forEach((l, i) => {
+    const cm = c.b && c.b[l.id], lm = getBest(i);
+    if (cm != null && (lm == null || cm < lm)) { store.set(bestKey(i), String(cm)); changed = true; }
+  });
+  if (typeof c.u === "number" && c.u > unlocked) { unlocked = Math.min(LEVELS.length - 1, c.u); store.set("mojoRoll2Unlocked", String(unlocked)); changed = true; }
+  const p = c.pr || {};
+  for (const id in (p.hb || {})) if (PR.hb[id] == null || p.hb[id] < PR.hb[id]) PR.hb[id] = p.hb[id];
+  for (const k of ["clean", "got3"]) for (const id in (p[k] || {})) PR[k][id] = 1;
+  for (const id of (p.tro || [])) if (!PR.tro.includes(id)) PR.tro.push(id);
+  for (const k in (p.c || {})) PR.c[k] = Math.max(PR.c[k] || 0, p.c[k] || 0);
+  PR.bestStreak = Math.max(PR.bestStreak, p.bestStreak || 0);
+  PR.taps = Math.max(PR.taps, p.taps || 0);
+  if ((p.savedAt || 0) > PR.savedAt && typeof p.hints === "number") PR.hints = p.hints;   // newest device wins for the hint bank
+  if (changed) { best = getBest(curLevel); }
+  store.set(PKEY, JSON.stringify(PR)); store.set("pm-roll-sum", JSON.stringify(summary()));
+  hud(); checkTrophies();
+}
+
+/* ---------- leaderboard (shared /lb.js) ---------- */
+let LBR = null, postedScore = 0;
+function lbBoard() {
+  if (!LBR && window.PMLB) LBR = PMLB.mount($("lbRoll"), { game: "roll", title: "Top 10, wrenches", unit: "" });
+  return LBR;
+}
+function postScore() {
+  const s = boardScore(); if (s < 1 || s <= postedScore) return;
+  const b = lbBoard(); if (!b) return;
+  if (!(window.PMLB && PMLB.account())) return;   // not signed in: they can claim a name from the Rank screen
+  postedScore = s; b.post(s);
+}
+
+/* ---------- cross-game: daily streak, holidays, Triple Threat ---------- */
+function acctKey() { try { const a = window.PMLB && PMLB.account(); return a ? String(a.name).toLowerCase().replace(/ /g, "") : ""; } catch (e) { return ""; } }
+function checkTriple() {
+  if (!window.PMX) return;
+  try {
+    const k = acctKey(), fs = JSON.parse(localStorage.getItem(k ? "pm-flow-save:" + k : "pm-flow-save") || "null") || {};
+    const lvl = fs.solved ? (fs.level || 1) + 1 : (fs.level || 1);
+    const flowRank = Math.floor((lvl - 1) / 100) >= 1, whackRank = (+localStorage.getItem("pm-whack-best") || 0) >= 100;
+    if (flowRank && whackRank && rankOf(boardScore()) >= 1) PMX.award("triple", "🎖️ Secret trophy: Triple Threat");
+  } catch (e) {}
+}
+
+/* ---------- hints: BFS from where you are right now ---------- */
+function nextMoveFrom(w) {
+  const key = s => s.x + "," + s.z + "," + s.o + "," + s.flip + "," + s.par;
+  const seen = new Set([key(w)]); let q = [{ s: w, first: null }];
+  while (q.length) {
+    const nq = [];
+    for (const n of q) for (const d of ["N", "E", "S", "W"]) {
+      const r = stepState(MAP, n.s, d, TELE);
+      if (r.res === "win") return n.first || d;
+      if (r.res === "ok" && !seen.has(key(r.w))) { seen.add(key(r.w)); nq.push({ s: r.w, first: n.first || d }); }
+    }
+    q = nq;
+  }
+  return null;
+}
+let hintUsed = false, sessFalls = 0, sessRestarts = 0;
+function syncHints() {
+  $("hintN").textContent = PR.hints;
+  $("askHints").textContent = PR.hints + (PR.hints === 1 ? " hint" : " hints");
+  $("askHint").disabled = PR.hints < 1;
+}
+function useHint() {
+  audioInit();
+  if (status !== "play") return;
+  if (PR.hints < 1) { openAsk("You're out of hints. Clear a level at par for 3 wrenches and I'll give you another."); return; }
+  const d = nextMoveFrom({ x: block.x, z: block.z, o: block.o, flip: flip, par: moves & 1 });
+  if (!d) { openAsk("Ain't no way out from here. Hit restart and I'll help you from the top."); return; }
+  PR.hints--; hintUsed = true; savePR(); syncHints();
+  closeModals();
+  const b = padBtns[d]; b.classList.remove("hintme"); void b.offsetWidth; b.classList.add("hintme");
+  setTimeout(() => b.classList.remove("hintme"), 3600);
+  sfx.ui();
+}
+
+/* ---------- called from the game loop ---------- */
+function onFall() {
+  PR.c.fall++; sessFalls++;
+  if (moves === 1) award("oops");
+  miniMojo("wince");
+  checkTrophies(); savePR();
+}
+function onLanded(r) {
+  if (r.trig) { if (block.o === 0 && tileAt(MAP, block.x, block.z) === "H") PR.c.heavy++; else PR.c.valve++; }
+  if (r.tele) PR.c.tele++;
+  for (const c of cellsOf(r.land)) { const t = tileAt(MAP, c[0], c[1]); if (t === "G" || t === "g") PR.c.ghost++; }
+}
+function onWin() {
+  const id = levelId(curLevel), n = wrenchesFor(curLevel, moves);
+  let earned = false;
+  if (hintUsed) { if (PR.hb[id] == null || moves < PR.hb[id]) PR.hb[id] = moves; }
+  else {
+    if (best == null || moves < best) { best = moves; store.set(bestKey(curLevel), String(best)); }
+    if (n === 3 && !PR.got3[id]) { PR.got3[id] = 1; PR.hints++; earned = true; }
+  }
+  if (sessFalls === 0) PR.clean[id] = 1;
+  if (!hintUsed && n === 3) { PR.streak++; PR.bestStreak = Math.max(PR.bestStreak, PR.streak); } else PR.streak = 0;
+  if (!hintUsed && n === 3 && PR.att[id] === 1 && sessFalls === 0 && sessRestarts === 0) award("bull");
+  miniMojo("hop");
+  checkTrophies(); savePR(); syncHints(); postScore();
+  return earned;
+}
+
+/* ---------- mini Mojo in the header ---------- */
+function miniMojo(cls) { const m = $("miniMojo"); m.classList.remove("wince", "hop"); void m.offsetWidth; m.classList.add(cls); }
+
 function wrStr(n) { return n ? "🔧".repeat(n) : "—"; }
 function hud() {
   stLevel.textContent = curLevel + 1;
   stMoves.textContent = moves;
   stPar.textContent = LEVELS[curLevel].par;
-  stBest.textContent = best == null ? "—" : wrStr(wrenchesFor(curLevel, best));
+  const lw = levelWr(curLevel); stBest.textContent = lw ? wrStr(lw) : "—";
 }
 function zoneOf(i) { return Math.min(ZONES.length - 1, Math.floor(i / PER_ZONE)); }
 function loadLevel(i) {
@@ -1482,6 +1786,8 @@ function loadLevel(i) {
   board.style.background = THEME.bg;
   document.documentElement.style.setProperty("--zone", ZONE.accent);
   best = getBest(curLevel);
+  hintUsed = false; sessFalls = 0; sessRestarts = 0;
+  PR.att[levelId(curLevel)] = (PR.att[levelId(curLevel)] || 0) + 1;
   lvlName.textContent = (curLevel + 1) + " · " + LEVELS[curLevel].name;
   zoneLbl.textContent = ZONE.name;
   reset();
@@ -1533,20 +1839,21 @@ function finishRoll() {
     sfx.bridge();
     spawnParts(cellsOf(block), 8, "#ff8a5e", 1.0, 0.7);
   }
+  if (r.res !== "fall" && r.res !== "break") onLanded(r);
   if (r.res === "fall") {
     status = "falling"; anim = { kind: "fall", t0: now }; queued = null;
-    sfx.fall();
+    sfx.fall(); onFall();
   } else if (r.res === "break") {
     status = "breaking"; anim = { kind: "break", t0: now, bx: block.x, bz: block.z }; queued = null;
     spawnParts(cellsOf(block), 12, "#9c8468", 1.4, 0.9);
-    sfx.crack();
+    sfx.crack(); onFall();
   } else if (r.res === "win") {
     status = "winning"; anim = { kind: "win", t0: now }; queued = null;
     spawnParts(cellsOf(block), 16, "#f4a95c", 1.6, 1.1);
     sfx.win();
-    if (best == null || moves < best) { best = moves; store.set(bestKey(curLevel), String(best)); }
     winUnlock = false;
     if (curLevel >= unlocked && curLevel < LEVELS.length - 1) { unlocked = curLevel + 1; store.set("mojoRoll2Unlocked", String(unlocked)); winUnlock = true; }
+    winEarned = onWin();
     hud();
   } else if (r.tele) {
     status = "teleporting"; queued = null;
@@ -1560,14 +1867,15 @@ function finishRoll() {
     if (queued) { const q = queued; queued = null; tryMove(q); }
   }
 }
-let winUnlock = false;
+let winUnlock = false, winEarned = false;
 function showWin() {
   status = "won";
-  const n = wrenchesFor(curLevel, moves), last = curLevel === LEVELS.length - 1;
+  const n = hintUsed ? Math.min(2, wrenchesFor(curLevel, moves)) : wrenchesFor(curLevel, moves), last = curLevel === LEVELS.length - 1;
   sfx.wrenches(n, winUnlock || last);
   ovTitle.textContent = last ? "PACK COMPLETE!" : (n === 3 ? "PERFECT ROLL!" : "LEVEL CLEAR!");
   [...$("ovWr").children].forEach((s, i) => { s.className = ""; void s.offsetWidth; s.className = i < n ? "on" : ""; });
-  ovText.textContent = "Moves " + moves + "  ·  Par " + LEVELS[curLevel].par + (n < 3 ? "  ·  hit par for 3 wrenches" : "");
+  ovText.textContent = "Moves " + moves + "  ·  Par " + LEVELS[curLevel].par +
+    (hintUsed ? "  ·  hint used, so 2 wrenches max" : n < 3 ? "  ·  hit par for 3 wrenches" : "") + (winEarned ? "  ·  💡 +1 hint" : "");
   btnNext.style.display = last ? "none" : "";
   overlay.classList.add("show");
 }
@@ -1575,6 +1883,126 @@ function showWin() {
 /* ============================================================
    MAIN LOOP
    ============================================================ */
+/* ============================================================
+   v4 ZONE EFFECTS (behind the board, kept faint)
+   Bayou: fireflies + drifting moss · French Quarter: lamp sparks + jazz notes
+   Cemetery: rolling fog, wisps, skulls fading in, bats · Mardi Gras: confetti,
+   beads, masks · Hellfire: rising embers + a flaming skull now and then
+   ============================================================ */
+const FX = { zone: -1, p: [], big: [], nextBig: 0 };
+const rnd = (a, b) => a + Math.random() * (b - a);
+function fxSpawn(zi, W, H, first) {
+  const y0 = first ? rnd(0, H) : null;
+  if (zi === 0) return Math.random() < 0.2 ? { k: "moss", x: rnd(0, W), y: first ? y0 : -40, len: rnd(26, 50), sp: rnd(6, 12), ph: rnd(0, 6) }
+                                           : { k: "fly", x: rnd(0, W), y: rnd(0, H), ph: rnd(0, 6), sp: rnd(0.4, 1) };
+  if (zi === 1) return Math.random() < 0.3 ? { k: "note", x: rnd(0, W), y: first ? y0 : H + 30, ch: Math.random() < 0.5 ? "♪" : "♫", sz: rnd(16, 26), sp: rnd(10, 20), ph: rnd(0, 6) }
+                                           : { k: "spark", x: rnd(0, W), y: first ? y0 : H + 10, sp: rnd(6, 16), ph: rnd(0, 6) };
+  if (zi === 2) return Math.random() < 0.35 ? { k: "fog", x: rnd(-200, W), y: rnd(H * 0.45, H * 1.05), r: rnd(120, 240), sp: rnd(6, 14) }
+                                            : { k: "wisp", x: rnd(0, W), y: rnd(0, H), ph: rnd(0, 6), sp: rnd(0.3, 0.8) };
+  if (zi === 3) return { k: "conf", x: rnd(0, W), y: first ? y0 : -12, sp: rnd(18, 40), r: rnd(0, 6), vr: rnd(-3, 3), w: rnd(5, 9), c: ["#b46bff", "#5fd35f", "#f5c842"][Math.random() * 3 | 0], ph: rnd(0, 6) };
+  return { k: "ember", x: rnd(0, W), y: first ? y0 : H + 10, sp: rnd(18, 42), ph: rnd(0, 6), r: rnd(1, 2.4) };
+}
+function fxBig(zi, W, H, now) {
+  const pick = a => a[Math.random() * a.length | 0];
+  if (zi === 2) return Math.random() < 0.5
+    ? { ch: "💀", x: rnd(W * 0.08, W * 0.92), y: rnd(H * 0.2, H * 0.8), sz: rnd(30, 46), t0: now, dur: 4200, mode: "fade" }
+    : { ch: "🦇", x: -40, y: rnd(H * 0.15, H * 0.5), sz: rnd(26, 36), t0: now, dur: 6500, mode: "fly", vx: W / 6.5 };
+  if (zi === 3) return { ch: pick(["🎭", "📿", "🎭"]), x: rnd(W * 0.1, W * 0.9), y: -50, sz: rnd(30, 44), t0: now, dur: 9000, mode: "fall", vy: H / 8, rot: rnd(-1, 1) };
+  if (zi === 4) return { ch: "💀", fire: 1, x: rnd(W * 0.1, W * 0.9), y: H + 50, sz: rnd(30, 42), t0: now, dur: 8000, mode: "rise", vy: H / 7 };
+  if (zi === 0) return { ch: "🦟", x: -30, y: rnd(H * 0.2, H * 0.7), sz: 18, t0: now, dur: 7000, mode: "fly", vx: W / 7 };
+  return null;
+}
+function drawFX(now, dt, W, H) {
+  const zi = zoneOf(curLevel), s = dt / 1000;
+  if (FX.zone !== zi || FX.W !== W) {
+    FX.zone = zi; FX.W = W; FX.big = []; FX.nextBig = now + rnd(3000, 6000);
+    FX.p = Array.from({ length: [28, 26, 20, 46, 36][zi] }, () => fxSpawn(zi, W, H, true));
+  }
+  ctx.save();
+  for (let i = 0; i < FX.p.length; i++) {
+    const p = FX.p[i];
+    if (p.k === "fly") {
+      p.x += Math.sin(now * 0.0004 * p.sp + p.ph) * 0.25; p.y += Math.cos(now * 0.0003 * p.sp + p.ph) * 0.2;
+      const blink = Math.max(0, Math.sin(now * 0.0016 * p.sp + p.ph * 3));
+      if (blink > 0.05) {
+        ctx.fillStyle = "rgba(225,245,120," + (blink * 0.22).toFixed(3) + ")"; ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, 7); ctx.fill();
+        ctx.fillStyle = "rgba(245,255,170," + (blink * 0.85).toFixed(3) + ")"; ctx.beginPath(); ctx.arc(p.x, p.y, 1.6, 0, 7); ctx.fill();
+      }
+    } else if (p.k === "moss") {
+      p.y += p.sp * s; const sw = Math.sin(now * 0.001 + p.ph) * 8;
+      ctx.strokeStyle = "rgba(150,170,120,.28)"; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(p.x + sw, p.y);
+      for (let k = 1; k <= 6; k++) ctx.lineTo(p.x + sw + Math.sin(now * 0.002 + p.ph + k) * 4, p.y + k * p.len / 6);
+      ctx.stroke();
+      if (p.y > H + 60) FX.p[i] = fxSpawn(zi, W, H, false);
+    } else if (p.k === "note") {
+      p.y -= p.sp * s; const a = Math.min(1, (H - p.y) / 120) * Math.min(1, p.y / 120);
+      ctx.fillStyle = "rgba(255,205,120," + (0.38 * Math.max(0, a)).toFixed(3) + ")"; ctx.font = p.sz + "px Georgia, serif";
+      ctx.fillText(p.ch, p.x + Math.sin(now * 0.0012 + p.ph) * 14, p.y);
+      if (p.y < -30) FX.p[i] = fxSpawn(zi, W, H, false);
+    } else if (p.k === "spark" || p.k === "ember") {
+      p.y -= p.sp * s; p.x += Math.sin(now * 0.002 + p.ph) * 0.3;
+      const f = 0.45 + 0.4 * Math.sin(now * 0.01 + p.ph * 5);
+      const col = p.k === "spark" ? "255,190,110" : "255,120,40";
+      ctx.fillStyle = "rgba(" + col + "," + (f * 0.25).toFixed(3) + ")"; ctx.beginPath(); ctx.arc(p.x, p.y, (p.r || 1.4) * 2.6, 0, 7); ctx.fill();
+      ctx.fillStyle = "rgba(" + col + "," + f.toFixed(3) + ")"; ctx.beginPath(); ctx.arc(p.x, p.y, p.r || 1.4, 0, 7); ctx.fill();
+      if (p.y < -10) FX.p[i] = fxSpawn(zi, W, H, false);
+    } else if (p.k === "fog") {
+      p.x += p.sp * s;
+      const g = ctx.createRadialGradient(p.x, p.y, 1, p.x, p.y, p.r);
+      g.addColorStop(0, "rgba(190,215,235,.10)"); g.addColorStop(1, "rgba(190,215,235,0)");
+      ctx.fillStyle = g; ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+      if (p.x - p.r > W) { p.x = -p.r; p.y = rnd(H * 0.45, H * 1.05); }
+    } else if (p.k === "wisp") {
+      p.x += Math.sin(now * 0.0003 * p.sp + p.ph) * 0.3; p.y += Math.cos(now * 0.00025 + p.ph) * 0.2;
+      const a = 0.25 + 0.2 * Math.sin(now * 0.002 + p.ph * 2);
+      ctx.fillStyle = "rgba(180,235,255," + (a * 0.3).toFixed(3) + ")"; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, 7); ctx.fill();
+      ctx.fillStyle = "rgba(220,245,255," + a.toFixed(3) + ")"; ctx.beginPath(); ctx.arc(p.x, p.y, 1.3, 0, 7); ctx.fill();
+    } else if (p.k === "conf") {
+      p.y += p.sp * s; p.r += p.vr * s; const sx = Math.sin(now * 0.003 + p.ph);
+      ctx.save(); ctx.translate(p.x + Math.sin(now * 0.0015 + p.ph) * 10, p.y); ctx.rotate(p.r); ctx.scale(sx, 1);
+      ctx.globalAlpha = 0.5; ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.w / 4, p.w, p.w / 2); ctx.restore();
+      if (p.y > H + 12) FX.p[i] = fxSpawn(zi, W, H, false);
+    }
+  }
+  // the occasional big one
+  if (now > FX.nextBig) { const b = fxBig(zi, W, H, now); if (b) FX.big.push(b); FX.nextBig = now + rnd(7000, 13000); }
+  FX.big = FX.big.filter(b => now - b.t0 < b.dur);
+  for (const b of FX.big) {
+    const t = (now - b.t0) / b.dur, fade = Math.min(1, t * 5, (1 - t) * 5);
+    let x = b.x, y = b.y, sc = 1, rot = 0;
+    if (b.mode === "fly") { x = -40 + b.vx * (now - b.t0) / 1000; y = b.y + Math.sin((now - b.t0) * 0.004) * 14; sc = 0.75 + 0.25 * Math.abs(Math.sin((now - b.t0) * 0.02)); }
+    if (b.mode === "fall") { y = -50 + b.vy * (now - b.t0) / 1000; x = b.x + Math.sin((now - b.t0) * 0.0015) * 24; rot = Math.sin((now - b.t0) * 0.001) * 0.5 * b.rot; }
+    if (b.mode === "rise") { y = H + 50 - b.vy * (now - b.t0) / 1000; x = b.x + Math.sin((now - b.t0) * 0.002) * 10; }
+    ctx.save(); ctx.globalAlpha = (b.mode === "fade" ? 0.32 : 0.42) * fade; ctx.translate(x, y); ctx.rotate(rot); ctx.scale(1, sc);
+    ctx.font = b.sz + "px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    if (b.fire) { ctx.font = (b.sz * 0.9) + "px serif"; ctx.fillText("🔥", 0, b.sz * 0.55); ctx.font = b.sz + "px serif"; }
+    ctx.fillText(b.ch, 0, 0); ctx.restore();
+  }
+  ctx.restore();
+}
+
+/* fade the pipe a little when it's standing in front of the flange, a valve or a cleanout */
+let coverA = 1;
+function coverAlpha(s) {
+  let want = 1;
+  const cs = cellsOf(s), mid = cs.reduce((a, c) => [a[0] + c[0] + 0.5, a[1] + c[1] + 0.5], [0, 0]).map(v => v / cs.length);
+  const base = P(mid[0], 0, mid[1]), top = P(mid[0], s.o === 0 ? 2 : 1, mid[1]);
+  const myD = Math.hypot(...toCam([mid[0], 0, mid[1]]));
+  for (let z = Math.floor(mid[1]) - 3; z <= Math.floor(mid[1]) + 3; z++) for (let x = Math.floor(mid[0]) - 3; x <= Math.floor(mid[0]) + 3; x++) {
+    const t = tileAt(MAP, x, z); if ("OVHT".indexOf(t) < 0) continue;
+    if (cs.some(c => c[0] === x && c[1] === z)) continue;
+    if (Math.hypot(...toCam([x + 0.5, 0, z + 0.5])) <= myD) continue;     // only things BEHIND the pipe
+    const p = P(x + 0.5, 0, z + 0.5);
+    // distance from the tile's screen point to the pipe's screen segment
+    const vx = top[0] - base[0], vy = top[1] - base[1], L = vx * vx + vy * vy || 1;
+    const k = Math.max(0, Math.min(1, ((p[0] - base[0]) * vx + (p[1] - base[1]) * vy) / L));
+    const dx = p[0] - (base[0] + vx * k), dy = p[1] - (base[1] + vy * k);
+    if (Math.hypot(dx, dy) < view.s * 0.5) want = 0.45;
+  }
+  coverA += (want - coverA) * 0.18;
+  return coverA;
+}
+
 function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
 let lastNow = 0;
 function draw(now) {
@@ -1584,19 +2012,7 @@ function draw(now) {
   const bg = ctx.createRadialGradient(CW * 0.5, CH * 0.36, 10, CW * 0.5, CH * 0.36, Math.max(CW, CH) * 0.75);
   bg.addColorStop(0, THEME.wash); bg.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = bg; ctx.fillRect(0, 0, CW, CH);
-  // zone motes: fireflies, gas-lamp sparks, will-o-wisps, confetti, embers
-  const motes = THEME.mote;
-  for (let i = 0; i < 24; i++) {
-    const c = motes[i % motes.length];
-    const mx = (hash2(i, 7) * CW + Math.sin(now * 0.00011 * (i % 5 + 1) + i) * 14 + CW) % CW;
-    const drift = now * 0.004 * (i % 3 + 1) * (THEME.rise ? 2.2 : 1);
-    const my = THEME.rise ? ((hash2(3, i) * CH - drift) % CH + CH) % CH : (hash2(3, i) * CH + drift) % CH;
-    const pulse = 0.30 + 0.25 * Math.sin(now * 0.002 + i * 1.7);
-    ctx.fillStyle = "rgba(" + c.join(",") + "," + (pulse * 0.35).toFixed(3) + ")";
-    ctx.beginPath(); ctx.arc(mx, my, 3.4, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "rgba(" + c.join(",") + "," + pulse.toFixed(3) + ")";
-    ctx.beginPath(); ctx.arc(mx, my, 1.3, 0, Math.PI * 2); ctx.fill();
-  }
+  drawFX(now, dt, CW, CH);
   const bc = P(COLS / 2, -SLAB, ROWS / 2);
   const sh = ctx.createRadialGradient(bc[0], bc[1], 4, bc[0], bc[1], view.s * COLS * 0.52);
   sh.addColorStop(0, "rgba(0,0,0,.62)"); sh.addColorStop(1, "rgba(0,0,0,0)");
@@ -1638,7 +2054,7 @@ function draw(now) {
     drawBlock(block, { yOff: -(t * t) * 1.9, alpha: t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1 });
     if (t >= 1) showWin();
   } else if (status === "play") {
-    drawShadow(block); drawBlock(block, leanOpts());
+    drawShadow(block); drawBlock(block, Object.assign(leanOpts(), { alpha: coverAlpha(block) }));
   }
   stepParts(dt);
   requestAnimationFrame(draw);
@@ -1685,7 +2101,7 @@ if (window.ResizeObserver) new ResizeObserver(resize).observe(board);
    MODALS: levels map, how-to, zone splash
    ============================================================ */
 const mLevels = $("mLevels"), mHelp = $("mHelp"), mZone = $("mZone"), mMenu = $("mMenu");
-function modalOpen() { return [mLevels, mHelp, mZone, mMenu, $("mFull")].some(m => m.classList.contains("show")); }
+function modalOpen() { return [mLevels, mHelp, mZone, mMenu, $("mFull"), $("mAsk"), $("mTro"), $("mRank"), $("mFan")].some(m => m.classList.contains("show")); }
 $("btnMenu").addEventListener("click", () => { audioInit(); sfx.ui(); mMenu.classList.add("show"); });
 $("btnResume").addEventListener("click", () => { sfx.ui(); mMenu.classList.remove("show"); });
 mMenu.addEventListener("click", e => { if (e.target === mMenu) mMenu.classList.remove("show"); });
@@ -1699,7 +2115,7 @@ function openLevels() {
     const grid = document.createElement("div"); grid.className = "lgrid";
     for (let k = 0; k < PER_ZONE; k++) {
       const i = zi * PER_ZONE + k; if (i >= LEVELS.length) break;
-      const n = wrenchesFor(i, getBest(i)); zw += n;
+      const n = levelWr(i); zw += n;
       const b = document.createElement("button"); b.type = "button";
       if (i === curLevel) b.classList.add("cur");
       b.disabled = i > unlocked;
@@ -1740,6 +2156,129 @@ $("zGo").addEventListener("click", () => {
   audioInit(); mZone.classList.remove("show");
   store.set("mojoRoll2Zone" + zoneOf(curLevel), "1"); sfx.ui();
 });
+
+/* ============================================================
+   v4 UI: Ask Mojo (tile guide + hints), trophies, rank, fanfare
+   ============================================================ */
+const mAsk = $("mAsk"), mTro = $("mTro"), mRank = $("mRank"), mFan = $("mFan");
+function closeModals() { [mLevels, mHelp, mZone, mMenu, mAsk, mTro, mRank, mFan, $("mFull")].forEach(m => m.classList.remove("show")); }
+const HEAD = document.querySelector(".mojo-head").src;
+$("mmImg").src = HEAD; $("askImg").src = HEAD;
+
+// little iso tile pictures for the guide
+function tileIcon(kind) {
+  const top = "M30 6 L56 19 L30 32 L4 19Z", side = '<path d="M4 19 L30 32 L30 38 L4 25Z" fill="#3a3346"/><path d="M30 32 L56 19 L56 25 L30 38Z" fill="#4c445a"/>';
+  const T = (fill, extra) => '<svg viewBox="0 0 60 42">' + side + '<path d="' + top + '" fill="' + fill + '" stroke="rgba(255,255,255,.45)" stroke-width="1"/>' + (extra || "") + "</svg>";
+  switch (kind) {
+    case "floor": return T("#b9a98f");
+    case "flange": return T("#b9a98f", '<ellipse cx="30" cy="19" rx="11" ry="5.5" fill="#0a0d12" stroke="#d98d4e" stroke-width="3"/>');
+    case "crack": return T("#d2a066", '<path d="M18 17 L26 21 L31 16 L40 22" fill="none" stroke="#3a2614" stroke-width="1.6"/>');
+    case "edge": return '<svg viewBox="0 0 60 42"><path d="M2 22 L20 13 L38 22 L20 31Z" fill="#b9a98f" stroke="rgba(255,255,255,.45)"/><path d="M22 23 L40 14 L58 23 L40 32Z" fill="none" stroke="#ff8a72" stroke-dasharray="3 3"/><rect x="10" y="15" width="34" height="9" rx="4.5" transform="rotate(-27 27 19)" fill="#d98d4e" stroke="#2b1a10"/></svg>';
+    case "valve": return T("#b9a98f", '<ellipse cx="30" cy="17" rx="10" ry="5" fill="none" stroke="#d32b22" stroke-width="3"/><path d="M21 17 L39 17 M30 12 L30 22" stroke="#b8231c" stroke-width="2"/>');
+    case "bridge": return T("#3c4048", '<path d="' + top + '" fill="none" stroke="#f0be3c" stroke-width="2"/><path d="M17 13 L43 26 M23 10 L49 23 M11 16 L37 29" stroke="#15171c" stroke-width="1.5"/>');
+    case "ghost": return T("#4fc0d8", '<path d="M30 13 L30 25 M25 18 L35 18" stroke="#e6faff" stroke-width="2"/>');
+    case "clean": return T("#b9a98f", '<ellipse cx="30" cy="19" rx="11" ry="5.5" fill="#e2bb58" stroke="#5a4310" stroke-width="1.5"/><rect x="26" y="16.5" width="8" height="5" fill="#c9a13e" stroke="#6b500f"/>');
+    case "heavy": return T("#b9a98f", '<ellipse cx="30" cy="19" rx="12" ry="6" fill="#17110f" stroke="#ff6e28" stroke-width="2"/><path d="M24 19 L27 16 L33 16 L36 19 L33 22 L27 22Z" fill="#5c5456" stroke="#ff8c46"/>');
+  }
+  return T("#b9a98f");
+}
+const GUIDE = [
+  { z: 0, k: "floor", n: "Stone tile", d: "Solid ground. Every roll has to land on tiles like this." },
+  { z: 0, k: "edge", n: "Edges and gaps", d: "A lying pipe needs a tile under both halves. Hang half off and down you go." },
+  { z: 0, k: "flange", n: "The flange", d: "The goal. Roll the pipe so it stands straight up in it." },
+  { z: 0, k: "crack", n: "Cracked tile", d: "Holds the pipe lying down. Stand it up on one and it breaks." },
+  { z: 1, k: "valve", n: "Shutoff valve", d: "Touch it with any part of the pipe and every bridge flips. Touch it again and they flip back." },
+  { z: 1, k: "bridge", n: "Bridge", d: "Steel grate with yellow trim when it's open. A dashed outline means it's closed, so don't roll onto it." },
+  { z: 2, k: "ghost", n: "Ghost tile", d: "Bright ones hold you, faint ones drop you. They swap every time you roll." },
+  { z: 3, k: "clean", n: "Cleanout", d: "Stand the pipe up on one and it pops out of the other. Lying on it does nothing." },
+  { z: 4, k: "heavy", n: "Heavy valve", d: "Only turns under full weight. Stand the pipe straight up on it to flip every bridge." }
+];
+const MOJO_LINES = ["Quit pokin' me, I'm on the clock.", "Roll the pipe, not my nerves.", "You want a hint or a punch?", "I got pipes older than you.", "Again? Really?", "Ow. That's my good side."];
+function openAsk(say) {
+  const reach = zoneOf(Math.max(unlocked, curLevel));
+  let h = "";
+  ZONES.forEach((z, zi) => {
+    if (zi > reach) return;
+    const rows = GUIDE.filter(g => g.z === zi);
+    if (!rows.length) return;
+    h += '<h3 style="color:' + z.accent + '">' + z.name + "</h3>" + rows.map(g => '<div class="row">' + tileIcon(g.k) + "<div><b>" + g.n + "</b><span>" + g.d + "</span></div></div>").join("");
+  });
+  if (reach < ZONES.length - 1) h += '<h3 style="color:#8d7fb0">MORE TILES UNLOCK AS YOU REACH NEW ZONES</h3>';
+  $("tileGuide").innerHTML = h;
+  $("askSay").textContent = say || "Here's how every tile works. Stuck? I'll show you one move at a time.";
+  syncHints();
+  closeModals(); mAsk.classList.add("show");
+}
+$("miniMojo").addEventListener("click", () => { audioInit(); sfx.ui(); openAsk(); });
+$("askClose").addEventListener("click", () => { sfx.ui(); mAsk.classList.remove("show"); });
+$("askHint").addEventListener("click", useHint);
+$("btnHint").addEventListener("click", useHint);
+mAsk.addEventListener("click", e => { if (e.target === mAsk) mAsk.classList.remove("show"); });
+$("askImg").addEventListener("click", () => {
+  audioInit(); PR.taps++;
+  const im = $("askImg"); im.classList.remove("poke"); void im.offsetWidth; im.classList.add("poke");
+  if (PR.taps >= 30 && award("annoy")) $("askSay").textContent = "Alright, ALRIGHT. You win. Now go roll something.";
+  else $("askSay").textContent = MOJO_LINES[PR.taps % MOJO_LINES.length];
+  sfx.ui(); savePR();
+});
+
+function openTrophies() {
+  const tile = (t, got, secret) => '<div class="tro' + (got ? "" : " lock") + (got && t.id === "w120" ? " fan" : "") + '" data-id="' + t.id + '"><span class="a">' + (got || !secret ? t.art : "❓") + "</span><b>" + (got || !secret ? t.name : "???") + "</b><small>" + (got || !secret ? t.desc : "Keep exploring") + "</small></div>";
+  const got = RT.filter(t => PR.tro.includes(t.id)).length + RS.filter(t => PR.tro.includes(t.id)).length;
+  $("troTotal").textContent = got + " OF " + (RT.length + RS.length) + " TROPHIES";
+  $("troList").innerHTML = '<div class="tsec">MOJO ROLL<small>' + totalWr() + " / 120 🔧 · best par streak " + PR.bestStreak + "</small></div>" +
+    '<div class="tgrid">' + RT.map(t => tile(t, PR.tro.includes(t.id), false)).join("") + "</div>" +
+    '<div class="tsec">SECRET<small>hidden until you find them</small></div><div class="tgrid">' + RS.map(t => tile(t, PR.tro.includes(t.id), true)).join("") + "</div>" +
+    '<p class="total" style="margin-top:10px">Daily streak, holiday badges and cross-game trophies live in Mojo\'s Locker.</p>';
+  closeModals(); mTro.classList.add("show");
+}
+$("troList").addEventListener("click", e => { const t = e.target.closest(".tro.fan"); if (t) showFanfare(); });
+$("troClose").addEventListener("click", () => { sfx.ui(); mTro.classList.remove("show"); });
+mTro.addEventListener("click", e => { if (e.target === mTro) mTro.classList.remove("show"); });
+
+function openRank() {
+  const s = boardScore(), r = rankOf(s);
+  $("rkIns").innerHTML = r ? armyWarrant(r) : '<svg viewBox="0 0 200 200"><rect x="64" y="14" width="72" height="172" rx="10" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="4" stroke-dasharray="8 8"/></svg>';
+  $("rkName").textContent = warrantName(r);
+  $("rkSub").textContent = r >= 5 ? s + " wrenches. Top rank. Nothing left but bragging." : s + " wrenches · next: " + warrantName(r + 1) + " at " + (r + 1) * 24;
+  $("rkBar").style.width = (r >= 5 ? 100 : Math.max(2, (s % 24) / 24 * 100)) + "%";
+  $("rkLadder").innerHTML = WARRANT.map((n, i) => '<div class="' + (r === i + 1 ? "on" : r > i + 1 ? "" : "dim") + '">' + armyWarrant(i + 1) + n.replace("Chief Warrant Officer", "CW").replace("Warrant Officer", "WO") + "</div>").join("");
+  const b = lbBoard();
+  if (b) { b.pending = s > postedScore ? s : 0; b.refresh(); } else $("lbRoll").innerHTML = '<p class="total">The leaderboard loads when you play on pipemojo.com.</p>';
+  closeModals(); mRank.classList.add("show");
+}
+$("rkClose").addEventListener("click", () => { sfx.ui(); mRank.classList.remove("show"); });
+mRank.addEventListener("click", e => { if (e.target === mRank) mRank.classList.remove("show"); });
+// when they sign in from the Rank screen, post what they've earned
+if (window.PMLB) PMLB.onChange(type => { if (type !== "signout") { postedScore = 0; setTimeout(() => { postScore(); PMLB.cloudLoad("roll").then(c => { cloudMerge(c); cloudPush(); }).catch(() => cloudPush()); }, 300); } });
+
+/* ---------- Master Roller fanfare ---------- */
+let fanRaf = 0;
+function showFanfare() {
+  closeModals(); mFan.classList.add("show");
+  sfx.zone(); setTimeout(() => sfx.wrenches(3, true), 500);
+  const cv = $("fanConf"), c = cv.getContext("2d"), W = cv.width = innerWidth, H = cv.height = innerHeight;
+  const cols = ["#f5c842", "#fff1a8", "#c78bff", "#7ee06a", "#ffffff"];
+  const P = Array.from({ length: 140 }, () => ({ x: W / 2, y: H * 0.42, vx: (Math.random() - .5) * 14, vy: -Math.random() * 13 - 3, r: Math.random() * 6, s: 4 + Math.random() * 6, c: cols[Math.random() * cols.length | 0] }));
+  cancelAnimationFrame(fanRaf);
+  (function f() {
+    c.clearRect(0, 0, W, H);
+    for (const p of P) {
+      p.vy += 0.22; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += 0.15;
+      if (p.y > H + 20) { p.y = -10; p.x = Math.random() * W; p.vy = Math.random() * 2; p.vx = (Math.random() - .5) * 2; }
+      c.save(); c.translate(p.x, p.y); c.rotate(p.r); c.fillStyle = p.c; c.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); c.restore();
+    }
+    if (mFan.classList.contains("show")) fanRaf = requestAnimationFrame(f);
+  })();
+}
+$("fanGo").addEventListener("click", () => { sfx.ui(); mFan.classList.remove("show"); });
+
+/* ---------- menu wiring ---------- */
+$("btnTro").addEventListener("click", () => { audioInit(); sfx.ui(); openTrophies(); });
+$("btnRank").addEventListener("click", () => { audioInit(); sfx.ui(); openRank(); });
+$("btnGuide").addEventListener("click", () => { audioInit(); sfx.ui(); openAsk(); });
+zoneLbl.style.cursor = "pointer";
+zoneLbl.addEventListener("click", () => { audioInit(); sfx.ui(); openAsk(); });
 
 /* ============================================================
    FULL SCREEN (iPad / desktop). iPhone Safari can't, so the
@@ -1841,7 +2380,7 @@ canvas.addEventListener("pointerup", e => endSwipe(e, false));
 canvas.addEventListener("pointercancel", e => endSwipe(e, true));
 document.addEventListener("touchmove", e => { if (e.target === canvas) e.preventDefault(); }, { passive: false });
 
-$("btnRestart").addEventListener("click", () => { audioInit(); if (status !== "rolling") { sfx.restart(); reset(); } });
+$("btnRestart").addEventListener("click", () => { audioInit(); if (status !== "rolling") { sessRestarts++; sfx.restart(); reset(); } });
 $("btnAgain").addEventListener("click", () => { audioInit(); sfx.restart(); reset(); });
 btnNext.addEventListener("click", () => { audioInit(); sfx.ui(); loadLevel(curLevel + 1); });
 const btnSound = $("btnSound");
@@ -1853,7 +2392,12 @@ btnSound.addEventListener("click", () => {
 });
 
 syncSoundBtn();
+syncHints();
 loadLevel(unlocked);
+checkTrophies(); store.set("pm-roll-sum", JSON.stringify(summary()));
+if (window.PMX) { PMX.onAward = n => toast("🏆 " + n); PMX.sync(); setTimeout(() => { PMX.tick(); checkTriple(); }, 1500); }
+if (window.PMLB && PMLB.account()) PMLB.cloudLoad("roll").then(c => { cloudMerge(c); postScore(); }).catch(() => {});
+document.addEventListener("visibilitychange", () => { if (document.hidden) cloudPush(true); });
 if (!store.get("mojoRoll2Help")) mHelp.classList.add("show");
 resize();
 requestAnimationFrame(draw);

@@ -1,4 +1,4 @@
-/* Pipe Mojo extras: daily streak, seasonal and secret trophies. Shared by Flow, Whack-a-Pipe and the Locker.
+/* Pipe Mojo extras: daily streak, seasonal and secret trophies. Shared by Flow, Whack-a-Pipe, Mojo Roll and the Locker.
    Saved on this device and, when signed in, to your name (inside the Whack-a-Pipe cloud save). */
 (function(){
 const acctKey=()=>{const a=window.PMLB&&PMLB.account();return a?String(a.name).toLowerCase().replace(/ /g,''):''};
@@ -38,6 +38,7 @@ const SECRETS=[
   {id:'annoy',name:'Annoying',art:'😤',desc:'Tapped Mojo 50 times in his locker room'},
   {id:'night',name:'Night Shift',art:'🌙',desc:'Cleared a Flow level between midnight and 4am'},
   {id:'double',name:'Double Duty',art:'🎖️',desc:'Held an Army rank in both games'},
+  {id:'triple',name:'Triple Threat',art:'🎖️🎖️',desc:'Held an Army rank in all three games'},
   {id:'golden',name:'Golden Touch',art:'✨',desc:'Caught every golden pipe in a bonus round'},
   {id:'marathon',name:'Marathon',art:'⏱️',desc:'Lasted 5 minutes in one Whack-a-Pipe round'}
 ];

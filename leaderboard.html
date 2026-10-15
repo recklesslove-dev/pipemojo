@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Mojo Board">
-<meta name="description" content="Pipe Mojo leaderboard: top Whack-a-Pipe scores and Flow levels. Think you can beat Pipe Mojo?">
+<meta name="description" content="Pipe Mojo leaderboard: top Whack-a-Pipe scores, Flow levels and Mojo Roll wrenches. Think you can beat Pipe Mojo?">
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Leaderboard | Pipe Mojo</title>
@@ -45,6 +45,10 @@ h1{font-family:var(--title);font-weight:400;font-size:clamp(3rem,13vw,4.4rem);li
 .card{background:var(--deep);border:2px solid rgba(255,255,255,.08);border-radius:14px;padding:18px}
 .card.whack{border-color:rgba(232,40,30,.45)}
 .card.flow{border-color:rgba(0,229,255,.4)}
+.card.roll{border-color:rgba(245,200,66,.45)}
+.roll h2{color:var(--gold)}
+.roll li .s{color:var(--gold)}
+.roll .play{background:var(--gold);color:#241128}
 .card header{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
 .card h2{font-family:var(--title);font-weight:400;font-size:2.1rem;line-height:1}
 .whack h2{color:#ff5a4f}
@@ -110,6 +114,11 @@ li.msg{color:rgba(255,255,255,.55);font-weight:600}
       <ol id="list-flow"><li class="msg">Loading…</li></ol>
       <a class="play" href="/flow">Play Flow</a>
     </section>
+    <section class="card roll" aria-labelledby="ro">
+      <header><h2 id="ro">Mojo Roll</h2><span>Wrenches</span></header>
+      <ol id="list-roll"><li class="msg">Loading…</li></ol>
+      <a class="play" href="/mojoroll">Play Mojo Roll</a>
+    </section>
   </div>
 
   <p class="you" id="you"></p>
@@ -117,7 +126,7 @@ li.msg{color:rgba(255,255,255,.55);font-weight:600}
   <section class="faq" aria-labelledby="faqh">
     <h2 id="faqh">Questions</h2>
     <details><summary>How do I get on the board?</summary>
-      <p>Play a round. In Whack-a-Pipe, claim a name on the Cursed screen when the round ends. In Flow, claim one in the leaderboard section under the board. Your score posts right away, and every game after that posts on its own.</p></details>
+      <p>Play a round. In Whack-a-Pipe, claim a name on the Cursed screen when the round ends. In Flow, claim one in the leaderboard section under the board. In Mojo Roll, open the menu and tap Rank &amp; Board. Your score posts right away, and every game after that posts on its own.</p></details>
     <details><summary>Is there a password?</summary>
       <p>No passwords and no email. When you claim a name, you get a one-time <b>recovery code</b>. Save it in Notes. It's the only way to sign back in to your name, and nobody can look it up for you, not even us.</p></details>
     <details><summary>How do I play on another phone or iPad?</summary>
@@ -129,7 +138,7 @@ li.msg{color:rgba(255,255,255,.55);font-weight:600}
     <details><summary>Why didn't my score post?</summary>
       <p>You need to be signed in to a name, and you need a connection. Whack-a-Pipe scores are also checked against how long the round actually lasted, so fake scores get turned away.</p></details>
     <details><summary>What's the insignia next to a name?</summary>
-      <p>That's the player's Army rank. Flow players are officers: every boss beaten (every 100 levels) is a promotion, from Second Lieutenant up to five-star General of the Army. Whack-a-Pipe players are enlisted: every 100 points of their best score is a promotion, from Private up to Sergeant Major of the Army. After the top rank come Silver, Gold and Diamond finishes. Tap or hover an insignia to see the rank.</p></details>
+      <p>That's the player's Army rank. Flow players are officers: every boss beaten (every 100 levels) is a promotion, from Second Lieutenant up to five-star General of the Army. Mojo Roll players are warrant officers: every 24 wrenches is a promotion, from Warrant Officer 1 up to Chief Warrant Officer 5. Whack-a-Pipe players are enlisted: every 100 points of their best score is a promotion, from Private up to Sergeant Major of the Army. After the top rank come Silver, Gold and Diamond finishes. Tap or hover an insignia to see the rank.</p></details>
     <details><summary>What's the 1K badge?</summary>
       <p>The 1K Club. It's only for Flow players who have cleared level 1000. Clear 2000 and it becomes 2K, and so on.</p></details>
     <details><summary>What's the 🔥 next to a name?</summary>
@@ -272,6 +281,24 @@ function armyEnlisted(r){
   const top=-12,h=(nRock?lastR+56:last+64)-top;
   return wrap('<g transform="translate(0 '+((200-h)/2-top).toFixed(1)+')">'+b+'</g>');
 }
+/* Warrant Officer rank (Mojo Roll): a promotion every 24 wrenches */
+const WARRANT=['Warrant Officer 1','Chief Warrant Officer 2','Chief Warrant Officer 3','Chief Warrant Officer 4','Chief Warrant Officer 5'];
+function warrantName(r){return r<1?'No rank yet':WARRANT[Math.min(5,r)-1]}
+let wgN=0;
+function armyWarrant(r){
+  if(r<1)return '';r=Math.min(5,r);const id='wg'+(wgN++);
+  let s='<svg viewBox="0 0 200 200"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#c9ced6"/><stop offset="1" stop-color="#6b7280"/></linearGradient></defs>'+
+    '<rect x="64" y="14" width="72" height="172" rx="10" fill="url(#'+id+')" stroke="#2b2f36" stroke-width="5"/><rect x="74" y="24" width="12" height="152" rx="6" fill="rgba(255,255,255,.55)"/>';
+  if(r===5)s+='<rect x="93" y="30" width="14" height="140" rx="3" fill="#15171c"/>';
+  else{const gap=152/r;for(let k=0;k<r;k++){const cy=24+gap*(k+.5);s+='<rect x="84" y="'+(cy-16).toFixed(1)+'" width="32" height="32" rx="3" fill="#15171c"/>'}}
+  return s+'</svg>';
+}
+/* the insignia next to a name: officers in Flow, enlisted in Whack-a-Pipe, warrant officers in Mojo Roll */
+function rankHTML(game,best){
+  if(game==='roll'){const r=Math.min(5,Math.floor(best/24));return r?'<span class="ri" title="'+warrantName(r)+'">'+armyWarrant(r)+'</span>':''}
+  if(best<100)return '';const n=Math.floor(best/100);
+  return '<span class="ri" title="'+(game==='flow'?officerName(n):enlistedName(n))+'">'+(game==='flow'?armyOfficer(n):armyEnlisted(n))+'</span>';
+}
 /* ---------- the K Club badge: platinum and diamond, 1K at level 1000, then 2K, 3K... ---------- */
 function badgeK(k){
   k=Math.max(1,k|0);
@@ -306,10 +333,10 @@ async function load(game,unit){
     const r=await fetch(API+'/top?game='+game);const d=await r.json();
     const top=d.top||[];
     if(!top.length){ol.innerHTML='<li class="msg">No scores yet. Be the first.</li>';return}
-    ol.innerHTML=top.map((x,i)=>'<li'+(me&&key(x.name)===key(me)?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+(x.best>=100?'<span class="ri" title="'+(game==='flow'?officerName(Math.floor(x.best/100)):enlistedName(Math.floor(x.best/100)))+'">'+(game==='flow'?armyOfficer(Math.floor(x.best/100)):armyEnlisted(Math.floor(x.best/100)))+'</span>':'')+'<span class="nm">'+esc(x.name)+'</span>'+(game==='flow'&&x.best>=1000?'<span class="k1" title="'+Math.floor(x.best/1000)+'K Club">'+badgeK(Math.floor(x.best/1000))+'</span>':'')+(x.streak>=2?' <span class="fl" title="Best par streak">🔥'+x.streak+'</span>':'')+'</span><span class="s">'+unit+x.best+'</span></li>').join('');
+    ol.innerHTML=top.map((x,i)=>'<li'+(me&&key(x.name)===key(me)?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+rankHTML(game,x.best)+'<span class="nm">'+esc(x.name)+'</span>'+(game==='flow'&&x.best>=1000?'<span class="k1" title="'+Math.floor(x.best/1000)+'K Club">'+badgeK(Math.floor(x.best/1000))+'</span>':'')+(x.streak>=2?' <span class="fl" title="Best par streak">🔥'+x.streak+'</span>':'')+'</span><span class="s">'+unit+x.best+'</span></li>').join('');
   }catch(e){ol.innerHTML='<li class="msg">Couldn\'t load the board. Try again in a bit.</li>'}
 }
-load('whack','');load('flow','Lv ');
+load('whack','');load('flow','Lv ');load('roll','🔧 ');
 })();
 </script>
 </body>
