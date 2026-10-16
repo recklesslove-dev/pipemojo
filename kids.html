@@ -881,7 +881,7 @@ document.querySelectorAll('[data-home]').forEach(b=>b.addEventListener('click',(
 function fit(cv){
   const d=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;
   cv.width=Math.round(w*d);cv.height=Math.round(h*d);
-  const ctx=cv.getContext('2d');ctx.setTransform(d,0,0,d,0,0);return {ctx,w,h};
+  const ctx=cv.getContext('2d');if(ctx)ctx.setTransform(d,0,0,d,0,0);return {ctx,w,h};
 }
 function drawImg(ctx,im,x,y,h,ang){
   if(!ready(im))return;const w=h*im.naturalWidth/im.naturalHeight;
@@ -917,7 +917,8 @@ const Pop=(function(){
   function paint(){
     const d=window.devicePixelRatio||1;bg=bg||document.createElement('canvas');
     bg.width=Math.round(W*d);bg.height=Math.round(H*d);
-    const g=bg.getContext('2d');g.setTransform(d,0,0,d,0,0);
+    const g=bg.getContext('2d');if(!g){freeCanvas(bg);bg=null;return} // no memory right now: carry on without the painted background
+    g.setTransform(d,0,0,d,0,0);
     ({bath:bgBath,laundry:bgLaundry,fish:bgFish,dish:bgDish})[place](g,W,H,geo.L);
     paintHoliday(g,W,H);
   }
@@ -1008,7 +1009,7 @@ const Pop=(function(){
   }
   function start(){intro=true;begin()}   // opened from home: say how to play once
   function next(){begin()}
-  function stop(){running=false;cancelAnimationFrame(raf);clearTimeout(titleT);clearTimeout(celebT)}
+  function stop(){running=false;cancelAnimationFrame(raf);clearTimeout(titleT);clearTimeout(celebT);if(bg){freeCanvas(bg);bg=null;freeCanvas(cv)}}
   function spawn(x,y,small){
     if(bubbles.length>=9)return;
     const r=geo.R*(small?.7:rand(.85,1.15));
@@ -1119,6 +1120,7 @@ const Pop=(function(){
     }
   }
   function loop(t){
+    try{
     if(!running)return;
     const dt=Math.min(.05,Math.max(0,(t-last)/1000));last=t;
     if(!done){spawnIn-=dt*1000;if(spawnIn<=0&&bubbles.length<6){const s=geo.src();spawn(s.x,s.y);spawnIn=rand(650,1000)}}
@@ -1149,7 +1151,8 @@ const Pop=(function(){
         y=sl.y-jump;a=doneAt&&t>doneAt?Math.sin((t-doneAt)/120+c.slot)*.15:0}
       drawImg(ctx,IMG[c.who],x,y,h,a);
     }
-    raf=requestAnimationFrame(loop);
+    }catch(err){if(window.console)console.error(err)}
+    if(running)raf=requestAnimationFrame(loop);
   }
   window.addEventListener('resize',()=>{if(running)resize()});
   return {start,next,stop};
@@ -1254,7 +1257,8 @@ const Flow=(function(){
   function paintBg(){
     const d=window.devicePixelRatio||1;bg=bg||document.createElement('canvas');
     bg.width=Math.round(Wd*d);bg.height=Math.round(Hd*d);
-    const g=bg.getContext('2d');g.setTransform(d,0,0,d,0,0);geo={};
+    const g=bg.getContext('2d');if(!g){freeCanvas(bg);bg=null;return} // no memory right now: carry on without the painted background
+    g.setTransform(d,0,0,d,0,0);geo={};
     ({sink:bgSink,bath:bgBath,dirt:bgDirt,sewer:bgSewer})[scene](g,Wd,Hd);
     paintHoliday(g,Wd,Hd);
   }
@@ -1416,7 +1420,7 @@ const Flow=(function(){
   function start(){
     intro=true;level=(me()&&me().level)||1;resize();generate();running=true;last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
   }
-  function stop(){running=false;cancelAnimationFrame(raf);clearTimeout(titleT)}
+  function stop(){running=false;cancelAnimationFrame(raf);clearTimeout(titleT);if(bg){freeCanvas(bg);bg=null;scene='';freeCanvas(cv)}}
   function next(){level++;const p=me();if(p){p.level=level;saveP()}generate()}
   function burst(i,now){
     const cx=ox+(i%n)*cell+cell/2,cy=oy+((i/n)|0)*cell+cell/2;
@@ -1458,6 +1462,7 @@ const Flow=(function(){
     ctx.restore();
   }
   function loop(t){
+    try{
     if(!running)return;
     const dt=Math.min(.05,Math.max(0,(t-last)/1000));last=t;
     if(bg)ctx.drawImage(bg,0,0,Wd,Hd);
@@ -1499,7 +1504,8 @@ const Flow=(function(){
       ctx.globalAlpha=Math.max(0,s.life);ctx.fillStyle=s.c;ctx.save();ctx.translate(s.x,s.y);ctx.rotate(t/200);
       const z=7*s.life+3;ctx.beginPath();ctx.moveTo(0,-z);ctx.lineTo(z*.35,0);ctx.lineTo(0,z);ctx.lineTo(-z*.35,0);ctx.closePath();ctx.fill();ctx.restore()}
     ctx.globalAlpha=1;sparks=sparks.filter(s=>s.life>0);
-    raf=requestAnimationFrame(loop);
+    }catch(err){if(window.console)console.error(err)}
+    if(running)raf=requestAnimationFrame(loop);
   }
   window.addEventListener('resize',()=>{if(running)resize()});
   return {start,stop,next,get level(){return level},sceneOf:sceneFor};
@@ -1522,16 +1528,26 @@ const OBJ={
 };
 const COLOR_KEYS=['bathtub','duck','hose','washer','heater','toolbox'];
 for(const k in OBJ){const im=new Image();im.src='/assets/'+OBJ[k].file+'.png';OBJ[k].img=im}
+/* iPad Safari has a fixed budget for canvas memory and is slow to give it back, so every canvas made here
+   is handed back (freeCanvas) as soon as it's not needed. Object pixels are read once into plain arrays. */
+function freeCanvas(c){try{if(c){c.width=0;c.height=0}}catch(e){}}
 function prepObj(k){
   const o=OBJ[k];if(o.d)return o.d;if(!ready(o.img))return null;
   const w=o.img.naturalWidth,h=o.img.naturalHeight,c=document.createElement('canvas');c.width=w;c.height=h;
-  const g=c.getContext('2d');g.drawImage(o.img,0,0);let px;
-  try{px=g.getImageData(0,0,w,h).data}catch(e){return null}
+  let px;try{const g=c.getContext('2d');g.drawImage(o.img,0,0);px=g.getImageData(0,0,w,h).data}catch(e){freeCanvas(c);freeArt(null);return null}
+  freeCanvas(c);
   const al=new Uint8Array(w*h);for(let i=0;i<w*h;i++)al[i]=px[i*4+3];
-  const sc=document.createElement('canvas');sc.width=w;sc.height=h;const sg=sc.getContext('2d'),sd=sg.createImageData(w,h);
-  for(let i=0;i<w*h;i++){if(!al[i])continue;sd.data[i*4]=40;sd.data[i*4+1]=22;sd.data[i*4+2]=78;sd.data[i*4+3]=al[i]}
-  sg.putImageData(sd,0,0);
-  o.d={w,h,img:c,px,al,shadow:sc,cuts:{}};return o.d;
+  o.d={w,h,img:o.img,px,al,cuts:{}};return o.d;           // draw from the original image, no copy
+}
+function shadowOf(k){ // dark silhouette for the shadow step, made when needed
+  const o=OBJ[k],d=prepObj(k);if(!d)return null;if(o.shadow)return o.shadow;
+  const sc=document.createElement('canvas');sc.width=d.w;sc.height=d.h;const sg=sc.getContext('2d');if(!sg)return null;const sd=sg.createImageData(d.w,d.h);
+  for(let i=0;i<d.w*d.h;i++){if(!d.al[i])continue;sd.data[i*4]=40;sd.data[i*4+1]=22;sd.data[i*4+2]=78;sd.data[i*4+3]=d.al[i]}
+  sg.putImageData(sd,0,0);return (o.shadow=sc);
+}
+function freeCuts(d){if(!d||!d.cuts)return;for(const n in d.cuts){const c=d.cuts[n];c.pieces.forEach(q=>{freeCanvas(q.img);freeCanvas(q.dark);freeCanvas(q.gold)});freeCanvas(c.ghost)}d.cuts={}}
+function freeArt(keep){ // hand back everything except what the current round uses
+  for(const k in OBJ){if(k===keep)continue;const o=OBJ[k];if(o.shadow){freeCanvas(o.shadow);o.shadow=null}if(o.grey){freeCanvas(o.grey);o.grey=null}if(o.d)freeCuts(o.d)}
 }
 // sounds when an object comes alive
 function aliveSound(k){
@@ -1609,7 +1625,7 @@ const Build=(function(){
   const prep=prepObj;
   function cut(d,n){ // split the shape into n chunky pieces (k-means on the solid pixels)
     if(d.cuts[n])return d.cuts[n];
-    d.cuts={};                                   // keep just one set in memory (iPad Safari is picky)
+    freeCuts(d);                                 // keep just one set in memory (iPad Safari is picky)
     const {w,h,al,px}=d,pts=[];
     for(let y=0;y<h;y+=4)for(let x=0;x<w;x+=4)if(al[y*w+x]>128)pts.push(x,y);
     const m=pts.length/2;let cx=0,cy=0;for(let i=0;i<m;i++){cx+=pts[2*i];cy+=pts[2*i+1]}cx/=m;cy/=m;
@@ -1680,7 +1696,8 @@ const Build=(function(){
   }
   function paintBg(){ // Mojo's workshop: pegboard wall and a workbench
     const d=window.devicePixelRatio||1;bg=bg||document.createElement('canvas');bg.width=Math.round(W*d);bg.height=Math.round(H*d);
-    const g=bg.getContext('2d');g.setTransform(d,0,0,d,0,0);
+    const g=bg.getContext('2d');if(!g){freeCanvas(bg);bg=null;return} // no memory right now: carry on without the painted background
+    g.setTransform(d,0,0,d,0,0);
     const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#4f86ad');gr.addColorStop(1,'#2e5679');g.fillStyle=gr;g.fillRect(0,0,W,H);
     const fy=H-Math.max(44,H*.085);
     g.fillStyle='rgba(10,28,48,.32)';for(let y=60;y<fy-10;y+=38)for(let x=(y/38%2)*19+10;x<W;x+=38){g.beginPath();g.arc(x,y,3.5,0,6.28);g.fill()}
@@ -1733,7 +1750,7 @@ const Build=(function(){
     const p=me(),r=((p&&p.buildRound)||0)+1;
     nPieces=r<=3?3:r<=9?4:5;rotMode=r>=10;                    // 3 pieces, then 4, then 5 that start turned
     obj=pick(KEYS.filter(k=>k!==(p&&p.buildLast)));if(p){p.buildLast=obj;saveP()}
-    info=prep(obj);set=null;pcs=[];drag=null;bits=[];sparks=[];shadows=[];wrongs=0;T={};
+    freeArt(obj);info=prep(obj);set=null;pcs=[];drag=null;bits=[];sparks=[];shadows=[];wrongs=0;T={};
     const h=theme();bal={t0:performance.now(),col:h?h.bal:pick(BAL)};
     stage='balloon';resize();
     if(intro)later(()=>say('buildPop',true),600);intro=false;
@@ -1741,7 +1758,8 @@ const Build=(function(){
   }
   function start(){intro=true;begin()}
   function next(){begin()}
-  function stop(){running=false;cancelAnimationFrame(raf);timers.forEach(clearTimeout);timers=[];drag=null}
+  function stop(){running=false;cancelAnimationFrame(raf);timers.forEach(clearTimeout);timers=[];drag=null;
+    if(W){freeArt(null);set=null;freeCanvas(bg);bg=null;freeCanvas(cv);W=0}}       // give the iPad its memory back
 
   function popIt(now,b){
     Snd.pop(14);Snd.noise(.18,1600,.3);Snd.squeal('fly');
@@ -1832,6 +1850,7 @@ const Build=(function(){
   }
   function drawAlive(t){aliveDraw(ctx,obj,oc.x,oc.y,S,t-T.built,t)}
   function loop(t){
+    try{
     if(!running)return;
     const dt=Math.min(.05,Math.max(0,(t-last)/1000));last=t;
     if(!info){info=prep(obj);if(info)layout()}
@@ -1877,7 +1896,7 @@ const Build=(function(){
         if(hintOn&&s.k===obj){ctx.fillStyle='rgba(255,212,71,'+(.25+.3*pu)+')';rr(ctx,sx-P/2-10,s.y-P/2-10,P+20,P+20,30);ctx.fill()}
         ctx.fillStyle='rgba(255,244,223,.82)';rr(ctx,sx-P/2,s.y-P/2,P,P,24);ctx.fill();
         ctx.strokeStyle=hintOn&&s.k===obj?'rgba(255,212,71,.95)':'rgba(107,58,18,.35)';ctx.lineWidth=hintOn&&s.k===obj?6:3;ctx.setLineDash([10,8]);ctx.stroke();ctx.setLineDash([]);
-        const d=OBJ[s.k].d,fs=B*(.6+.4*p)/Math.max(d.w,d.h);ctx.drawImage(d.shadow,sx-d.w*fs/2,s.y-d.h*fs/2,d.w*fs,d.h*fs);
+        const d=OBJ[s.k].d,shd=shadowOf(s.k),fs=B*(.6+.4*p)/Math.max(d.w,d.h);if(shd)ctx.drawImage(shd,sx-d.w*fs/2,s.y-d.h*fs/2,d.w*fs,d.h*fs);
         ctx.globalAlpha=1;
       }
       let x,y,sz;
@@ -1899,7 +1918,8 @@ const Build=(function(){
       if(b.drop){ctx.beginPath();ctx.arc(b.x,b.y,4,0,6.28);ctx.fill()}
       else{ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.rot+=dt*8);ctx.beginPath();ctx.moveTo(-9,-5);ctx.lineTo(9,-2);ctx.lineTo(-2,7);ctx.closePath();ctx.fill();ctx.restore()}}
     ctx.globalAlpha=1;bits=bits.filter(b=>b.life>0);
-    raf=requestAnimationFrame(loop);
+    }catch(err){if(window.console)console.error(err)}
+    if(running)raf=requestAnimationFrame(loop);
   }
   window.addEventListener('resize',()=>{if(running)resize()});
   return {start,next,stop,get stage(){return stage},debug:()=>({pcs,shadows,obj,oc,S,K,mt,B,home,stage,iw:info?info.w:0,ih:info?info.h:0,balPos:balPos(performance.now())})};
@@ -1919,7 +1939,8 @@ const Color=(function(){
 
   function greyOf(k){ // coloring-page version: outlines stay dark, everything else goes light grey
     const o=OBJ[k];if(o.grey)return o.grey;const q=prepObj(k);if(!q)return null;
-    const c=document.createElement('canvas');c.width=q.w;c.height=q.h;const g=c.getContext('2d'),id=g.createImageData(q.w,q.h),D=id.data,P=q.px;
+    const c=document.createElement('canvas');c.width=q.w;c.height=q.h;const g=c.getContext('2d');if(!g){freeCanvas(c);return null}
+    const id=g.createImageData(q.w,q.h),D=id.data,P=q.px;
     for(let i=0;i<q.w*q.h;i++){if(!q.al[i])continue;const L=.299*P[i*4]+.587*P[i*4+1]+.114*P[i*4+2],v=L<70?L*.8:168+L*.3;
       D[i*4]=D[i*4+1]=D[i*4+2]=Math.min(248,v);D[i*4+3]=q.al[i]}
     g.putImageData(id,0,0);return (o.grey=c);
@@ -1943,7 +1964,8 @@ const Color=(function(){
   }
   function paintBg(){ // art corner: warm wall, a sheet of paper taped up, crayons on the table
     const dpr=window.devicePixelRatio||1;bg=bg||document.createElement('canvas');bg.width=Math.round(W*dpr);bg.height=Math.round(H*dpr);
-    const g=bg.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+    const g=bg.getContext('2d');if(!g){freeCanvas(bg);bg=null;return} // no memory right now: carry on without the painted background
+    g.setTransform(dpr,0,0,dpr,0,0);
     const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#ffe3a8');gr.addColorStop(1,'#f5ba68');g.fillStyle=gr;g.fillRect(0,0,W,H);
     g.fillStyle='rgba(255,255,255,.18)';for(let y=40;y<tableY;y+=56)for(let x=(y/56%2)*28+14;x<W;x+=56){g.beginPath();g.arc(x,y,5,0,6.28);g.fill()}
     const pw=(d?d.w*K:S)+90,ph=(d?d.h*K:S)+90,px=oc.x-pw/2,py=oc.y-ph/2;
@@ -2005,15 +2027,17 @@ const Color=(function(){
     const p=me(),cnt=(p&&p.colored)||{},opts=COLOR_KEYS.filter(k=>k!==(p&&p.colorLast));
     const lo=Math.min(...opts.map(k=>cnt[k]||0));obj=pick(opts.filter(k=>(cnt[k]||0)===lo)); // new ones first
     trace=(((p&&p.colorRound)||0)+1)%3===0;                                                    // every 3rd picture
-    d=null;stage='wait';sparks=[];covN=0;nVis=0;down=false;T={};touchAt=performance.now();
-    resize();setup();
+    freeArt(obj);freeCanvas(paint);paint=null;pg=null;
+    d=null;stage='wait';sparks=[];covN=0;nVis=0;down=false;T={wait:performance.now()};touchAt=performance.now();
+    resize();try{setup()}catch(e){stage='wait'}
     if(trace)later(()=>say('colorDots',true),500);else if(intro)later(()=>say('colorRub',true),500);intro=false;
     running=true;last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
   }
   function setup(){ // once the image is in
     d=prepObj(obj);if(!d||!greyOf(obj))return false;
     layout();paintBg();R=Math.max(d.w,d.h)*.1;
-    paint=document.createElement('canvas');paint.width=d.w;paint.height=d.h;pg=paint.getContext('2d');
+    freeCanvas(paint);paint=document.createElement('canvas');paint.width=d.w;paint.height=d.h;pg=paint.getContext('2d');
+    if(!pg){freeCanvas(paint);paint=null;return false}
     cw=Math.max(d.w,d.h)/60;cols=Math.ceil(d.w/cw);rows=Math.ceil(d.h/cw);cells=new Uint8Array(cols*rows);covTot=0;
     for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const x=Math.min(d.w-1,Math.floor((c+.5)*cw)),y=Math.min(d.h-1,Math.floor((r+.5)*cw));if(d.al[y*d.w+x]>128){cells[r*cols+c]=1;covTot++}}
     covTot=Math.max(1,covTot);
@@ -2022,7 +2046,8 @@ const Color=(function(){
   }
   function start(){intro=true;begin()}
   function next(){begin()}
-  function stop(){running=false;cancelAnimationFrame(raf);timers.forEach(clearTimeout);timers=[];down=false}
+  function stop(){running=false;cancelAnimationFrame(raf);timers.forEach(clearTimeout);timers=[];down=false;
+    if(W){freeCanvas(paint);paint=null;pg=null;freeArt(null);freeCanvas(bg);bg=null;freeCanvas(cv);W=0}}  // give the iPad its memory back
 
   /* ---------- touch ---------- */
   const pt=e=>{const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}};
@@ -2040,8 +2065,10 @@ const Color=(function(){
 
   /* ---------- loop ---------- */
   function loop(t){
+    try{
     if(!running)return;const dt=Math.min(.05,Math.max(0,(t-last)/1000));last=t;
-    if(stage==='wait')setup();
+    if(stage==='wait'&&!setup()&&t-T.wait>1500){ // picture not ready: free memory and try a different one rather than sit on a blank page
+      freeArt(null);const alt=COLOR_KEYS.filter(k=>k!==obj&&ready(OBJ[k].img));if(alt.length){obj=pick(alt);d=null}T.wait=t;resize()}
     if(bg)ctx.drawImage(bg,0,0,W,H);
     fx.draw(ctx,t,dt,W,H);
     if(d&&(stage==='paint'||stage==='fill')){
@@ -2070,7 +2097,8 @@ const Color=(function(){
       ctx.globalAlpha=Math.max(0,Math.min(1,s.life));ctx.fillStyle=s.c;ctx.save();ctx.translate(s.x,s.y);ctx.rotate(t/200);
       const z=6*Math.min(1,s.life)+3;ctx.beginPath();ctx.moveTo(0,-z);ctx.lineTo(z*.35,0);ctx.lineTo(0,z);ctx.lineTo(-z*.35,0);ctx.closePath();ctx.fill();ctx.restore()}
     ctx.globalAlpha=1;sparks=sparks.filter(s=>s.life>0);
-    raf=requestAnimationFrame(loop);
+    }catch(err){if(window.console)console.error(err)}
+    if(running)raf=requestAnimationFrame(loop);
   }
   window.addEventListener('resize',()=>{if(running){resize()}});
   return {start,next,stop,debug:()=>({obj,stage,trace,oc,S,K,cov:covN/covTot,dots:dots.map(p=>d?toScr(p):p),nVis,R})};
@@ -2158,7 +2186,7 @@ function showFinale(){
 }
 $('finOk').addEventListener('click',()=>{$('finale').hidden=true});
 $('again').addEventListener('click',()=>{
-  $('yay').hidden=true;$('finale').hidden=true;cancelAnimationFrame(confettiRaf);
+  $('yay').hidden=true;$('finale').hidden=true;cancelAnimationFrame(confettiRaf);freeCanvas($('confetti'));
   if(lastGame==='flow')Flow.next();else if(lastGame==='build')Build.next();else if(lastGame==='color')Color.next();else Pop.next();
 });
 function confetti(){
@@ -2170,7 +2198,7 @@ function confetti(){
     const dt=Math.min(.05,(now-last)/1000);last=now;c.clearRect(0,0,f.w,f.h);
     for(const p of ps){p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=p.vr*dt;
       c.save();c.translate(p.x,p.y);c.rotate(p.r);c.fillStyle=p.c;c.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);c.restore()}
-    if(now-t0<4000)confettiRaf=requestAnimationFrame(step);else c.clearRect(0,0,f.w,f.h);
+    if(now-t0<4000)confettiRaf=requestAnimationFrame(step);else{c.clearRect(0,0,f.w,f.h);freeCanvas(cv)}
   })(last);
 }
 
