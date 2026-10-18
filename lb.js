@@ -236,43 +236,111 @@ function armyWarrant(r){
 const TRADE=['Helper','Apprentice I','Apprentice II','Apprentice III','Apprentice IV','Journeyman','Lead Journeyman','Foreman','Superintendent','Master Plumber','Plumbing Contractor'];
 const tradeTier=r=>r>=20?3:r>=17?2:r>=14?1:0;
 function tradeName(r){if(r<1)return 'No rank yet';if(r<11)return TRADE[r-1];return ['','Silver ','Gold ','Diamond '][tradeTier(r)]+'Plumbing Contractor'}
-const TR_M={copper:{light:'#f3c08a',mid:'#c4813f',dark:'#6e3f17',edge:'#3b1f08'},silver:{light:'#ffffff',mid:'#c9ced6',dark:'#6b7280',edge:'#2b2f36'},
-  gold:{light:'#fff1a8',mid:'#e9b93a',dark:'#8a5f10',edge:'#3d2804'},diamond:{light:'#ffffff',mid:'#9fe8ff',dark:'#3aa7d6',edge:'#0b3550'}};
+/* pin-badge look: beveled metal rim, colored enamel field, one bold metal symbol per tier */
+const TR_M={copper:{light:'#ffd6a8',mid:'#d4884a',dark:'#7a3f16',edge:'#3b1f08'},silver:{light:'#ffffff',mid:'#cfd5de',dark:'#6b7482',edge:'#23272e'},
+  gold:{light:'#fff4b0',mid:'#efc23e',dark:'#8f6210',edge:'#3d2804'},diamond:{light:'#ffffff',mid:'#a6ecff',dark:'#2f9bd0',edge:'#0b3550'}};
+const TR_E={navy:['#3567c9','#0c1d45'],oxblood:['#b02a36','#3a0610'],black:['#46404f','#0b0a10'],royal:['#4a5ce0','#0d1450'],ruby:['#d42a47','#400614'],ice:['#2a78b0','#061a33']};
+const TR_SH='M100 12 L174 34 L174 96 Q174 156 100 190 Q26 156 26 96 L26 34Z';
 let tgN=0;
-function tradeStar(cx,cy,R,fill,edge){let d='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?R*.45:R;d+=(i?'L':'M')+(cx+rr*Math.cos(a)).toFixed(1)+' '+(cy+rr*Math.sin(a)).toFixed(1)}
-  return '<path d="'+d+'Z" fill="'+fill+'" stroke="'+edge+'" stroke-width="2" stroke-linejoin="round"/>'}
+const trAt=(s,x,y)=>'translate('+x+' '+y+') scale('+s+') translate(-100 -100)';
+function trStar(cx,cy,R,m){ // faceted star, lit from the top left
+  let g='';const r=R*.42,pt=i=>{const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r:R;return (cx+rr*Math.cos(a)).toFixed(1)+' '+(cy+rr*Math.sin(a)).toFixed(1)};
+  for(let i=0;i<10;i++)g+='<path d="M'+cx+' '+cy+'L'+pt(i)+'L'+pt(i+1)+'Z" fill="'+(i%2?m.dark:(i>=4&&i<=6?m.mid:m.light))+'"/>';
+  let d='';for(let i=0;i<10;i++)d+=(i?'L':'M')+pt(i);
+  return g+'<path d="'+d+'Z" fill="none" stroke="'+m.edge+'" stroke-width="'+Math.max(2,R*.1).toFixed(1)+'" stroke-linejoin="round"/>';
+}
+function trWrench(F,B,E){ // a chunky pipe wrench, pointing up, about 130 tall
+  const s=' stroke="'+E+'" stroke-width="3" stroke-linejoin="round"';
+  return '<rect x="-6" y="-60" width="12" height="36"'+' fill="'+F+'"'+s+'/>'+
+    '<path d="M-7 -67 L31 -67 L31 -51 L15 -51 L15 -47 L-7 -47Z" fill="'+F+'"'+s+'/>'+
+    '<path d="M15 -47 l3 4 l3 -4 l3 4 l3 -4 l4 0" fill="none" stroke="'+E+'" stroke-width="2"/>'+
+    '<rect x="-13" y="-34" width="26" height="30" rx="3" fill="'+F+'"'+s+'/>'+
+    '<path d="M11 -40 L31 -40 L31 -31 L11 -31Z" fill="'+F+'"'+s+'/>'+
+    '<path d="M15 -40 l3 -4 l3 4 l3 -4 l3 4 l4 0" fill="none" stroke="'+E+'" stroke-width="2"/>'+
+    '<rect x="-15" y="-27" width="30" height="11" rx="2" fill="'+B+'"'+s+'/>'+
+    '<path d="M-9 -26 v9 M-4 -26 v9 M1 -26 v9 M6 -26 v9 M11 -26 v9" stroke="'+E+'" stroke-width="1.5" opacity=".7"/>'+
+    '<path d="M-9 -4 L9 -4 L7 58 Q7 67 0 67 Q-7 67 -7 58Z" fill="'+F+'"'+s+'/>'+
+    '<rect x="-4" y="2" width="3.5" height="48" rx="1.7" fill="#fff" opacity=".45"/>'+
+    '<circle cx="0" cy="56" r="3.5" fill="'+E+'"/>';
+}
+const trOne=(x,y,sc,rot,F,B,E)=>'<g transform="translate('+x+' '+y+') rotate('+rot+') scale('+sc+')">'+trWrench(F,B,E)+'</g>';
+const trCross=(x,y,sc,F,B,E)=>'<g transform="translate('+x+' '+y+') rotate(-34) scale('+(-sc)+' '+sc+')">'+trWrench(F,B,E)+'</g>'+trOne(x,y,sc,34,F,B,E); // jaws facing out
+function trWreath(a0,a1,cx,cy,R,F,E){ // two laurel branches climbing from the bottom
+  let g='';
+  for(const side of [1,-1]){
+    const P=a=>[cx+side*R*Math.cos(a*Math.PI/180),cy+R*Math.sin(a*Math.PI/180)];
+    let d='';for(let a=a0;a<=a1;a+=4){const p=P(a);d+=(d?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)}
+    g+='<path d="'+d+'" fill="none" stroke="'+E+'" stroke-width="5" stroke-linecap="round"/><path d="'+d+'" fill="none" stroke="'+F+'" stroke-width="2.5" stroke-linecap="round"/>';
+    let k=0;for(let a=a0+6;a<=a1;a+=11,k++){const p=P(a),tang=side>0?(a+90):(180-a-90);
+      for(const o of [-1,1]){const ang=tang+o*38;
+        g+='<ellipse cx="0" cy="0" rx="9.5" ry="4.2" transform="translate('+p[0].toFixed(1)+' '+p[1].toFixed(1)+') rotate('+ang.toFixed(0)+') translate(9 0)" fill="'+F+'" stroke="'+E+'" stroke-width="1.6"/>'}}
+  }
+  return g;
+}
+function trShield(F,B,N,E,inner){
+  return '<path d="'+TR_SH+'" fill="rgba(0,0,0,.45)" transform="translate(4 5)"/>'+
+    '<path d="'+TR_SH+'" fill="'+F+'" stroke="'+E+'" stroke-width="5" stroke-linejoin="round"/>'+
+    '<path d="'+TR_SH+'" transform="'+trAt(.9,100,100)+'" fill="'+B+'" stroke="'+E+'" stroke-width="1.5" stroke-linejoin="round"/>'+
+    '<path d="'+TR_SH+'" transform="'+trAt(.8,100,100)+'" fill="'+N+'" stroke="'+E+'" stroke-width="3" stroke-linejoin="round"/>'+
+    '<path d="M33 38 L100 18 L100 24 L38 42 L38 92 L33 92Z" fill="#fff" opacity=".4"/>'+inner;
+}
+function trWings(F,E){
+  let w='';const T=[[4,40],[6,60],[12,80],[22,98],[36,112]];
+  for(let i=T.length-1;i>=0;i--){const [tx,ty]=T[i],y0=58+i*11;
+    w+='<path d="M74 '+y0+' Q'+((74+tx)/2).toFixed(0)+' '+(Math.min(y0,ty)-8)+' '+tx+' '+ty+' Q'+(tx+2)+' '+(ty+9)+' '+(tx+12)+' '+(ty+9)+' L74 '+(y0+15)+'Z" fill="'+F+'" stroke="'+E+'" stroke-width="3" stroke-linejoin="round"/>'}
+  return '<g>'+w+'</g><g transform="translate(200 0) scale(-1 1)">'+w+'</g>';
+}
+function trValve(cx,cy,R,F,B,N,E){ // the handwheel
+  let g='';for(let i=0;i<8;i++){const a=i*Math.PI/4;g+='<circle cx="'+(cx+R*Math.cos(a)).toFixed(1)+'" cy="'+(cy+R*Math.sin(a)).toFixed(1)+'" r="'+(R*.2).toFixed(1)+'" fill="'+F+'" stroke="'+E+'" stroke-width="2.5"/>'}
+  g+='<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="'+F+'" stroke="'+E+'" stroke-width="3"/><circle cx="'+cx+'" cy="'+cy+'" r="'+(R*.72).toFixed(1)+'" fill="'+N+'" stroke="'+E+'" stroke-width="2.5"/>';
+  for(let i=0;i<4;i++)g+='<rect x="'+(cx-R*.12).toFixed(1)+'" y="'+(cy-R*.78).toFixed(1)+'" width="'+(R*.24).toFixed(1)+'" height="'+(R*1.56).toFixed(1)+'" fill="'+F+'" stroke="'+E+'" stroke-width="2" transform="rotate('+(45+i*90)+' '+cx+' '+cy+')"/>';
+  g+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(R*.32).toFixed(1)+'" fill="'+B+'" stroke="'+E+'" stroke-width="2.5"/><circle cx="'+cx+'" cy="'+cy+'" r="'+(R*.11).toFixed(1)+'" fill="'+E+'"/>';
+  return g;
+}
 function tradeBadge(r){
   if(r<1)return '';
-  const tier=tradeTier(r),m=r>=14?TR_M[['','silver','gold','diamond'][tier]]:r>=8?TR_M.gold:r>=6?TR_M.silver:TR_M.copper,id='tb'+(tgN++),F='url(#'+id+')',E=m.edge;
-  const crest=r>=8;
-  let s='<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+m.light+'"/><stop offset=".5" stop-color="'+m.mid+'"/><stop offset="1" stop-color="'+m.dark+'"/></linearGradient>'+
-    '<linearGradient id="'+id+'c" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f3c08a"/><stop offset=".5" stop-color="#c97a3d"/><stop offset="1" stop-color="#8f4f22"/></linearGradient></defs>';
-  let g=tier?'<path d="M100 30 L166 50 L166 108 Q166 162 100 192 Q34 162 34 108 L34 50Z" transform="translate(100 111) scale(1.07) translate(-100 -111)" fill="none" stroke="'+F+'" stroke-width="4" stroke-linejoin="round"/>':'';
-  g+='<path d="M100 30 L166 50 L166 108 Q166 162 100 192 Q34 162 34 108 L34 50Z" fill="'+F+'" stroke="'+E+'" stroke-width="5" stroke-linejoin="round"/>'+
-    '<path d="M100 42 L154 58 L154 108 Q154 154 100 180 Q46 154 46 108 L46 58Z" fill="#1a1424" stroke="'+E+'" stroke-width="2.5" stroke-linejoin="round"/>';
-  // a copper line crossed behind the wrench, from Journeyman up
-  if(r>=6)g+='<g transform="rotate(38 100 96)"><rect x="93" y="52" width="14" height="88" rx="2" fill="url(#'+id+'c)" stroke="#3b1f08" stroke-width="2.5"/>'+
-    '<rect x="89" y="50" width="22" height="10" rx="2" fill="#8f4f22" stroke="#3b1f08" stroke-width="2"/><rect x="89" y="132" width="22" height="10" rx="2" fill="#8f4f22" stroke="#3b1f08" stroke-width="2"/></g>';
-  // the pipe wrench: red handle, steel jaws
-  g+='<g transform="rotate(-38 100 96)"><rect x="94" y="84" width="12" height="54" rx="4" fill="#d6322a" stroke="#2b0a08" stroke-width="2.5"/>'+
-    '<rect x="91" y="60" width="18" height="30" rx="3" fill="#c9ced6" stroke="#2b2f36" stroke-width="2.5"/>'+
-    '<path d="M88 52 L122 52 L122 62 L109 62 L109 66 L88 66Z" fill="#dfe5ec" stroke="#2b2f36" stroke-width="2.5" stroke-linejoin="round"/>'+
-    '<rect x="105" y="74" width="17" height="8" rx="2" fill="#dfe5ec" stroke="#2b2f36" stroke-width="2.5"/>'+
-    '<circle cx="100" cy="76" r="4.5" fill="#6b7280" stroke="#2b2f36" stroke-width="2"/></g>';
-  // apprentice bars
-  if(r>=2&&r<=5){const W=[58,50,40,28];for(let i=0;i<r-1;i++)g+='<rect x="'+(100-W[i]/2)+'" y="'+(139+i*10)+'" width="'+W[i]+'" height="7" rx="3.5" fill="'+F+'" stroke="'+E+'" stroke-width="1.5"/>'}
-  // stars
-  if(r===7||r===9||r===10)g+=tradeStar(100,154,14,F,E);
-  if(r>=11)g+=tradeStar(77,146,10,F,E)+tradeStar(100,157,12,F,E)+tradeStar(123,146,10,F,E);
-  // crest: hard hat for Foreman and Superintendent, crown from Master Plumber up
-  if(r===8||r===9)g+='<path d="M74 36 Q74 8 100 8 Q126 8 126 36Z" fill="#f5c842" stroke="#3d2804" stroke-width="3" stroke-linejoin="round"/>'+
-    '<rect x="96" y="9" width="8" height="26" rx="3" fill="#e0a92a" stroke="#3d2804" stroke-width="2"/><rect x="64" y="33" width="72" height="8" rx="4" fill="#f5c842" stroke="#3d2804" stroke-width="3"/>';
-  if(r>=10)g+='<path d="M70 40 L70 14 L85 28 L100 6 L115 28 L130 14 L130 40Z" fill="'+F+'" stroke="'+E+'" stroke-width="3" stroke-linejoin="round"/>'+
-    '<rect x="68" y="36" width="64" height="9" rx="2" fill="'+F+'" stroke="'+E+'" stroke-width="3"/>'+
-    '<circle cx="100" cy="40.5" r="3.5" fill="#e8281e"/><circle cx="84" cy="40.5" r="3" fill="#2f8cff"/><circle cx="116" cy="40.5" r="3" fill="#2f8cff"/>'+
-    (tier===3?'<path d="M100 0 L104 6 L100 12 L96 6Z" fill="#fff"/>':'');
-  if(!crest)g='<g transform="translate(0 -10)">'+g+'</g>';
-  return '<svg viewBox="0 0 200 200">'+s+g+'</svg>';
+  const tier=tradeTier(r),boss=r>=11;
+  const m=boss?TR_M[['gold','silver','gold','diamond'][tier]]:r>=8?TR_M.gold:r>=6?TR_M.silver:TR_M.copper;
+  const en=TR_E[boss?['black','royal','ruby','ice'][tier]:r>=8?'black':r>=6?'oxblood':'navy'];
+  const id='tb'+(tgN++),F='url(#'+id+'m)',B='url(#'+id+'b)',N='url(#'+id+'e)',E=m.edge;
+  const defs='<defs><linearGradient id="'+id+'m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+m.light+'"/><stop offset=".5" stop-color="'+m.mid+'"/><stop offset="1" stop-color="'+m.dark+'"/></linearGradient>'+
+    '<linearGradient id="'+id+'b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+m.dark+'"/><stop offset=".55" stop-color="'+m.mid+'"/><stop offset="1" stop-color="'+m.light+'"/></linearGradient>'+
+    '<radialGradient id="'+id+'e" cx=".45" cy=".35" r=".75"><stop offset="0" stop-color="'+en[0]+'"/><stop offset="1" stop-color="'+en[1]+'"/></radialGradient></defs>';
+  let g='';
+  if(r===1){ // Helper: not a shield yet, a copper disk with a mop in a bucket
+    g='<circle cx="104" cy="105" r="86" fill="rgba(0,0,0,.45)"/><circle cx="100" cy="100" r="86" fill="'+F+'" stroke="'+E+'" stroke-width="5"/>'+
+      '<circle cx="100" cy="100" r="77" fill="'+B+'" stroke="'+E+'" stroke-width="1.5"/><circle cx="100" cy="100" r="68" fill="'+N+'" stroke="'+E+'" stroke-width="3"/>'+
+      '<path d="M40 70 A66 66 0 0 1 100 22 L100 30 A58 58 0 0 0 47 72Z" fill="#fff" opacity=".4"/>'+
+      '<g transform="rotate(24 100 100)"><rect x="95" y="26" width="10" height="92" rx="4" fill="'+F+'" stroke="'+E+'" stroke-width="3"/><rect x="97.5" y="32" width="3" height="76" rx="1.5" fill="#fff" opacity=".45"/></g>'+
+      '<path d="M62 106 Q100 72 138 106" fill="none" stroke="'+E+'" stroke-width="7" stroke-linecap="round"/><path d="M62 106 Q100 72 138 106" fill="none" stroke="'+F+'" stroke-width="3.5" stroke-linecap="round"/>'+
+      '<path d="M58 104 L142 104 L132 152 Q100 160 68 152Z" fill="'+F+'" stroke="'+E+'" stroke-width="3.5" stroke-linejoin="round"/>'+
+      '<rect x="54" y="98" width="92" height="12" rx="4" fill="'+B+'" stroke="'+E+'" stroke-width="3"/>'+
+      '<path d="M66 124 L134 124 M68 138 L132 138" stroke="'+E+'" stroke-width="2.5" opacity=".6"/><path d="M66 114 L70 146" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".45"/>';
+  }else if(r<=5){ // Apprentice I to IV: copper shield, one wrench, a chevron per level
+    let ch='';const HW=[44,36,28,20];
+    for(let i=0;i<r-1;i++){const y=117+i*10,hw=HW[i];ch+='<path d="M'+(100-hw)+' '+(y+11)+' L100 '+y+' L'+(100+hw)+' '+(y+11)+' L'+(100+hw)+' '+(y+18)+' L100 '+(y+7)+' L'+(100-hw)+' '+(y+18)+'Z" fill="'+F+'" stroke="'+E+'" stroke-width="2.5" stroke-linejoin="round"/>'}
+    g=trShield(F,B,N,E,trOne(100,r>2?74:80,.78,45,F,B,E)+ch);
+  }else if(r<=7){ // Journeyman: silver shield, crossed wrenches; Lead Journeyman adds a rocker
+    const lead=r===7;
+    g=trShield(F,B,N,E,trCross(100,lead?90:102,lead?.66:.8,F,B,E)+
+      (lead?'<path d="M66 138 Q100 162 134 138 L134 149 Q100 173 66 149Z" fill="'+F+'" stroke="'+E+'" stroke-width="2.5" stroke-linejoin="round"/>':''));
+  }else if(r<=10){ // Foreman: gold, hard hat; Superintendent adds half a wreath; Master Plumber gets the full wreath and a star
+    const sc=r===8?.86:.76;
+    if(r>=9)g+=trWreath(100,r===10?236:192,100,112,86,F,E);
+    g+='<g transform="'+trAt(sc,100,r===8?120:118)+'">'+trShield(F,B,N,E,trCross(100,102,.8,F,B,E))+'</g>';
+    if(r<10)g+='<g transform="translate(0 '+(r===8?8:14)+')"><path d="M70 36 Q70 4 100 4 Q130 4 130 36Z" fill="'+F+'" stroke="'+E+'" stroke-width="3.5" stroke-linejoin="round"/>'+
+      '<path d="M93 6 Q100 4 107 6 L107 34 L93 34Z" fill="'+B+'" stroke="'+E+'" stroke-width="2.5"/><rect x="58" y="32" width="84" height="10" rx="5" fill="'+F+'" stroke="'+E+'" stroke-width="3.5"/>'+
+      '<path d="M78 30 Q78 14 92 9" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".5"/></g>';
+    else g+=trStar(100,28,27,m);
+  }else{ // Plumbing Contractor: winged shield, handwheel, wreath, star; then Silver, Gold and Diamond plating
+    if(tier>=2){let ry='';for(let i=0;i<16;i++){const a=i*Math.PI/8;ry+='<path d="M100 104 L'+(100+90*Math.cos(a-.08)).toFixed(1)+' '+(104+90*Math.sin(a-.08)).toFixed(1)+' L'+(100+90*Math.cos(a+.08)).toFixed(1)+' '+(104+90*Math.sin(a+.08)).toFixed(1)+'Z"/>'}
+      g+='<g fill="'+m.mid+'" opacity=".5">'+ry+'</g>'}
+    g+=trWreath(98,150,100,112,78,F,E)+trWings(F,E)+
+      '<g transform="'+trAt(.64,100,112)+'">'+trShield(F,B,N,E,trValve(100,100,40,F,B,N,E))+'</g>'+trStar(100,30,22,m);
+    if(tier===3){const gl=(x,y,s,d)=>'<path d="M'+x+' '+(y-s)+'L'+(x+s*.22)+' '+(y-s*.22)+'L'+(x+s)+' '+y+'L'+(x+s*.22)+' '+(y+s*.22)+'L'+x+' '+(y+s)+'L'+(x-s*.22)+' '+(y+s*.22)+'L'+(x-s)+' '+y+'L'+(x-s*.22)+' '+(y-s*.22)+'Z" fill="#fff" opacity="0"><animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.15;.3;1" dur="3s" begin="'+d+'s" repeatCount="indefinite"/></path>';
+      g+=gl(30,52,10,0)+gl(164,96,8,1.1)+gl(118,22,7,2)+gl(84,136,6,.6)}
+  }
+  return '<svg viewBox="0 0 200 200">'+defs+g+'</svg>';
 }
 /* the insignia next to a name: officers in Flow, enlisted in Whack-a-Pipe, warrant officers in Mojo Roll, trade ranks in Hot & Cold */
 function rankHTML(game,best){
