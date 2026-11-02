@@ -15,6 +15,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <title>Mojo Blast | Pipe Mojo</title>
 <!--
+  MOJO BLAST — v0.3 (Nov 2 2026)
+  v0.3: Auger renamed Auger bit (cutter-head icon); standing liquid above the clog per zone
+        (swamp water, gray water, sewage, glitter grease water, boiling sewage) that drips through
+        open gaps; real pipe walls in the zone material with fittings (galv threads, copper solder,
+        PVC hubs with primer, brass, cast iron hubs) and corner elbows, field widened to 372 so the
+        layouts don't change; the whoosh: clearing a level flushes the liquid down the whole field
+        (tap skips); the Fatberg boss uses /assets/fatberg.png (code blob fallback), wobbles,
+        jiggles when hit, spits from its mouth, grows each zone, breaks into chunks that get flushed.
+
   MOJO BLAST — v0.2 (Nov 2 2026)
   v0.2: home-screen app support (mojoblast.webmanifest + mojoblast-icon.png / -512.png in the
         repo root) with a one-time "Play full screen" tip in iOS Safari; the game pauses the moment
@@ -144,26 +153,26 @@ let muted=false;try{muted=localStorage.getItem('pipeBlastMuted')==='1'}catch(e){
 
 /* ---------- images ---------- */
 const IMG={};
-['mojo-front','ganja-front','fly-front','maggot-front','crawfish-front'].forEach(k=>{const i=new Image();i.src='/assets/'+k+'.png';IMG[k]=i});
+['mojo-front','ganja-front','fly-front','maggot-front','crawfish-front','fatberg'].forEach(k=>{const i=new Image();i.src='/assets/'+k+'.png';IMG[k]=i});
 const ok=i=>i&&i.complete&&i.naturalWidth>0;
 
 /* ---------- field ---------- */
-const W=360,COLS=11,BW=30,BH=14,SX=32,SY=16,X0=5,Y0=50;
+const W=372,WT=8,COLS=11,BW=30,BH=14,SX=32,SY=16,X0=11,Y0=50;
 let H=640,SC=1,DPR=1,bg=null;
 
 /* ---------- zones & levels ---------- */
 const MAT={galv:['#a7b0b6','#e3e8eb','#646d73','galvanized'],copper:['#c87533','#f4b47c','#7a3f17','copper'],
   pvc:['#e6e9ec','#ffffff','#a3abb2','PVC'],brass:['#c9a227','#f5de7c','#76590c','brass'],iron:['#44484e','#787d85','#1c1e21','cast iron']};
 const ZONES=[
- {name:'Bayou',pipe:'galv',acc:'#9fd36a',bg:['#12281d','#050c08'],fx:'fireflies',en:['fly'],boss:'#c8bd78',
+ {name:'Bayou',pipe:'galv',acc:'#9fd36a',bg:['#12281d','#050c08'],fx:'fireflies',en:['fly'],boss:'#ece3cc',
   blurb:'Swamp water and a whole lot of grease. Bust every clog brick and keep the drop in play.'},
- {name:'French Quarter',pipe:'copper',acc:'#f0a04b',bg:['#2a160d','#0c0505'],fx:'sparks',en:['fly','maggot'],boss:'#dab27a',
+ {name:'French Quarter',pipe:'copper',acc:'#f0a04b',bg:['#2a160d','#0c0505'],fx:'sparks',en:['fly','maggot'],boss:'#ece3cc',
   blurb:'Old copper, older clogs. Beignet\'s crawling around in there regrowing grease, so knock him out of the line.'},
- {name:'Cemetery',pipe:'pvc',acc:'#b9c4d6',bg:['#161d29','#06080c'],fx:'fog',en:['fly','maggot'],boss:'#c7c6b4',
+ {name:'Cemetery',pipe:'pvc',acc:'#b9c4d6',bg:['#161d29','#06080c'],fx:'fog',en:['fly','maggot'],boss:'#ece3cc',
   blurb:'Fog on the ground and roots in the drain. Some of this scale has been down here a hundred years.'},
- {name:'Mardi Gras',pipe:'brass',acc:'#c77dff',bg:['#22102f','#08030e'],fx:'confetti',en:['fly','maggot','crawfish'],boss:'#d4a7d9',
+ {name:'Mardi Gras',pipe:'brass',acc:'#c77dff',bg:['#22102f','#08030e'],fx:'confetti',en:['fly','maggot','crawfish'],boss:'#ece3cc',
   blurb:'Beads, glitter and Roux. Hit those claws and your drop comes back hotter.'},
- {name:'Hellfire',pipe:'iron',acc:'#ff6a2a',bg:['#2c0b06','#0a0202'],fx:'embers',en:['fly','maggot','crawfish'],boss:'#d77c4c',
+ {name:'Hellfire',pipe:'iron',acc:'#ff6a2a',bg:['#2c0b06','#0a0202'],fx:'embers',en:['fly','maggot','crawfish'],boss:'#ece3cc',
   blurb:'The deepest, hottest line on the bayou. Cast iron, heavy scale, and the biggest fatberg of them all.'}
 ];
 const mir=s=>s+s.slice(0,5).split('').reverse().join('');
@@ -217,6 +226,9 @@ const LV=[
  B('Hellfire Fatberg')
 ];
 const BOSS_HP=[14,20,26,32,40];
+// standing liquid behind the clog, per zone
+const LIQ=[{c:'#3e5a2b',d:'#22341a',hi:'#8fb35a',k:'bubble'},{c:'#6a7076',d:'#43484d',hi:'#b5bcc3',k:'suds'},
+  {c:'#5b4327',d:'#33240f',hi:'#8c6b3e',k:'chunk'},{c:'#9c8a52',d:'#5e5230',hi:'#e2d394',k:'glitter'},{c:'#5c2614',d:'#2a0c05',hi:'#ff8a3a',k:'boil'}];
 const HP={g:1,h:1,m:1,w:1,r:2,s:3,c:99};
 const PTS={g:50,h:60,m:70,w:80,r:120,s:200};
 const BCOL={g:['#e7bf4f','#a87f1f'],h:['#6e4b2c','#3a2614'],m:['#93704a','#57401f'],w:['#e5ecf1','#9fb0bd'],
@@ -227,13 +239,13 @@ const SAY={
  start:['Let\'s bust this clog.','Grease, hair, roots. My favorite.','Drop\'s ready. Let it fly.','Another day, another clog.'],
  lose:['Lost the drop!','Down the drain.','That one got away.','Ugh. Again.'],
  tee:'Tee! Three ways now.',coupling:'Coupled up. Longer pipe.',jet:'Jetter\'s hot!',plunger:'Plunger on. Lift to shoot.',
- auger:'Snake it through!',ganja:'Ganja\'s got my back.',
+ auger:'Auger bit\'s in. Drill it!',ganja:'Ganja\'s got my back.',
  fly:'Zydeco! Quit buzzing my drop.',maggot:'Beignet\'s regrowing the grease!',crawfish:'Roux, watch those claws!',
  boss:'That\'s a fatberg. A big one.',half:'It\'s breaking up!',bossdead:'Flushed it!'
 };
 const CAPS={tee:{c:'#2f8fe0',n:'Tee',d:'splits the drop into three'},coupling:{c:'#3aa856',n:'Coupling',d:'longer pipe'},
  jet:{c:'#f07a2a',n:'Hydrojetter',d:'pipe fires water blasts'},plunger:{c:'#c93c3c',n:'Plunger',d:'drop sticks, lift to shoot'},
- auger:{c:'#b8901a',n:'Auger',d:'drop drills straight through'},ganja:{c:'#7a4d22',n:'Ganja',d:'extra life'}};
+ auger:{c:'#b8901a',n:'Auger bit',d:'drop drills through everything but concrete'},ganja:{c:'#7a4d22',n:'Ganja',d:'extra life'}};
 
 /* ---------- audio ---------- */
 let AC=null,MG=null,NB=null;const lastS={};
@@ -274,7 +286,12 @@ const sfx={
  bossHit:()=>{tone(120,.16,'sine',.42,70);noise(.1,.15,700,'lowpass')},
  spit:()=>{noise(.14,.14,600,'lowpass');tone(220,.12,'sine',.14,110)},
  bossDie:()=>{noise(.9,.25,500,'lowpass');[392,523,659,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.2,null,.25+i*.11))},
- ui:()=>tone(880,.04,'triangle',.08)
+ ui:()=>tone(880,.04,'triangle',.08),
+ whoosh:()=>{if(muted)return;const a=au();if(!a)return;const t=a.currentTime;
+   const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=NB;s.loop=true;f.type='bandpass';f.Q.value=.7;
+   f.frequency.setValueAtTime(260,t);f.frequency.exponentialRampToValueAtTime(2400,t+.5);f.frequency.exponentialRampToValueAtTime(380,t+1.4);
+   g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.55,t+.15);g.gain.exponentialRampToValueAtTime(.0001,t+1.5);
+   s.connect(f);f.connect(g);g.connect(MG);s.start(t);s.stop(t+1.55);tone(75,1.2,'sine',.3,40)}
 };
 document.addEventListener('pointerdown',()=>{if(!muted)au()},{passive:true});
 
@@ -298,13 +315,13 @@ function beginLevel(i){
   G.lvl=i;const z=zoneOf(i),L=LV[i];
   G.base=290+z*20+(i%8)*5;G.maxSp=G.base*1.42;
   bricks=[];rows=0;remain=0;boss=null;
-  if(L.boss){boss={x:W/2,y:104,rx:70,ry:42,hp:BOSS_HP[z],max:BOSS_HP[z],t:0,spitT:2.4,flash:0,hits:0,half:0,dying:0}}
+  if(L.boss){boss={x:W/2,y:110,rx:70,ry:42,bw:120,hp:BOSS_HP[z],max:BOSS_HP[z],t:0,spitT:2.4,flash:0,hits:0,half:0,dying:0}}
   else{rows=L.rows.length;for(let r=0;r<rows;r++){bricks[r]=[];for(let c=0;c<COLS;c++){const t=L.rows[r][c];
     if(t&&t!=='.'){bricks[r][c]={t,hp:HP[t],max:HP[t],f:0};if(t!=='c')remain++}else bricks[r][c]=null}}}
-  caps=[];blasts=[];parts=[];texts=[];enemies=[];globs=[];augerT=0;seen={};
+  caps=[];blasts=[];parts=[];texts=[];enemies=[];globs=[];augerT=0;seen={};drained=false;flushT=0;splashed=false;
   pad.x=W/2;pad.mode='normal';pad.tw=pad.w=64;pad.jet=0;
   balls=[newBall()];spawnT=rand(8,12);wonT=0;
-  mode='play';buildFx();buildBg();hud();
+  mode='play';buildLiq();buildFx();buildBg();hud();
   setTimeout(()=>{if(mode==='play')say(L.boss?SAY.boss:pick(SAY.start))},350);
 }
 function launch(b){
@@ -383,7 +400,7 @@ function maybeDrop(x,y){if(caps.length||Math.random()>.16)return;dropCap(x,y)}
 function dropCap(x,y){
   const w=[['tee',18],['coupling',20],['jet',16],['plunger',17],['auger',14],['ganja',G.lives<5?7:0]];
   let s=w.reduce((a,b)=>a+b[1],0)*Math.random(),t='tee';for(const [k,v] of w){if((s-=v)<0){t=k;break}}
-  caps.push({t,x:clamp(x,18,W-18),y});
+  caps.push({t,x:clamp(x,WT+16,W-WT-16),y});
 }
 function applyCap(t){
   sfx.power();if(t!=='ganja')float(pad.x,pad.y-26,CAPS[t].n,'#fff');
@@ -404,10 +421,9 @@ function loseLife(){
   balls=[newBall()];
 }
 function levelDone(){
-  if(mode!=='play')return;mode='won';wonT=0;pad.hop=1.2;pm('hop');addScore(1000);sfx.clear();
+  if(mode!=='play')return;mode='flush';flushT=0;splashed=false;drained=true;drips=[];caps=[];globs=[];blasts=[];addScore(1000);sfx.whoosh();
   SAVE.unl=Math.max(SAVE.unl,Math.min(LV.length,G.lvl+2));SAVE.best=Math.max(SAVE.best,G.score);persist();
-  for(let i=0;i<24;i++)burst(rand(30,W-30),rand(60,H*.5),pick(['#7fd3ff','#f5c842',Z().acc]),2,160);
-  setTimeout(showClear,1100);
+
 }
 function shake(t){if(!RM)shakeT=Math.max(shakeT,t)}
 
@@ -418,7 +434,7 @@ function spawnEnemy(){
   const z=Z(),k=pick(z.en),bb=bricksBottom();
   if(k==='maggot'){const cells=emptyCells();if(!cells.length)return;const [r,c]=pick(cells);
     enemies.push({k,x:X0+c*SX+BW/2,y:-14,r:10,hp:1,f:0,t:0,tg:[r,c],wait:0,grown:0,leave:false})}
-  else if(k==='crawfish'){const s=Math.random()<.5;enemies.push({k,x:s?16:W-16,y:Math.min(bb+36,pad.y-130),r:12,hp:2,f:0,t:0,vx:s?55:-55})}
+  else if(k==='crawfish'){const s=Math.random()<.5;enemies.push({k,x:s?WT+14:W-WT-14,y:Math.min(bb+36,pad.y-130),r:12,hp:2,f:0,t:0,vx:s?55:-55})}
   else enemies.push({k,x:rand(30,W-30),y:Math.min(bb+24,pad.y-140),r:11,hp:1,f:0,t:0,vx:rand(-60,60),vy:rand(-40,40),turn:.6});
   if(!seen[k]){seen[k]=1;say(SAY[k],2)}
 }
@@ -426,9 +442,9 @@ function updEnemies(dt){
   const bb=bricksBottom(),top=bb+10,bot=pad.y-100;
   for(const e of enemies){e.t+=dt;e.f=Math.max(0,e.f-dt);
     if(e.k==='fly'){e.turn-=dt;if(e.turn<=0){e.turn=rand(.4,1);e.vx=rand(-75,75);e.vy=rand(-55,55)}
-      e.x+=e.vx*dt;e.y+=e.vy*dt;if(e.x<14){e.x=14;e.vx=Math.abs(e.vx)}if(e.x>W-14){e.x=W-14;e.vx=-Math.abs(e.vx)}
+      e.x+=e.vx*dt;e.y+=e.vy*dt;if(e.x<WT+12){e.x=WT+12;e.vx=Math.abs(e.vx)}if(e.x>W-WT-12){e.x=W-WT-12;e.vx=-Math.abs(e.vx)}
       if(e.y<top){e.y=top;e.vy=Math.abs(e.vy)}if(e.y>bot){e.y=bot;e.vy=-Math.abs(e.vy)}}
-    else if(e.k==='crawfish'){e.x+=e.vx*dt;if(e.x<16){e.x=16;e.vx=Math.abs(e.vx)}if(e.x>W-16){e.x=W-16;e.vx=-Math.abs(e.vx)}}
+    else if(e.k==='crawfish'){e.x+=e.vx*dt;if(e.x<WT+14){e.x=WT+14;e.vx=Math.abs(e.vx)}if(e.x>W-WT-14){e.x=W-WT-14;e.vx=-Math.abs(e.vx)}}
     else{ // maggot
       if(e.leave){e.y-=40*dt;if(e.y<-20)e.dead=true;continue}
       const tx=X0+e.tg[1]*SX+BW/2,ty=Y0+e.tg[0]*SY+BH/2,dx=tx-e.x,dy=ty-e.y,d=Math.hypot(dx,dy);
@@ -444,15 +460,16 @@ function updEnemies(dt){
 /* ---------- boss ---------- */
 function updBoss(dt){
   const z=zoneOf(G.lvl);boss.t+=dt;boss.flash=Math.max(0,boss.flash-dt);
-  const k=.65+.35*Math.max(0,boss.hp)/boss.max;boss.rx=70*k+6;boss.ry=42*k+4;
-  boss.x=W/2+Math.sin(boss.t*.6*(1+z*.12))*(W/2-boss.rx-14);boss.y=104+Math.sin(boss.t*1.3)*8;
-  if(boss.dying){boss.dying-=dt;if(Math.random()<.6)burst(boss.x+rand(-boss.rx,boss.rx),boss.y+rand(-boss.ry,boss.ry),ZONES[z].boss,4,180);
+  const k=.65+.35*Math.max(0,boss.hp)/boss.max,bw=(124+z*10)*k;boss.bw=bw;boss.rx=bw*.46;boss.ry=bw*.4;
+  boss.x=W/2+Math.sin(boss.t*.6*(1+z*.12))*(W/2-WT-bw*.5-4);boss.y=bw*.46+WT+8+Math.sin(boss.t*1.3)*5;
+  if(boss.dying){boss.dying-=dt;
+    if(Math.random()<.7){const c=pick(['#ece3cc','#ece3cc','#e8a35a']);parts.push({x:boss.x+rand(-boss.rx,boss.rx),y:boss.y+rand(-boss.ry,boss.ry),vx:rand(-120,120),vy:rand(-160,20),t:1.3,m:1.3,c,s:rand(4,9)})}
     if(boss.dying<=0){boss=null;levelDone()}return}
   boss.spitT-=dt;
   if(boss.spitT<=0){
     const shots=boss.hp<=boss.max*.4?2:1;
     for(let i=0;i<shots;i++){const vy=150+z*22,tt=(pad.y-boss.y)/vy,vx=(pad.x-boss.x)/tt*.8+rand(-25,25)+(shots>1?(i?40:-40):0);
-      globs.push({x:boss.x,y:boss.y+boss.ry-4,vx,vy,r:6})}
+      globs.push({x:boss.x,y:boss.y+boss.bw*.23,vx,vy,r:6})}
     sfx.spit();boss.spitT=Math.max(.8,rand(1.5,2.5)-z*.15);
   }
 }
@@ -466,10 +483,10 @@ function stepBall(b,dt){
   const n=Math.max(1,Math.ceil(b.sp*dt/3)),sdt=dt/n;
   for(let i=0;i<n;i++){
     b.x+=b.vx*sdt;
-    if(b.x<b.r){b.x=b.r;b.vx=Math.abs(b.vx);sfx.wall()}else if(b.x>W-b.r){b.x=W-b.r;b.vx=-Math.abs(b.vx);sfx.wall()}
+    if(b.x<WT+b.r){b.x=WT+b.r;b.vx=Math.abs(b.vx);sfx.wall()}else if(b.x>W-WT-b.r){b.x=W-WT-b.r;b.vx=-Math.abs(b.vx);sfx.wall()}
     hitBricks(b,'x');if(mode!=='play')return true;
     b.y+=b.vy*sdt;
-    if(b.y<b.r){b.y=b.r;b.vy=Math.abs(b.vy);rot(b,rand(-.05,.05));fixAng(b);sfx.wall()}
+    if(b.y<WT+b.r){b.y=WT+b.r;b.vy=Math.abs(b.vy);rot(b,rand(-.05,.05));fixAng(b);sfx.wall()}
     hitBricks(b,'y');if(mode!=='play')return true;
     if(b.vy>0&&b.y+b.r>=pad.y&&b.y-b.r<=pad.y+pad.h&&b.x>=pad.x-pad.w/2-b.r&&b.x<=pad.x+pad.w/2+b.r){paddleHit(b);if(b.held)return true}
     if(boss&&!boss.dying)bossHit(b);
@@ -481,7 +498,7 @@ function stepBall(b,dt){
 function update(dt){
   t0+=dt;
   if(keys.ArrowLeft)pad.x-=430*dt;if(keys.ArrowRight)pad.x+=430*dt;
-  pad.w+=(pad.tw-pad.w)*Math.min(1,dt*10);pad.x=clamp(pad.x,pad.w/2+2,W-pad.w/2-2);
+  pad.w+=(pad.tw-pad.w)*Math.min(1,dt*10);pad.x=clamp(pad.x,pad.w/2+WT,W-pad.w/2-WT);
   pad.hop=Math.max(0,pad.hop-dt);pad.wince=Math.max(0,pad.wince-dt);
   if(boss){updBoss(dt);if(boss&&boss.dying)return}
   if(mode!=='play')return;
@@ -572,10 +589,94 @@ function buildBg(){
     const fg=b.createLinearGradient(0,H-140,0,H);fg.addColorStop(0,'rgba(255,90,30,0)');fg.addColorStop(1,'rgba(255,90,30,.22)');b.fillStyle=fg;b.fillRect(0,H-140,W,140);
     b.fillStyle='rgba(60,8,4,.7)';b.beginPath();b.moveTo(0,H);for(let x=0;x<=W;x+=20)b.lineTo(x,H-20-((x*7)%30));b.lineTo(W,H);b.fill();
   }
-  // pipe frame (left, right, top)
-  const m=MAT[z.pipe],fgc=b.createLinearGradient(0,0,4,0);fgc.addColorStop(0,m[2]);fgc.addColorStop(.5,m[1]);fgc.addColorStop(1,m[2]);
-  b.globalAlpha=.7;b.fillStyle=fgc;b.fillRect(0,0,3,H);b.fillRect(W-3,0,3,H);
-  const ft=b.createLinearGradient(0,0,0,3);ft.addColorStop(0,m[2]);ft.addColorStop(1,m[1]);b.fillStyle=ft;b.fillRect(0,0,W,3);b.globalAlpha=1;
+  drawWalls(b,z);
+}
+function drawWalls(b,z){ // the pipe we're working inside, in this zone's material
+  const m=MAT[z.pipe],p=z.pipe;
+  const grad=(x0,y0,x1,y1)=>{const g=b.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,m[2]);g.addColorStop(.45,m[1]);g.addColorStop(1,m[2]);return g};
+  b.fillStyle=grad(0,0,WT,0);b.fillRect(0,0,WT,H);
+  b.fillStyle=grad(W,0,W-WT,0);b.fillRect(W-WT,0,WT,H);
+  b.fillStyle=grad(0,0,0,WT);b.fillRect(0,0,W,WT);
+  const L={galv:14,copper:10,pvc:16,brass:10,iron:16}[p];
+  const band=(x,y,w,h,vert)=>{
+    b.fillStyle=vert?grad(x,0,x+w,0):grad(0,y,0,y+h);b.fillRect(x,y,w,h);
+    b.strokeStyle='rgba(0,0,0,.5)';b.lineWidth=1;b.strokeRect(x+.5,y+.5,w-1,h-1);
+    const len=vert?h:w;
+    const across=(o,col,a)=>{b.globalAlpha=a;b.strokeStyle=col;b.beginPath();
+      if(vert){b.moveTo(x,y+o);b.lineTo(x+w,y+o)}else{b.moveTo(x+o,y);b.lineTo(x+o,y+h)}b.stroke();b.globalAlpha=1};
+    if(p==='galv'){for(const o of [-2,-4,-6,len+2,len+4,len+6])across(o,'#3a4045',.6)}      // threads
+    else if(p==='copper'){across(-1,'#e9e9e9',.9);across(len+1,'#e9e9e9',.9)}              // solder
+    else if(p==='pvc'){b.globalAlpha=.55;b.fillStyle='#8b5fbf';if(vert)b.fillRect(x,y-5,w,5);else b.fillRect(x-5,y,5,h);b.globalAlpha=1} // primer
+    else if(p==='brass'){across(len/2,'#76590c',.8)}
+    else{across(3,'#000',.5);across(len-3,'#000',.5)}                                         // cast iron hub
+  };
+  const wv=WT+2;
+  for(let y=150;y<H-40;y+=170){band(0,y,wv,L,true);band(W-wv,y,wv,L,true)}
+  band(W/2-L/2,0,L,wv,false);
+  for(const x of [0,W-WT-6]){b.fillStyle=grad(0,0,0,WT+6);b.fillRect(x,0,WT+6,WT+6);b.strokeStyle='rgba(0,0,0,.5)';b.lineWidth=1;b.strokeRect(x+.5,.5,WT+5,WT+5)}
+}
+
+/* ---------- standing liquid, drips, flush ---------- */
+let liqP=[],drips=[],drained=false,flushT=0,splashed=false;
+const FLUSH_D=1.5;
+function buildLiq(){
+  const L=LIQ[zoneOf(G.lvl)];liqP=[];drips=[];
+  for(let i=0;i<16;i++)liqP.push({x:rand(WT+2,W-WT-2),y:rand(WT+3,Y0-5),s:rand(.5,1),a:rand(0,6.3),c:pick(['#c77dff','#2fae5c','#f5c842','#ffffff'])});
+  return L;
+}
+function updLiq(dt){
+  const L=LIQ[zoneOf(G.lvl)];
+  for(const q of liqP){q.a+=dt*3;
+    if(L.k==='bubble'||L.k==='boil'){q.y-=(L.k==='boil'?16:8)*q.s*dt;if(q.y<WT+3){q.y=Y0-5;q.x=rand(WT+2,W-WT-2)}}
+    else{q.x+=7*q.s*dt;if(q.x>W-WT-2)q.x=WT+2}}
+  if(mode==='play'&&rows&&!drained){
+    for(let c=0;c<COLS;c++){if(bricks[0][c]||Math.random()>dt*.6)continue;
+      let stop=H+10;for(let r=1;r<rows;r++)if(bricks[r][c]){stop=Y0+r*SY;break}
+      drips.push({x:X0+c*SX+BW/2+rand(-7,7),y:Y0-1,vy:15,stop})}}
+  for(const d of drips){d.vy+=520*dt;d.y+=d.vy*dt;if(d.y>=d.stop){d.dead=true;if(d.stop<H)burst(d.x,d.stop,L.hi,2,40)}}
+  drips=drips.filter(d=>!d.dead);
+}
+function drawLiquid(){
+  if(drained)return;const L=LIQ[zoneOf(G.lvl)],top=WT,bot=Y0-2;
+  const g=ctx.createLinearGradient(0,top,0,bot);g.addColorStop(0,L.d);g.addColorStop(1,L.c);
+  ctx.globalAlpha=.92;ctx.fillStyle=g;ctx.fillRect(WT,top,W-2*WT,bot-top);
+  ctx.strokeStyle=L.hi;ctx.lineWidth=1;
+  for(let i=0;i<3;i++){ctx.globalAlpha=.28;ctx.beginPath();const y=top+9+i*10;ctx.moveTo(WT,y);
+    for(let x=WT;x<=W-WT;x+=8)ctx.lineTo(x,y+Math.sin(x*.05+t0*2+i*1.7)*1.6);ctx.stroke()}
+  ctx.globalAlpha=.6;ctx.beginPath();ctx.moveTo(WT,bot);for(let x=WT;x<=W-WT;x+=8)ctx.lineTo(x,bot+Math.sin(x*.08+t0*3)*.8);ctx.stroke();
+  for(const q of liqP){
+    if(L.k==='bubble'){ctx.globalAlpha=.5;ctx.strokeStyle=L.hi;ctx.beginPath();ctx.arc(q.x,q.y,1.5,0,6.3);ctx.stroke()}
+    else if(L.k==='suds'){ctx.globalAlpha=.45;ctx.fillStyle='#f2f5f7';ctx.beginPath();ctx.arc(q.x,q.y,1.7,0,6.3);ctx.fill()}
+    else if(L.k==='chunk'){ctx.globalAlpha=.7;ctx.fillStyle='#2b1d0c';ctx.fillRect(q.x,q.y,3,2)}
+    else if(L.k==='glitter'){ctx.globalAlpha=.3+.5*Math.abs(Math.sin(q.a));ctx.fillStyle=q.c;ctx.fillRect(q.x,q.y,1.6,1.6)}
+    else{const k=1-(q.y-WT)/(Y0-WT);ctx.globalAlpha=.65;ctx.strokeStyle=L.hi;ctx.beginPath();ctx.arc(q.x,q.y,1+k*2.2,0,6.3);ctx.stroke()}
+  }
+  ctx.globalAlpha=1;
+  ctx.fillStyle=L.hi;for(const d of drips){ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(d.x,d.y,1.8,0,6.3);ctx.fill();ctx.fillRect(d.x-.6,d.y-4,1.2,3)}
+  ctx.globalAlpha=1;
+}
+const flushFront=()=>{const k=Math.min(1,flushT/.85);return Y0-2+(H+80-Y0)*k*k};
+const flushTail=()=>{const k=clamp((flushT-.55)/.95,0,1);return WT+(H+90)*k*k};
+function updFlush(dt){
+  flushT+=dt;t0+=dt;const fy=flushFront();
+  for(const p of parts)if(p.y<fy)p.vy=Math.max(p.vy,560);
+  for(const e of enemies)if(e.y<fy)e.y+=640*dt;
+  if(!splashed&&fy>pad.y-10){splashed=true;pad.hop=1.2;pm('hop');say(pick(['Whoosh!','Line\'s open!','There she goes!']),1.6);
+    for(let i=0;i<26;i++)parts.push({x:pad.x+rand(-30,30),y:pad.y,vx:rand(-160,160),vy:rand(-260,-90),t:.7,m:.7,c:LIQ[zoneOf(G.lvl)].hi,s:rand(2,3.5)})}
+  if(flushT>=FLUSH_D)endFlush();
+}
+function endFlush(){
+  if(mode!=='flush')return;mode='won';enemies=[];flushT=FLUSH_D;sfx.clear();setTimeout(showClear,250);
+}
+function drawFlush(){
+  if(mode!=='flush')return;const L=LIQ[zoneOf(G.lvl)],fy=flushFront(),ty=flushTail();if(ty>=fy)return;
+  ctx.globalAlpha=.84;ctx.fillStyle=L.c;ctx.beginPath();ctx.moveTo(WT,ty);ctx.lineTo(W-WT,ty);ctx.lineTo(W-WT,fy);
+  for(let x=W-WT;x>=WT;x-=10)ctx.lineTo(x,fy+Math.sin(x*.06+t0*14)*7);ctx.closePath();ctx.fill();
+  ctx.globalAlpha=.35;ctx.strokeStyle=L.hi;ctx.lineWidth=1.5;
+  for(let i=0;i<14;i++){const x=WT+10+i*25,y=ty+((i*53+t0*900)%Math.max(1,fy-ty));ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y+14);ctx.stroke()}
+  ctx.globalAlpha=.75;ctx.fillStyle='#f4f7f8';
+  for(let x=WT+4;x<W-WT;x+=11){ctx.beginPath();ctx.arc(x,fy+Math.sin(x*.06+t0*14)*7,2.5+Math.abs(Math.sin(x+t0*9))*2.5,0,6.3);ctx.fill()}
+  ctx.globalAlpha=1;
 }
 
 /* ---------- drawing ---------- */
@@ -590,7 +691,10 @@ function drawCap(c,t,x,y){
   else if(t==='jet'){c.beginPath();c.moveTo(x-9,y-3);c.lineTo(x-2,y-1);c.lineTo(x-2,y+1);c.lineTo(x-9,y+3);c.closePath();c.fill();
     c.lineWidth=1.4;c.beginPath();c.moveTo(x,y-1);c.lineTo(x+8,y-4);c.moveTo(x,y);c.lineTo(x+9,y);c.moveTo(x,y+1);c.lineTo(x+8,y+4);c.stroke()}
   else if(t==='plunger'){c.beginPath();c.moveTo(x,y-5);c.lineTo(x,y+1);c.stroke();c.beginPath();c.arc(x,y+4,4.5,Math.PI,0);c.fill()}
-  else if(t==='auger'){c.lineWidth=1.6;c.beginPath();c.moveTo(x-9,y);for(let i=0;i<6;i++)c.lineTo(x-7+i*3,y+(i%2?3:-3));c.lineTo(x+10,y);c.stroke()}
+  else if(t==='auger'){ // cable into a spade cutter head
+    c.lineWidth=1.6;c.beginPath();c.moveTo(x-11,y);c.lineTo(x-2,y);c.stroke();
+    c.lineWidth=1;c.beginPath();for(const o of [-9,-6,-3]){c.moveTo(o+x,y-2);c.lineTo(o+x+1.5,y+2)}c.stroke();
+    c.fillRect(x-2,y-2.5,5,5);c.beginPath();c.moveTo(x+3,y-5);c.lineTo(x+10,y-2.5);c.lineTo(x+7,y);c.lineTo(x+10,y+2.5);c.lineTo(x+3,y+5);c.closePath();c.fill()}
   else{const g=IMG['ganja-front'];if(ok(g)){const s=13,r=g.naturalWidth/g.naturalHeight;c.drawImage(g,x-s*r/2,y-s/2,s*r,s)}else{c.font='900 11px Nunito';c.textAlign='center';c.textBaseline='middle';c.fillText('+1',x,y+.5)}}
   c.lineCap='butt';
 }
@@ -642,7 +746,13 @@ function drawBall(b){
   if(au){ctx.strokeStyle='rgba(80,40,0,.8)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(b.x,b.y,b.r-1.5,t0*12,t0*12+3.5);ctx.stroke()}
 }
 function drawBoss(){
-  const z=zoneOf(G.lvl),col=ZONES[z].boss,{x,y,rx,ry,t}=boss;
+  const z=zoneOf(G.lvl),col=ZONES[z].boss,{y,rx,ry,t}=boss;let x=boss.x;const im=IMG.fatberg;
+  if(ok(im)){const w=boss.bw,h=w*im.naturalHeight/im.naturalWidth;let sx=1+Math.sin(t*2.2)*.035,sy=1-Math.sin(t*2.2)*.035;
+    if(boss.flash>0){const j=Math.sin(boss.flash*70)*.07;sx+=j;sy-=j}
+    if(boss.dying){const q=Math.max(0,boss.dying/1.5);sx*=.55+.45*q;sy*=.55+.45*q;x+=rand(-3,3);ctx.globalAlpha=Math.min(1,q*1.6)}
+    ctx.save();ctx.translate(x,y);ctx.scale(sx,sy);if(boss.flash>0&&Math.floor(boss.flash*40)%2)ctx.globalAlpha=.55;
+    ctx.drawImage(im,-w/2,-w*.46,w,h);ctx.restore();ctx.globalAlpha=1;
+  }else{
   ctx.fillStyle=col;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,6.3);ctx.fill();
   for(let i=0;i<8;i++){const a=i/8*6.283+t*.4,w=1+Math.sin(t*3+i)*.08;ctx.beginPath();ctx.arc(x+Math.cos(a)*rx*.78,y+Math.sin(a)*ry*.72,ry*.42*w,0,6.3);ctx.fill()}
   ctx.fillStyle='rgba(70,50,20,.3)';ctx.beginPath();ctx.ellipse(x,y+ry*.35,rx*.92,ry*.55,0,0,Math.PI);ctx.fill();
@@ -656,9 +766,11 @@ function drawBoss(){
   ctx.strokeStyle='#3a2a10';ctx.lineWidth=3;ctx.beginPath();const mw=rx*.42,my=y+ry*.32;ctx.moveTo(x-mw,my);
   for(let i=1;i<=6;i++)ctx.lineTo(x-mw+i*mw/3,my+(i%2?5:0));ctx.stroke();ctx.lineCap='butt';
   if(boss.flash>0){ctx.globalAlpha=boss.flash*2;ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,6.3);ctx.fill();ctx.globalAlpha=1}
+  }
+  if(boss.dying)return;
   // health bar
-  ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(40,14,W-80,7);ctx.fillStyle=Z().acc;ctx.fillRect(41,15,(W-82)*Math.max(0,boss.hp)/boss.max,5);
-  ctx.font='700 11px Nunito';ctx.textAlign='center';ctx.fillStyle='#f4ecff';ctx.fillText(LV[G.lvl].name,W/2,34);
+  ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(40,13,W-80,7);ctx.fillStyle=Z().acc;ctx.fillRect(41,14,(W-82)*Math.max(0,boss.hp)/boss.max,5);
+  ctx.font='700 11px Nunito';ctx.textAlign='center';ctx.fillStyle='#f4ecff';ctx.fillText(LV[G.lvl].name,W/2,32);
 }
 function drawEnemy(e){
   const im=IMG[e.k+'-front'],s=e.k==='crawfish'?28:24;let bob=Math.sin(e.t*(e.k==='fly'?18:4))*(e.k==='fly'?1.5:1);
@@ -688,6 +800,7 @@ function draw(){
   ctx.setTransform(SC*DPR,0,0,SC*DPR,sx*SC*DPR,sy*SC*DPR);
   drawFx();
   if(mode==='title')return;
+  drawLiquid();
   for(let r=0;r<rows;r++)for(let c=0;c<COLS;c++){const k=bricks[r][c];if(k)drawBrick(ctx,k,X0+c*SX,Y0+r*SY)}
   for(const e of enemies)drawEnemy(e);
   if(boss)drawBoss();
@@ -696,7 +809,8 @@ function draw(){
   for(const c of caps)drawCap(ctx,c.t,c.x,c.y);
   ctx.fillStyle='#9be3ff';for(const b of blasts)ctx.fillRect(b.x-1.5,b.y-6,3,10);
   drawMojo();drawPad();
-  for(const b of balls)drawBall(b);
+  if(!drained)for(const b of balls)drawBall(b);
+  drawFlush();
   for(const p of parts){ctx.globalAlpha=Math.max(0,p.t/p.m);ctx.fillStyle=p.c;ctx.fillRect(p.x-p.s/2,p.y-p.s/2,p.s,p.s)}ctx.globalAlpha=1;
   ctx.font='900 13px Nunito';ctx.textAlign='center';ctx.textBaseline='middle';
   for(const t of texts){ctx.globalAlpha=Math.min(1,t.t*2);ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillText(t.s,t.x+1,t.y+1);ctx.fillStyle=t.c;ctx.fillText(t.s,t.x,t.y)}ctx.globalAlpha=1;
@@ -705,7 +819,7 @@ function draw(){
     if(hb){ctx.globalAlpha=.55+.35*Math.sin(t0*5);ctx.font='800 15px Nunito';ctx.textAlign='center';ctx.fillStyle='#f4ecff';
       ctx.fillText(hb.caught?'Lift to shoot':'Tap to launch',W/2,pad.y-70);ctx.globalAlpha=1}
     if(augerT>0||pad.jet>0){ctx.font='700 11px Nunito';ctx.textAlign='left';ctx.fillStyle='#f5c842';
-      ctx.fillText((augerT>0?'Auger '+Math.ceil(augerT)+'s  ':'')+(pad.jet>0?'Jetter '+Math.ceil(pad.jet)+'s':''),8,H-10)}}
+      ctx.fillText((augerT>0?'Auger bit '+Math.ceil(augerT)+'s  ':'')+(pad.jet>0?'Jetter '+Math.ceil(pad.jet)+'s':''),8,H-10)}}
 }
 
 /* ---------- side panels (wide screens) ---------- */
@@ -714,7 +828,7 @@ function panelFit(dt){
   if(!document.body.classList.contains('cab'))return;fitT-=dt;if(fitT>0)return;fitT=.2;
   const c=[];const chip=(t,label)=>c.push('<div class="chip"><i style="background:'+CAPS[t].c+'"></i>'+label+'</div>');
   if(mode==='play'||mode==='pause'){if(pad.mode==='long')chip('coupling','Coupling');if(pad.mode==='catch')chip('plunger','Plunger');
-    if(pad.jet>0)chip('jet','Jetter '+Math.ceil(pad.jet)+'s');if(augerT>0)chip('auger','Auger '+Math.ceil(augerT)+'s');
+    if(pad.jet>0)chip('jet','Jetter '+Math.ceil(pad.jet)+'s');if(augerT>0)chip('auger','Auger bit '+Math.ceil(augerT)+'s');
     const fb=balls.length;if(fb>1)chip('tee',fb+' drops')}
   const k=c.join('');if(k!==fitK){fitK=k;$('pFit').innerHTML=k}
 }
@@ -723,10 +837,10 @@ function pm(c){const e=$('pMojo');e.classList.remove('hop','wince');void e.offse
 /* ---------- loop ---------- */
 let last=0;
 function frame(ts){const dt=Math.min(.033,last?(ts-last)/1000:0);last=ts;
-  if(mode==='play')update(dt);else if(mode==='won'&&boss)update(dt);
+  if(mode==='play')update(dt);else if(mode==='flush')updFlush(dt);
   if(mode!=='play'&&mode!=='title'&&mode!=='won'){} // frozen
   if(mode==='won'){pad.hop=Math.max(0,pad.hop-dt);t0+=dt}
-  updFx(dt);panelFit(dt);draw();requestAnimationFrame(frame)}
+  updFx(dt);if(mode!=='title')updLiq(dt);panelFit(dt);draw();requestAnimationFrame(frame)}
 
 /* ---------- sizing ---------- */
 const coarse=!!(window.matchMedia&&matchMedia('(pointer: coarse)').matches);
@@ -752,9 +866,9 @@ addEventListener('orientationchange',()=>setTimeout(resize,250));
 
 /* ---------- input ---------- */
 let ptr=null;
-stage.addEventListener('pointerdown',e=>{if(mode!=='play')return;e.preventDefault();ptr={id:e.pointerId,x:e.clientX}},{passive:false});
+stage.addEventListener('pointerdown',e=>{if(mode==='flush'){endFlush();return}if(mode!=='play')return;e.preventDefault();ptr={id:e.pointerId,x:e.clientX}},{passive:false});
 stage.addEventListener('pointermove',e=>{if(!ptr||e.pointerId!==ptr.id||mode!=='play')return;pad.x+=(e.clientX-ptr.x)/SC*1.2;ptr.x=e.clientX;
-  pad.x=clamp(pad.x,pad.w/2+2,W-pad.w/2-2)});
+  pad.x=clamp(pad.x,pad.w/2+WT,W-pad.w/2-WT)});
 const up=e=>{if(!ptr||e.pointerId!==ptr.id)return;ptr=null;if(mode==='play')releaseHeld()};
 stage.addEventListener('pointerup',up);
 // a system swipe (Safari bar, home bar) steals the touch: pause right away
@@ -807,7 +921,7 @@ function showTitle(){
     (SAVE.best?'<p class="small">Best score '+SAVE.best.toLocaleString()+'</p>':'')+
     '<button class="btn" data-a="play">'+(n>1?'Play level '+n:'Play')+'</button>'+
     '<div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="how">How to play</button></div>'+
-    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.2</p>');
+    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.3</p>');
   let seenTip=false;try{seenTip=localStorage.getItem('mojoBlastFullTip')==='1'}catch(e){}
   if(isIOS&&!isApp&&!seenTip&&!canFull)showTip();
 }
@@ -815,7 +929,7 @@ function startRun(i){G={lvl:i,score:0,lives:3,nextLife:25000,base:290,maxSp:420}
 function crewImgs(z){return '<div class="crew"><span class="ganjabub"><img src="/assets/ganja-front.png" alt="Ganja"><i>!</i></span>'+
   ZONES[z].en.map(k=>'<img src="/assets/'+k+'-front.png" alt="">').join('')+'</div>'}
 function showIntro(i){
-  const z=zoneOf(i),Zn=ZONES[z];mode='intro';G.lvl=i;buildFx();buildBg();hud();
+  const z=zoneOf(i),Zn=ZONES[z];mode='intro';G.lvl=i;drained=false;rows=0;bricks=[];boss=null;buildLiq();buildFx();buildBg();hud();
   show('<p class="small">Zone '+(z+1)+' of 5</p><h2 style="color:'+Zn.acc+'">'+Zn.name+'</h2><p>'+Zn.blurb+'</p>'+crewImgs(z)+
     '<p class="small">Mojo\'s running '+MAT[Zn.pipe][3]+' pipe here.</p><button class="btn" data-a="begin">Start</button>');
 }
@@ -857,12 +971,12 @@ function showHow(){
   const cap=t=>'<div class="it"><canvas data-c="'+t+'" width="32" height="16" style="width:32px;height:16px"></canvas><div><b>'+CAPS[t].n+'</b> <span>'+CAPS[t].d+'</span></div></div>';
   const crew=(k,n,d)=>'<div class="it"><img src="/assets/'+k+'-front.png" alt=""><div><b>'+n+'</b> <span>'+d+'</span></div></div>';
   show('<h2>How to play</h2><div class="how">'+
-   '<p>Drag anywhere to move Mojo\'s pipe. Lift your finger to launch the drop. Break every clog brick to clear the level. Don\'t let the drop fall past Mojo.</p>'+
+   '<p>Drag anywhere to move Mojo\'s pipe. Lift your finger to launch the drop. Break every clog brick to clear the stoppage and flush the line. Don\'t let the drop fall past Mojo.</p>'+
    '<h3>The clog</h3>'+brick('g','Grease, hair, mud, soap','one hit')+brick('r','Roots','two hits')+brick('s','Scale','three hits')+brick('c','Concrete','never breaks, play around it')+
    '<h3>Fittings</h3><p>Some bricks drop a fitting. Catch it with the pipe.</p>'+['tee','coupling','jet','plunger','auger','ganja'].map(cap).join('')+
    '<h3>The crew</h3>'+crew('fly','Zydeco','buzzes around and knocks your drop off line')+crew('maggot','Beignet','crawls in and regrows grease bricks')+
    crew('crawfish','Roux','snaps your drop back faster, takes two hits')+
-   '<h3>Fatbergs</h3><p>Every zone ends with a fatberg. Hit it with the drop or the jetter until it breaks up, and dodge the grease it spits. A glob on the pipe costs a life.</p>'+
+   '<h3>Fatbergs</h3><p>Every zone ends with a fatberg, and each one is bigger than the last. Hit it with the drop or the jetter until it breaks up, and dodge the grease it spits. A glob on the pipe costs a life.</p>'+
    '</div><button class="btn alt" data-a="back">Back</button>');
   ov.querySelectorAll('canvas[data-b]').forEach(c=>{const x=c.getContext('2d');const t=c.dataset.b;drawBrick(x,{t,hp:HP[t],max:HP[t],f:0},0,0)});
   ov.querySelectorAll('canvas[data-c]').forEach(c=>{const x=c.getContext('2d');drawCap(x,c.dataset.c,16,8)});
