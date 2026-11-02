@@ -1,0 +1,14 @@
+{
+  "name": "Mojo Blast",
+  "short_name": "Mojo Blast",
+  "start_url": "/mojoblast",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0710",
+  "theme_color": "#0b0710",
+  "icons": [
+    { "src": "/mojoblast-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/mojoblast-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

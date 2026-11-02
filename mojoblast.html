@@ -9,11 +9,19 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mojo Blast">
 <link rel="icon" type="image/png" href="/logo.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="/mojoblast-icon.png">
+<link rel="manifest" href="/mojoblast.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <title>Mojo Blast | Pipe Mojo</title>
 <!--
+  MOJO BLAST — v0.2 (Nov 2 2026)
+  v0.2: home-screen app support (mojoblast.webmanifest + mojoblast-icon.png / -512.png in the
+        repo root) with a one-time "Play full screen" tip in iOS Safari; the game pauses the moment
+        a system swipe steals your finger, the page hides, or the window loses focus, and Resume
+        parks the drop back on the pipe; iPhone landscape shows "Turn it upright"; wide screens
+        (iPad, iPad mini, iPhone Duo in landscape) get an arcade-cabinet layout with side panels.
+
   MOJO BLAST — v0.1 test build (Nov 1 2026)
   Breakout-style clog buster for pipemojo.com. Unlinked test at pipemojo.com/mojoblast.
   Single self-contained file. Portrait. Art from /assets (mojo-front, ganja-front,
@@ -64,6 +72,32 @@ p{margin:6px 0;color:var(--dim);font-size:15px;line-height:1.4}
 .ganjabub{position:relative;display:inline-block}
 .ganjabub i{position:absolute;top:-8px;right:-10px;font:900 22px Nunito;color:var(--gold);font-style:normal}
 .small{font-size:13px;color:var(--dim)}
+#lp,#rp{display:none}
+body.cab #hud{display:none}
+body.cab #app{flex-direction:row}
+body.cab #lp,body.cab #rp{display:flex;flex-direction:column;flex:1 1 0;min-width:0;padding:16px 14px;gap:14px;overflow:hidden}
+#lp{align-items:flex-start}
+#rp{align-items:flex-end;text-align:right}
+#lp .menu{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:22px;touch-action:manipulation}
+.pn-title{font-family:'Pirata One',serif;font-size:clamp(26px,4vw,46px);color:var(--gold);line-height:1;text-shadow:0 2px 0 #7a3b00}
+.pn-zone{font-family:'Pirata One',serif;font-size:clamp(20px,2.8vw,34px);color:var(--zone);line-height:1}
+.pn-lab{font-size:13px;color:var(--dim);font-weight:700}
+.pn-big{font:900 clamp(22px,3vw,36px) Nunito,sans-serif;line-height:1.1}
+.pn-lives{display:flex;align-items:center;gap:4px;font:900 20px Nunito,sans-serif}.pn-lives img{height:30px}
+.pn-mojo{margin-top:auto;max-height:38%;max-width:100%;object-fit:contain;align-self:center}
+.pn-mojo.hop{animation:hop .45s ease 2}.pn-mojo.wince{animation:wince .5s ease}
+@keyframes hop{50%{transform:translateY(-16px)}}
+@keyframes wince{25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}
+.pn-fit{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.chip{display:flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;background:#24163b;border:1px solid var(--line);font:800 14px Nunito,sans-serif}
+.chip i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.pn-crew{display:flex;gap:6px;margin-top:auto;flex-wrap:wrap;justify-content:flex-end}.pn-crew img{height:46px}
+#rot{position:fixed;inset:0;z-index:10;display:none;flex-direction:column;align-items:center;justify-content:center;background:#0b0710;text-align:center;padding:20px}
+body.rot #rot{display:flex}
+#rot .ph{width:46px;height:80px;border:4px solid var(--gold);border-radius:10px;animation:turn 1.8s ease-in-out infinite}
+@keyframes turn{0%,25%{transform:rotate(-90deg)}65%,100%{transform:rotate(0)}}
+.steps{text-align:left;margin:10px 0 4px;padding-left:22px;color:var(--ink);line-height:1.5}
+@media (prefers-reduced-motion:reduce){.pn-mojo.hop,.pn-mojo.wince,#rot .ph{animation:none}}
 </style>
 </head>
 <body>
@@ -74,8 +108,23 @@ p{margin:6px 0;color:var(--dim);font-size:15px;line-height:1.4}
     <div id="lvl">Mojo Blast</div>
     <div id="lives"></div>
   </div>
+  <aside id="lp">
+    <button class="menu" id="menuBtn2" aria-label="Menu">☰</button>
+    <div class="pn-title">Mojo Blast</div>
+    <div><div class="pn-zone" id="pZone"></div><div class="pn-lab" id="pLvl"></div></div>
+    <div><div class="pn-lab">Score</div><div class="pn-big" id="pScore">0</div></div>
+    <div class="pn-lives" id="pLives"></div>
+    <img class="pn-mojo" id="pMojo" src="/assets/mojo-front.png" alt="">
+  </aside>
   <div id="stage"><canvas id="cv"></canvas></div>
+  <aside id="rp">
+    <div><div class="pn-lab">Best</div><div class="pn-big" id="pBest">0</div></div>
+    <div><div class="pn-lab">Next extra life</div><div class="pn-big" id="pNext" style="font-size:20px"></div></div>
+    <div class="pn-fit" id="pFit"></div>
+    <div class="pn-crew" id="pCrew"></div>
+  </aside>
 </div>
+<div id="rot"><div class="ph"></div><h2 style="margin-top:24px">Turn it upright</h2><p>Mojo Blast plays standing up on iPhone.</p></div>
 <div id="ov" hidden></div>
 <script>
 (()=>{
@@ -255,7 +304,7 @@ function beginLevel(i){
   caps=[];blasts=[];parts=[];texts=[];enemies=[];globs=[];augerT=0;seen={};
   pad.x=W/2;pad.mode='normal';pad.tw=pad.w=64;pad.jet=0;
   balls=[newBall()];spawnT=rand(8,12);wonT=0;
-  buildFx();buildBg();hud();mode='play';
+  mode='play';buildFx();buildBg();hud();
   setTimeout(()=>{if(mode==='play')say(L.boss?SAY.boss:pick(SAY.start))},350);
 }
 function launch(b){
@@ -349,13 +398,13 @@ function applyCap(t){
   say(SAY[t],1.8);
 }
 function loseLife(){
-  G.lives--;sfx.lose();shake(.35);pad.wince=.9;gpop={t:1.4,s:'#@%!'};say(pick(SAY.lose));
+  G.lives--;sfx.lose();shake(.35);pad.wince=.9;pm('wince');gpop={t:1.4,s:'#@%!'};say(pick(SAY.lose));
   caps=[];blasts=[];globs=[];augerT=0;pad.jet=0;pad.mode='normal';pad.tw=64;hud();
   if(G.lives<=0){mode='over';balls=[];SAVE.best=Math.max(SAVE.best,G.score);persist();setTimeout(showOver,1000);return}
   balls=[newBall()];
 }
 function levelDone(){
-  if(mode!=='play')return;mode='won';wonT=0;pad.hop=1.2;addScore(1000);sfx.clear();
+  if(mode!=='play')return;mode='won';wonT=0;pad.hop=1.2;pm('hop');addScore(1000);sfx.clear();
   SAVE.unl=Math.max(SAVE.unl,Math.min(LV.length,G.lvl+2));SAVE.best=Math.max(SAVE.best,G.score);persist();
   for(let i=0;i<24;i++)burst(rand(30,W-30),rand(60,H*.5),pick(['#7fd3ff','#f5c842',Z().acc]),2,160);
   setTimeout(showClear,1100);
@@ -659,16 +708,39 @@ function draw(){
       ctx.fillText((augerT>0?'Auger '+Math.ceil(augerT)+'s  ':'')+(pad.jet>0?'Jetter '+Math.ceil(pad.jet)+'s':''),8,H-10)}}
 }
 
+/* ---------- side panels (wide screens) ---------- */
+let fitT=0,fitK='';
+function panelFit(dt){
+  if(!document.body.classList.contains('cab'))return;fitT-=dt;if(fitT>0)return;fitT=.2;
+  const c=[];const chip=(t,label)=>c.push('<div class="chip"><i style="background:'+CAPS[t].c+'"></i>'+label+'</div>');
+  if(mode==='play'||mode==='pause'){if(pad.mode==='long')chip('coupling','Coupling');if(pad.mode==='catch')chip('plunger','Plunger');
+    if(pad.jet>0)chip('jet','Jetter '+Math.ceil(pad.jet)+'s');if(augerT>0)chip('auger','Auger '+Math.ceil(augerT)+'s');
+    const fb=balls.length;if(fb>1)chip('tee',fb+' drops')}
+  const k=c.join('');if(k!==fitK){fitK=k;$('pFit').innerHTML=k}
+}
+function pm(c){const e=$('pMojo');e.classList.remove('hop','wince');void e.offsetWidth;e.classList.add(c)}
+
 /* ---------- loop ---------- */
 let last=0;
 function frame(ts){const dt=Math.min(.033,last?(ts-last)/1000:0);last=ts;
   if(mode==='play')update(dt);else if(mode==='won'&&boss)update(dt);
   if(mode!=='play'&&mode!=='title'&&mode!=='won'){} // frozen
   if(mode==='won'){pad.hop=Math.max(0,pad.hop-dt);t0+=dt}
-  updFx(dt);draw();requestAnimationFrame(frame)}
+  updFx(dt);panelFit(dt);draw();requestAnimationFrame(frame)}
 
 /* ---------- sizing ---------- */
+const coarse=!!(window.matchMedia&&matchMedia('(pointer: coarse)').matches);
+function layout(){
+  const w=innerWidth,h=innerHeight,ar=w/h;
+  // phones are much longer than they are wide; iPad, iPad mini and iPhone Duo are close to 4:3
+  const rot=coarse&&ar>1.6;document.body.classList.toggle('rot',rot);if(rot&&mode==='play')pause();
+  const cab=!rot&&ar>1.05;document.body.classList.toggle('cab',cab);
+  if(cab){stage.style.flex='';const ah=stage.getBoundingClientRect().height||h;
+    const fw=Math.max(240,Math.min(ah*.6,w-2*Math.max(150,w*.17)));stage.style.flex='0 0 '+Math.floor(fw)+'px';fitK='';}
+  else stage.style.flex='';
+}
 function resize(){
+  layout();
   const r=stage.getBoundingClientRect();if(r.width<10||r.height<10)return;
   let sc=r.width/W,h=r.height/sc;if(h<500){h=500;sc=r.height/500}if(h>760)h=760;
   SC=sc;H=Math.round(h);DPR=Math.min(window.devicePixelRatio||1,3);
@@ -684,7 +756,11 @@ stage.addEventListener('pointerdown',e=>{if(mode!=='play')return;e.preventDefaul
 stage.addEventListener('pointermove',e=>{if(!ptr||e.pointerId!==ptr.id||mode!=='play')return;pad.x+=(e.clientX-ptr.x)/SC*1.2;ptr.x=e.clientX;
   pad.x=clamp(pad.x,pad.w/2+2,W-pad.w/2-2)});
 const up=e=>{if(!ptr||e.pointerId!==ptr.id)return;ptr=null;if(mode==='play')releaseHeld()};
-stage.addEventListener('pointerup',up);stage.addEventListener('pointercancel',up);
+stage.addEventListener('pointerup',up);
+// a system swipe (Safari bar, home bar) steals the touch: pause right away
+stage.addEventListener('pointercancel',e=>{if(!ptr||e.pointerId!==ptr.id)return;ptr=null;if(mode==='play')pause()});
+addEventListener('pagehide',()=>{if(mode==='play')pause()});
+addEventListener('blur',()=>{if(mode==='play')pause()});
 addEventListener('keydown',e=>{keys[e.key]=true;if((e.key===' '||e.key==='ArrowUp')&&mode==='play'){releaseHeld();e.preventDefault()}if(e.key==='Escape'&&mode==='play')pause()});
 addEventListener('keyup',e=>{keys[e.key]=false});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='play')pause()});
@@ -692,10 +768,17 @@ document.addEventListener('gesturestart',e=>e.preventDefault());
 
 /* ---------- HUD ---------- */
 function hud(){
-  $('score').textContent=G.score.toLocaleString();
-  if(mode==='title'){$('lvl').textContent='Mojo Blast';$('lives').innerHTML='';document.documentElement.style.setProperty('--zone','#f5c842');return}
+  const sc=G.score.toLocaleString();$('score').textContent=sc;$('pScore').textContent=sc;
+  $('pBest').textContent=Math.max(SAVE.best,G.score).toLocaleString();
+  if(mode==='title'){$('lvl').textContent='Mojo Blast';$('lives').innerHTML='';$('pLives').innerHTML='';$('pZone').textContent='';$('pLvl').textContent='';
+    $('pNext').textContent='';$('pCrew').innerHTML='';document.documentElement.style.setProperty('--zone','#f5c842');return}
   const z=Z(),L=LV[G.lvl];document.documentElement.style.setProperty('--zone',z.acc);
   $('lvl').textContent=z.name+' '+(L.boss?'Boss':(G.lvl%8+1));
+  $('pZone').textContent=z.name;$('pLvl').textContent=(L.boss?'Boss: ':'Level '+(G.lvl%8+1)+': ')+L.name;
+  $('pNext').textContent=G.nextLife.toLocaleString();
+  const cr=['ganja'].concat(z.en.map(k=>k+'-front'));const ch=cr.map(k=>'<img src="/assets/'+(k==='ganja'?'ganja-front':k)+'.png" alt="">').join('');
+  if($('pCrew').dataset.k!==ch){$('pCrew').innerHTML=ch;$('pCrew').dataset.k=ch}
+  $('pLives').innerHTML=(ok(IMG['mojo-front'])?'<img src="/assets/mojo-front.png" alt="">':'♥')+'×'+Math.max(0,G.lives);
   const src=ok(IMG['mojo-front'])?'/assets/mojo-front.png':'';
   $('lives').innerHTML=(src?'<img src="'+src+'" alt="">':'♥')+'<span style="font:900 18px Nunito;margin-left:3px">×'+Math.max(0,G.lives)+'</span>';
 }
@@ -703,7 +786,17 @@ function hud(){
 /* ---------- overlays ---------- */
 const root=document.documentElement;
 const isApp=navigator.standalone===true||(window.matchMedia&&(matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches));
+const isIOS=/iPhone|iPod|iPad/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const canFull=!!(root.requestFullscreen||root.webkitRequestFullscreen)&&!isApp&&!/iPhone|iPod/.test(navigator.userAgent);
+const fullBtn=()=>isApp?'':'<button class="btn alt" data-a="full">Full screen</button>';
+function showTip(){
+  backTo=mode==='pause'?'pause':'title';if(mode!=='pause')mode='tip';
+  try{localStorage.setItem('mojoBlastFullTip','1')}catch(e){}
+  show('<h2>Play full screen</h2><p>Safari\'s bar can\'t be hidden from inside a web page, but you can install Mojo Blast as its own app:</p>'+
+    '<ol class="steps"><li>Tap Share (or the ••• menu) in Safari</li><li>Tap Add to Home Screen</li><li>Open Mojo Blast from your home screen</li></ol>'+
+    '<p class="small">It opens with no Safari bar. The home screen app keeps its own save, separate from Safari.</p>'+
+    '<button class="btn" data-a="back">Got it</button>');
+}
 function show(html){ov.innerHTML='<div class="card">'+html+'</div>';ov.hidden=false;ov.scrollTop=0}
 function hide(){ov.hidden=true;ov.innerHTML=''}
 const soundBtn=()=>'<button class="btn alt" data-a="sound">Sound: '+(muted?'Off':'On')+'</button>';
@@ -714,7 +807,9 @@ function showTitle(){
     (SAVE.best?'<p class="small">Best score '+SAVE.best.toLocaleString()+'</p>':'')+
     '<button class="btn" data-a="play">'+(n>1?'Play level '+n:'Play')+'</button>'+
     '<div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="how">How to play</button></div>'+
-    soundBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.1</p>');
+    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.2</p>');
+  let seenTip=false;try{seenTip=localStorage.getItem('mojoBlastFullTip')==='1'}catch(e){}
+  if(isIOS&&!isApp&&!seenTip&&!canFull)showTip();
 }
 function startRun(i){G={lvl:i,score:0,lives:3,nextLife:25000,base:290,maxSp:420};if(i%8===0)showIntro(i);else{hide();beginLevel(i)}}
 function crewImgs(z){return '<div class="crew"><span class="ganjabub"><img src="/assets/ganja-front.png" alt="Ganja"><i>!</i></span>'+
@@ -744,7 +839,7 @@ function showOver(){
 function pause(){if(mode!=='play')return;mode='pause';ptr=null;
   show('<h2>Paused</h2><button class="btn" data-a="resume">Resume</button><button class="btn alt" data-a="restart">Restart level</button>'+
     '<div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="how">How to play</button></div>'+soundBtn()+
-    (canFull?'<button class="btn alt" data-a="full">Full screen</button>':'')+'<div class="row"><button class="btn alt" data-a="title">Title</button><button class="btn alt" data-a="games">All games</button></div>');
+    fullBtn()+'<div class="row"><button class="btn alt" data-a="title">Title</button><button class="btn alt" data-a="games">All games</button></div>');
 }
 let backTo='title';
 function showLevels(){
@@ -783,13 +878,18 @@ ov.addEventListener('click',e=>{
   else if(a==='next'){const n=G.lvl+1;if(n%8===0)showIntro(n);else{hide();beginLevel(n)}}
   else if(a==='retry'){const i=G.lvl;G.score=0;G.lives=3;G.nextLife=25000;hide();beginLevel(i)}
   else if(a==='restart'){hide();G.lives=Math.max(G.lives,1);beginLevel(G.lvl)}
-  else if(a==='resume'){hide();mode='play';last=0}
+  else if(a==='resume'){hide();park();mode='play';last=0}
   else if(a==='title'){showTitle()}
   else if(a==='sound'){muted=!muted;try{localStorage.setItem('pipeBlastMuted',muted?'1':'0')}catch(err){}b.textContent='Sound: '+(muted?'Off':'On');if(!muted)au()}
-  else if(a==='full'){const p=(root.requestFullscreen||root.webkitRequestFullscreen).call(root);if(p&&p.catch)p.catch(()=>{});setTimeout(resize,300)}
+  else if(a==='full'){if(canFull){const p=(root.requestFullscreen||root.webkitRequestFullscreen).call(root);if(p&&p.catch)p.catch(()=>{});setTimeout(resize,300)}else showTip()}
   else if(a==='games')location.href='/play';
 });
-$('menuBtn').addEventListener('click',()=>{sfx.ui();if(mode==='play')pause();else if(mode==='pause'){hide();mode='play'}});
+const menuTap=()=>{sfx.ui();if(mode==='play')pause();else if(mode==='pause'){hide();park();mode='play';last=0}};
+$('menuBtn').addEventListener('click',menuTap);$('menuBtn2').addEventListener('click',menuTap);
+function park(){ // coming back from a pause: the drop waits on the pipe, nothing is mid-air
+  if(boss&&boss.dying)return;const sp=balls.reduce((m,b)=>Math.max(m,b.sp||0),G.base||290);
+  const nb=newBall();nb.sp=sp;balls=[nb];globs=[];blasts=[];ptr=null;
+}
 IMG['mojo-front'].onload=()=>hud();
 
 resize();buildFx();buildBg();showTitle();requestAnimationFrame(frame);
