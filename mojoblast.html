@@ -15,6 +15,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <title>Mojo Blast | Pipe Mojo</title>
 <!--
+  MOJO BLAST — v0.3.1 (Nov 2 2026)
+  v0.3.1: field re-measures whenever the stage changes size (iOS home-screen app could report its
+          height late and clip the bottom); stage can shrink below the canvas; pipe sits a bit
+          higher (H-90) so Mojo shows in full and there's room to rest a finger on him.
+
   MOJO BLAST — v0.3 (Nov 2 2026)
   v0.3: Auger renamed Auger bit (cutter-head icon); standing liquid above the clog per zone
         (swamp water, gray water, sewage, glitter grease water, boiling sewage) that drips through
@@ -51,7 +56,7 @@ html,body{margin:0;height:100%;background:#0b0710;color:var(--ink);font-family:N
 #lvl{flex:1;text-align:center;font-family:'Pirata One',serif;font-size:23px;color:var(--zone);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #lives{display:flex;gap:1px;align-items:center;min-width:60px;justify-content:flex-end}
 #lives img{height:26px}
-#stage{flex:1 1 auto;position:relative;display:flex;align-items:center;justify-content:center;touch-action:none;overflow:hidden}
+#stage{flex:1 1 auto;min-height:0;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;touch-action:none;overflow:hidden}
 canvas{display:block;touch-action:none}
 #ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:calc(16px + var(--st)) 16px calc(16px + var(--sb));background:rgba(8,4,14,.74);z-index:5}
 #ov[hidden]{display:none}
@@ -859,9 +864,14 @@ function resize(){
   let sc=r.width/W,h=r.height/sc;if(h<500){h=500;sc=r.height/500}if(h>760)h=760;
   SC=sc;H=Math.round(h);DPR=Math.min(window.devicePixelRatio||1,3);
   cv.style.width=W*SC+'px';cv.style.height=H*SC+'px';cv.width=Math.round(W*SC*DPR);cv.height=Math.round(H*SC*DPR);
-  pad.y=H-78;buildBg();
+  pad.y=H-90;buildBg();
 }
 addEventListener('resize',()=>setTimeout(resize,60));
+// iOS home-screen apps can report their final height late: re-measure whenever the stage changes size
+let lastSz='';
+if(window.ResizeObserver)new ResizeObserver(()=>{const r=stage.getBoundingClientRect(),k=Math.round(r.width)+'x'+Math.round(r.height);if(k!==lastSz){lastSz=k;resize()}}).observe(stage);
+if(window.visualViewport)visualViewport.addEventListener('resize',()=>setTimeout(resize,60));
+addEventListener('pageshow',()=>setTimeout(resize,60));
 addEventListener('orientationchange',()=>setTimeout(resize,250));
 
 /* ---------- input ---------- */
@@ -921,7 +931,7 @@ function showTitle(){
     (SAVE.best?'<p class="small">Best score '+SAVE.best.toLocaleString()+'</p>':'')+
     '<button class="btn" data-a="play">'+(n>1?'Play level '+n:'Play')+'</button>'+
     '<div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="how">How to play</button></div>'+
-    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.3</p>');
+    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.3.1</p>');
   let seenTip=false;try{seenTip=localStorage.getItem('mojoBlastFullTip')==='1'}catch(e){}
   if(isIOS&&!isApp&&!seenTip&&!canFull)showTip();
 }
