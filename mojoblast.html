@@ -15,6 +15,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <title>Mojo Blast | Pipe Mojo</title>
 <!--
+  MOJO BLAST — v0.4.1 (Nov 3 2026)
+  v0.4.1: pipe sits at 80% of field height (was H-90); on phone-size screens (field < 520 css px
+          wide) sprites are ~18% bigger: Mojo, crew, falling fittings, pipe thickness 14, drop r=6.
+
   MOJO BLAST — v0.4 (Nov 2 2026)
   v0.4: arcade sound overhaul (NES-style square/triangle): pipe "bip", per-brick pitches, scale
         "ting", concrete "clank", catch jingle + a sound per fitting (Coupling whomp-whomp-whomp synced
@@ -175,7 +179,7 @@ const ok=i=>i&&i.complete&&i.naturalWidth>0;
 
 /* ---------- field ---------- */
 const W=372,WT=8,COLS=11,BW=30,BH=14,SX=32,SY=16,X0=11,Y0=50;
-let H=640,SC=1,DPR=1,bg=null;
+let H=640,SC=1,DPR=1,bg=null,BOOST=1; // BOOST: sprites a bit bigger on phone-size screens
 
 /* ---------- zones & levels ---------- */
 const MAT={galv:['#a7b0b6','#e3e8eb','#646d73','galvanized'],copper:['#c87533','#f4b47c','#7a3f17','copper'],
@@ -353,7 +357,7 @@ const Z=()=>ZONES[zoneOf(G.lvl)];
 const bricksBottom=()=>rows?Y0+rows*SY:150;
 
 function say(s,d){sayO={s,t:d||2.2}}
-function newBall(){return{x:pad.x,y:pad.y-6,vx:0,vy:0,r:5,sp:G.base,held:true,caught:false,ox:rand(-7,7),holdT:0,cool:0,tr:[]}}
+function newBall(){return{x:pad.x,y:pad.y-6,vx:0,vy:0,r:BOOST>1?6:5,sp:G.base,held:true,caught:false,ox:rand(-7,7),holdT:0,cool:0,tr:[]}}
 function addScore(n){G.score+=n;while(G.score>=G.nextLife){G.nextLife+=25000;gainLife()}hud()}
 function gainLife(){if(G.lives<6)G.lives++;gpop={t:1.4,s:'!'};sfx.life();float(pad.x,pad.y-24,'+1 life','#f5c842');hud()}
 function float(x,y,s,c){texts.push({x,y,s,c:c||'#fff',t:1.1})}
@@ -481,9 +485,9 @@ function emptyCells(){const out=[];for(let r=0;r<rows;r++)for(let c=0;c<COLS;c++
 function spawnEnemy(){
   const z=Z(),k=pick(z.en),bb=bricksBottom();
   if(k==='maggot'){const cells=emptyCells();if(!cells.length)return;const [r,c]=pick(cells);
-    enemies.push({k,x:X0+c*SX+BW/2,y:-14,r:10,hp:1,f:0,t:0,tg:[r,c],wait:0,grown:0,leave:false})}
-  else if(k==='crawfish'){const s=Math.random()<.5;enemies.push({k,x:s?WT+14:W-WT-14,y:Math.min(bb+36,pad.y-130),r:12,hp:2,f:0,t:0,vx:s?55:-55})}
-  else enemies.push({k,x:rand(30,W-30),y:Math.min(bb+24,pad.y-140),r:11,hp:1,f:0,t:0,vx:rand(-60,60),vy:rand(-40,40),turn:.6});
+    enemies.push({k,x:X0+c*SX+BW/2,y:-14,r:10*BOOST,hp:1,f:0,t:0,tg:[r,c],wait:0,grown:0,leave:false})}
+  else if(k==='crawfish'){const s=Math.random()<.5;enemies.push({k,x:s?WT+14:W-WT-14,y:Math.min(bb+36,pad.y-130),r:12*BOOST,hp:2,f:0,t:0,vx:s?55:-55})}
+  else enemies.push({k,x:rand(30,W-30),y:Math.min(bb+24,pad.y-140),r:11*BOOST,hp:1,f:0,t:0,vx:rand(-60,60),vy:rand(-40,40),turn:.6});
   if(!seen[k]){seen[k]=1;say(SAY[k],2)}
 }
 function updEnemies(dt){
@@ -783,7 +787,7 @@ function drawPad(){
   if(augerT>0){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(x+8,y,w-16,4);ctx.fillStyle=augerT<3&&Math.floor(t0*8)%2?'#ffe0a0':'#ffb02e';ctx.fillRect(x+9,y+1,(w-18)*augerT/AUG_T,2)}
 }
 function drawMojo(){
-  const im=IMG['mojo-front'],h=48;let y=pad.y+3,x=pad.x,a=0;
+  const im=IMG['mojo-front'],h=48*BOOST;let y=pad.y+3,x=pad.x,a=0;
   if(pad.hop>0)y-=Math.abs(Math.sin(pad.hop*9))*8;
   if(pad.wince>0){a=Math.sin(pad.wince*30)*.12;x+=Math.sin(pad.wince*40)*2}
   ctx.save();ctx.translate(x,y);ctx.rotate(a);
@@ -828,7 +832,7 @@ function drawBoss(){
   ctx.font='700 11px Nunito';ctx.textAlign='center';ctx.fillStyle='#f4ecff';ctx.fillText(LV[G.lvl].name,W/2,32);
 }
 function drawEnemy(e){
-  const im=IMG[e.k+'-front'],s=e.k==='crawfish'?28:24;let bob=Math.sin(e.t*(e.k==='fly'?18:4))*(e.k==='fly'?1.5:1);
+  const im=IMG[e.k+'-front'],s=(e.k==='crawfish'?28:24)*BOOST;let bob=Math.sin(e.t*(e.k==='fly'?18:4))*(e.k==='fly'?1.5:1);
   ctx.save();ctx.translate(e.x,e.y+bob);if(e.k==='crawfish'&&e.vx<0)ctx.scale(-1,1);
   if(e.f>0&&Math.floor(e.f*30)%2)ctx.globalAlpha=.4;
   if(ok(im)){const r=im.naturalWidth/im.naturalHeight,w=r>=1?s:s*r,h=r>=1?s/r:s;ctx.drawImage(im,-w/2,-h/2,w,h)}
@@ -861,7 +865,7 @@ function draw(){
   if(boss)drawBoss();
   for(const g of globs){ctx.fillStyle=ZONES[zoneOf(G.lvl)].boss;ctx.beginPath();ctx.arc(g.x,g.y,g.r,0,6.3);ctx.fill();
     ctx.fillStyle='rgba(255,255,255,.4)';ctx.beginPath();ctx.arc(g.x-2,g.y-2,2,0,6.3);ctx.fill()}
-  for(const c of caps)drawCap(ctx,c.t,c.x,c.y);
+  for(const c of caps){ctx.save();ctx.translate(c.x,c.y);ctx.scale(BOOST,BOOST);drawCap(ctx,c.t,0,0);ctx.restore()}
   ctx.fillStyle='#9be3ff';for(const b of blasts)ctx.fillRect(b.x-1.5,b.y-6,3,10);
   drawMojo();drawPad();
   if(!drained)for(const b of balls)drawBall(b);
@@ -914,7 +918,8 @@ function resize(){
   let sc=r.width/W,h=r.height/sc;if(h<500){h=500;sc=r.height/500}if(h>760)h=760;
   SC=sc;H=Math.round(h);DPR=Math.min(window.devicePixelRatio||1,3);
   cv.style.width=W*SC+'px';cv.style.height=H*SC+'px';cv.width=Math.round(W*SC*DPR);cv.height=Math.round(H*SC*DPR);
-  pad.y=H-90;buildBg();
+  BOOST=W*SC<520?1.18:1;pad.h=BOOST>1?14:12;
+  pad.y=Math.round(H*.8);balls.forEach(b=>{if(b.held)b.y=pad.y-b.r-.5});buildBg();
 }
 addEventListener('resize',()=>setTimeout(resize,60));
 // iOS home-screen apps can report their final height late: re-measure whenever the stage changes size
@@ -986,7 +991,7 @@ function showTitle(){
     (SAVE.best?'<p class="small">Best score '+SAVE.best.toLocaleString()+'</p>':'')+
     '<button class="btn" data-a="play">'+(n>1?'Play level '+n:'Play')+'</button>'+
     '<div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="how">How to play</button></div>'+
-    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.4</p>');
+    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.4.1</p>');
   let seenTip=false;try{seenTip=localStorage.getItem('mojoBlastFullTip')==='1'}catch(e){}
   if(isIOS&&!isApp&&!seenTip&&!canFull)showTip();
 }
