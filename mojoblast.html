@@ -15,6 +15,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <title>Mojo Blast | Pipe Mojo</title>
 <!--
+  MOJO BLAST — v0.4.2 (Nov 3 2026)
+  v0.4.2: Y0 is dynamic: 50 + 0.8*(H-520) on tall screens (iPhone ~169, iPad unchanged), so the clog
+          sits lower and the standing liquid above it is deeper (more ripples/particles, boss sits
+          lower in it); fittings fall at (distance to pipe)/2s, min 105 px/s, so they land in ~2s.
+
   MOJO BLAST — v0.4.1 (Nov 3 2026)
   v0.4.1: pipe sits at 80% of field height (was H-90); on phone-size screens (field < 520 css px
           wide) sprites are ~18% bigger: Mojo, crew, falling fittings, pipe thickness 14, drop r=6.
@@ -178,7 +183,8 @@ const IMG={};
 const ok=i=>i&&i.complete&&i.naturalWidth>0;
 
 /* ---------- field ---------- */
-const W=372,WT=8,COLS=11,BW=30,BH=14,SX=32,SY=16,X0=11,Y0=50;
+const W=372,WT=8,COLS=11,BW=30,BH=14,SX=32,SY=16,X0=11;
+let Y0=50; // top of the clog; drops lower on tall screens so the gap to the pipe stays arcade-like
 let H=640,SC=1,DPR=1,bg=null,BOOST=1; // BOOST: sprites a bit bigger on phone-size screens
 
 /* ---------- zones & levels ---------- */
@@ -452,7 +458,7 @@ function maybeDrop(x,y){if(caps.length||Math.random()>.16)return;dropCap(x,y)}
 function dropCap(x,y){
   const w=[['tee',18],['coupling',20],['jet',16],['plunger',17],['auger',14],['ganja',G.lives<5?7:0]];
   let s=w.reduce((a,b)=>a+b[1],0)*Math.random(),t='tee';for(const [k,v] of w){if((s-=v)<0){t=k;break}}
-  caps.push({t,x:clamp(x,WT+16,W-WT-16),y});
+  caps.push({t,x:clamp(x,WT+16,W-WT-16),y,vy:Math.max(105,(pad.y-y)/2)}); // reaches the pipe in ~2s
 }
 function applyCap(t){
   if(t!=='ganja'){sfx.power();setTimeout(()=>sfx['cap_'+t]&&sfx['cap_'+t](),190)}if(t!=='ganja')float(pad.x,pad.y-26,CAPS[t].n,'#fff');
@@ -513,7 +519,7 @@ function updEnemies(dt){
 function updBoss(dt){
   const z=zoneOf(G.lvl);boss.t+=dt;boss.flash=Math.max(0,boss.flash-dt);
   const k=.65+.35*Math.max(0,boss.hp)/boss.max,bw=(124+z*10)*k;boss.bw=bw;boss.rx=bw*.46;boss.ry=bw*.4;
-  boss.x=W/2+Math.sin(boss.t*.6*(1+z*.12))*(W/2-WT-bw*.5-4);boss.y=bw*.46+WT+8+Math.sin(boss.t*1.3)*5;
+  boss.x=W/2+Math.sin(boss.t*.6*(1+z*.12))*(W/2-WT-bw*.5-4);boss.y=bw*.46+WT+8+(Y0-50)+Math.sin(boss.t*1.3)*5;
   if(boss.dying){boss.dying-=dt;
     if(Math.random()<.7){const c=pick(['#ece3cc','#ece3cc','#e8a35a']);parts.push({x:boss.x+rand(-boss.rx,boss.rx),y:boss.y+rand(-boss.ry,boss.ry),vx:rand(-120,120),vy:rand(-160,20),t:1.3,m:1.3,c,s:rand(4,9)})}
     if(boss.dying<=0){boss=null;levelDone()}return}
@@ -568,7 +574,7 @@ function update(dt){
     if(!b.dead)for(const e of enemies){if(!e.dead&&Math.hypot(b.x-e.x,b.y-e.y)<e.r+3){hurtEnemy(e);b.dead=true;break}}
     if(b.y<-10)b.dead=true}
   blasts=blasts.filter(b=>!b.dead);
-  for(const c of caps){c.y+=105*dt;
+  for(const c of caps){c.y+=(c.vy||105)*dt;
     if(c.y+7>=pad.y&&c.y-7<=pad.y+pad.h&&Math.abs(c.x-pad.x)<pad.w/2+14){c.dead=true;applyCap(c.t)}
     else if(c.y>H+10)c.dead=true}
   caps=caps.filter(c=>!c.dead);
@@ -675,7 +681,7 @@ let liqP=[],drips=[],drained=false,flushT=0,splashed=false;
 const FLUSH_D=1.5;
 function buildLiq(){
   const L=LIQ[zoneOf(G.lvl)];liqP=[];drips=[];
-  for(let i=0;i<16;i++)liqP.push({x:rand(WT+2,W-WT-2),y:rand(WT+3,Y0-5),s:rand(.5,1),a:rand(0,6.3),c:pick(['#c77dff','#2fae5c','#f5c842','#ffffff'])});
+  for(let i=0,n=Math.round(16*(Y0-WT)/42);i<n;i++)liqP.push({x:rand(WT+2,W-WT-2),y:rand(WT+3,Y0-5),s:rand(.5,1),a:rand(0,6.3),c:pick(['#c77dff','#2fae5c','#f5c842','#ffffff'])});
   return L;
 }
 function updLiq(dt){
@@ -695,7 +701,7 @@ function drawLiquid(){
   const g=ctx.createLinearGradient(0,top,0,bot);g.addColorStop(0,L.d);g.addColorStop(1,L.c);
   ctx.globalAlpha=.92;ctx.fillStyle=g;ctx.fillRect(WT,top,W-2*WT,bot-top);
   ctx.strokeStyle=L.hi;ctx.lineWidth=1;
-  for(let i=0;i<3;i++){ctx.globalAlpha=.28;ctx.beginPath();const y=top+9+i*10;ctx.moveTo(WT,y);
+  for(let i=0,y=top+9;y<bot-3;i++,y+=11){ctx.globalAlpha=.28;ctx.beginPath();ctx.moveTo(WT,y);
     for(let x=WT;x<=W-WT;x+=8)ctx.lineTo(x,y+Math.sin(x*.05+t0*2+i*1.7)*1.6);ctx.stroke()}
   ctx.globalAlpha=.6;ctx.beginPath();ctx.moveTo(WT,bot);for(let x=WT;x<=W-WT;x+=8)ctx.lineTo(x,bot+Math.sin(x*.08+t0*3)*.8);ctx.stroke();
   for(const q of liqP){
@@ -918,7 +924,7 @@ function resize(){
   let sc=r.width/W,h=r.height/sc;if(h<500){h=500;sc=r.height/500}if(h>760)h=760;
   SC=sc;H=Math.round(h);DPR=Math.min(window.devicePixelRatio||1,3);
   cv.style.width=W*SC+'px';cv.style.height=H*SC+'px';cv.width=Math.round(W*SC*DPR);cv.height=Math.round(H*SC*DPR);
-  BOOST=W*SC<520?1.18:1;pad.h=BOOST>1?14:12;
+  BOOST=W*SC<520?1.18:1;Y0=50+Math.round(Math.max(0,H-520)*.8);pad.h=BOOST>1?14:12;
   pad.y=Math.round(H*.8);balls.forEach(b=>{if(b.held)b.y=pad.y-b.r-.5});buildBg();
 }
 addEventListener('resize',()=>setTimeout(resize,60));
@@ -991,7 +997,7 @@ function showTitle(){
     (SAVE.best?'<p class="small">Best score '+SAVE.best.toLocaleString()+'</p>':'')+
     '<button class="btn" data-a="play">'+(n>1?'Play level '+n:'Play')+'</button>'+
     '<div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="how">How to play</button></div>'+
-    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.4.1</p>');
+    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.4.2</p>');
   let seenTip=false;try{seenTip=localStorage.getItem('mojoBlastFullTip')==='1'}catch(e){}
   if(isIOS&&!isApp&&!seenTip&&!canFull)showTip();
 }
