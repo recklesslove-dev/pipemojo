@@ -15,6 +15,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <title>Mojo Blast | Pipe Mojo</title>
 <!--
+  MOJO BLAST — v0.3.2 (Nov 2 2026)
+  v0.3.2: blocks the iOS long-press magnifier/selection loupe on the play field.
+
   MOJO BLAST — v0.3.1 (Nov 2 2026)
   v0.3.1: field re-measures whenever the stage changes size (iOS home-screen app could report its
           height late and clip the bottom); stage can shrink below the canvas; pipe sits a bit
@@ -58,6 +61,7 @@ html,body{margin:0;height:100%;background:#0b0710;color:var(--ink);font-family:N
 #lives img{height:26px}
 #stage{flex:1 1 auto;min-height:0;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;touch-action:none;overflow:hidden}
 canvas{display:block;touch-action:none}
+#stage,canvas{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:calc(16px + var(--st)) 16px calc(16px + var(--sb));background:rgba(8,4,14,.74);z-index:5}
 #ov[hidden]{display:none}
 .card{width:min(92vw,390px);max-height:100%;overflow:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(#1c1130,#120a20);border:2px solid var(--line);border-radius:20px;padding:18px 16px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.6)}
@@ -889,6 +893,11 @@ addEventListener('keydown',e=>{keys[e.key]=true;if((e.key===' '||e.key==='ArrowU
 addEventListener('keyup',e=>{keys[e.key]=false});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='play')pause()});
 document.addEventListener('gesturestart',e=>e.preventDefault());
+// stop iOS long-press magnifier / text selection on the play field (pointer events still fire)
+const noTouch=e=>{if(e.cancelable)e.preventDefault()};
+stage.addEventListener('touchstart',noTouch,{passive:false});stage.addEventListener('touchmove',noTouch,{passive:false});
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('selectstart',e=>e.preventDefault());
 
 /* ---------- HUD ---------- */
 function hud(){
@@ -931,7 +940,7 @@ function showTitle(){
     (SAVE.best?'<p class="small">Best score '+SAVE.best.toLocaleString()+'</p>':'')+
     '<button class="btn" data-a="play">'+(n>1?'Play level '+n:'Play')+'</button>'+
     '<div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="how">How to play</button></div>'+
-    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.3.1</p>');
+    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.3.2</p>');
   let seenTip=false;try{seenTip=localStorage.getItem('mojoBlastFullTip')==='1'}catch(e){}
   if(isIOS&&!isApp&&!seenTip&&!canFull)showTip();
 }
