@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Mojo Board">
-<meta name="description" content="Pipe Mojo leaderboard: top Whack-a-Pipe scores, Flow levels, Mojo Roll wrenches and Hot & Cold jobs. Think you can beat Pipe Mojo?">
+<meta name="description" content="Pipe Mojo leaderboard: top Whack-a-Pipe scores, Flow levels, Mojo Roll wrenches, Hot & Cold jobs and Mojo Blast scores. Think you can beat Pipe Mojo?">
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Leaderboard | Pipe Mojo</title>
@@ -46,6 +46,10 @@ h1{font-family:var(--title);font-weight:400;font-size:clamp(3rem,13vw,4.4rem);li
 .card.whack{border-color:rgba(232,40,30,.45)}
 .card.flow{border-color:rgba(0,229,255,.4)}
 .card.roll{border-color:rgba(245,200,66,.45)}
+.card.blast{border-color:rgba(94,200,255,.45)}
+.blast h2{background:linear-gradient(90deg,#5ec8ff,#f5c842);-webkit-background-clip:text;background-clip:text;color:transparent}
+.blast li .s{color:#7fd3ff}
+.blast .play{background:linear-gradient(90deg,#2f8fe0,#5ec8ff);color:#06121c}
 .roll h2{color:var(--gold)}
 .roll li .s{color:var(--gold)}
 .roll .play{background:var(--gold);color:#241128}
@@ -128,6 +132,11 @@ li.msg{color:rgba(255,255,255,.55);font-weight:600}
       <ol id="list-hotcold"><li class="msg">Loading…</li></ol>
       <a class="play" href="/hotcold">Play Hot &amp; Cold</a>
     </section>
+    <section class="card blast" aria-labelledby="mb">
+      <header><h2 id="mb">Mojo Blast</h2><span>Best run</span></header>
+      <ol id="list-blast"><li class="msg">Loading…</li></ol>
+      <a class="play" href="/mojoblast">Play Mojo Blast</a>
+    </section>
   </div>
 
   <p class="you" id="you"></p>
@@ -135,7 +144,7 @@ li.msg{color:rgba(255,255,255,.55);font-weight:600}
   <section class="faq" aria-labelledby="faqh">
     <h2 id="faqh">Questions</h2>
     <details><summary>How do I get on the board?</summary>
-      <p>Play a round. In Whack-a-Pipe, claim a name on the Cursed screen when the round ends. In Flow, claim one in the leaderboard section under the board. In Mojo Roll, open the menu and tap Rank &amp; Board. In Hot &amp; Cold, claim one in the leaderboard section under the board. Your score posts right away, and every game after that posts on its own.</p></details>
+      <p>Play a round. In Whack-a-Pipe, claim a name on the Cursed screen when the round ends. In Flow, claim one in the leaderboard section under the board. In Mojo Roll, open the menu and tap Rank &amp; Board. In Hot &amp; Cold, claim one in the leaderboard section under the board. In Mojo Blast, open the menu and tap Rank &amp; Board. Your score posts right away, and every game after that posts on its own.</p></details>
     <details><summary>Is there a password?</summary>
       <p>No passwords and no email. When you claim a name, you get a one-time <b>recovery code</b>. Save it in Notes. It's the only way to sign back in to your name, and nobody can look it up for you, not even us.</p></details>
     <details><summary>How do I play on another phone or iPad?</summary>
@@ -147,7 +156,7 @@ li.msg{color:rgba(255,255,255,.55);font-weight:600}
     <details><summary>Why didn't my score post?</summary>
       <p>You need to be signed in to a name, and you need a connection. Whack-a-Pipe scores are also checked against how long the round actually lasted, so fake scores get turned away.</p></details>
     <details><summary>What's the insignia next to a name?</summary>
-      <p>That's the player's rank. Flow players are officers: every boss beaten (every 100 levels) is a promotion, from Second Lieutenant up to five-star General of the Army. Mojo Roll players are warrant officers: every 24 wrenches is a promotion, from Warrant Officer 1 up to Chief Warrant Officer 5. Whack-a-Pipe players are enlisted: every 100 points of their best score is a promotion, from Private up to Sergeant Major of the Army. Hot &amp; Cold players go by the trade: every inspection passed (every 25 jobs) is a promotion, from Helper through Apprentice, Journeyman, Foreman and Superintendent up to Master Plumber and Plumbing Contractor. After the top rank come Silver, Gold and Diamond finishes. Tap or hover an insignia to see the rank.</p></details>
+      <p>That's the player's rank. Flow players are officers: every boss beaten (every 100 levels) is a promotion, from Second Lieutenant up to five-star General of the Army. Mojo Roll players are warrant officers: every 24 wrenches is a promotion, from Warrant Officer 1 up to Chief Warrant Officer 5. Whack-a-Pipe players are enlisted: every 100 points of their best score is a promotion, from Private up to Sergeant Major of the Army. Mojo Blast players earn marksmanship badges from their best run: Marksman at 10,000, Sharpshooter at 50,000 and Expert at 120,000, with Rifle, Pistol and Grenade qualification bars in between. Hot &amp; Cold players go by the trade: every inspection passed (every 25 jobs) is a promotion, from Helper through Apprentice, Journeyman, Foreman and Superintendent up to Master Plumber and Plumbing Contractor. After the top rank come Silver, Gold and Diamond finishes. Tap or hover an insignia to see the rank.</p></details>
     <details><summary>What's the 1K badge?</summary>
       <p>The 1K Club. It's only for Flow players who have cleared level 1000 and Hot &amp; Cold players who have passed job 1000. Clear 2000 and it becomes 2K, and so on.</p></details>
     <details><summary>What's the 🔥 next to a name?</summary>
@@ -412,8 +421,50 @@ function tradeBadge(r){
   }
   return '<svg viewBox="0 0 200 200">'+defs+g+'</svg>';
 }
-/* the insignia next to a name: officers in Flow, enlisted in Whack-a-Pipe, warrant officers in Mojo Roll, trade ranks in Hot & Cold */
+/* Marksmanship (Mojo Blast): your best run score earns Marksman, Sharpshooter or Expert, plus qualification bars */
+const MK_AT=[10000,20000,35000,50000,70000,90000,120000,150000,180000,210000,230000,250000,270000];
+const MK_N=['Marksman','Marksman · Rifle','Marksman · Rifle, Pistol','Sharpshooter','Sharpshooter · Rifle','Sharpshooter · Rifle, Pistol',
+  'Expert','Expert · Rifle','Expert · Rifle, Pistol','Expert · Rifle, Pistol, Grenade','Silver Expert','Gold Expert','Diamond Expert'];
+const marksRank=b=>MK_AT.filter(t=>(+b||0)>=t).length;
+function marksName(r){return r<1?'No rank yet':MK_N[Math.min(13,r)-1]}
+const MK_M={pewter:{light:'#f1f3f5',mid:'#a9afb7',dark:'#5b6169',edge:'#23262b'},silver:{light:'#ffffff',mid:'#d9dee6',dark:'#7c8594',edge:'#23272e'},
+  gold:{light:'#fff4b0',mid:'#efc23e',dark:'#8f6210',edge:'#3d2804'},diamond:{light:'#ffffff',mid:'#a6ecff',dark:'#2f9bd0',edge:'#0b3550'}};
+let mkN=0;
+function mkWreath(cx,cy,R,F,E){let g='';
+  for(const side of [1,-1]){const P=a=>[cx+side*R*Math.cos(a*Math.PI/180),cy+R*Math.sin(a*Math.PI/180)];
+    let d='';for(let a=-50;a<=86;a+=4){const p=P(a);d+=(d?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)}
+    g+='<path d="'+d+'" fill="none" stroke="'+E+'" stroke-width="4.5" stroke-linecap="round"/><path d="'+d+'" fill="none" stroke="'+F+'" stroke-width="2.2" stroke-linecap="round"/>';
+    for(let a=-44;a<=80;a+=12){const p=P(a),tang=side>0?(a+90):(180-a-90);
+      for(const o of [-1,1])g+='<ellipse cx="0" cy="0" rx="8" ry="3.6" transform="translate('+p[0].toFixed(1)+' '+p[1].toFixed(1)+') rotate('+(tang+o*38).toFixed(0)+') translate(8 0)" fill="'+F+'" stroke="'+E+'" stroke-width="1.4"/>'}}
+  return g;
+}
+function marksBadge(r){
+  if(r<1)return '';r=Math.min(13,r);
+  const tier=r>=13?'diamond':r>=12?'gold':r>=11?'silver':'pewter',m=MK_M[tier],id='mk'+(mkN++);
+  const kind=r<=3?0:r<=6?1:2,bars=r<=3?r-1:r<=6?r-4:r<=10?r-7:3,BN=['RIFLE','PISTOL','GRENADE'];
+  const cx=100,cy=bars?(kind===2?58:62):98,R=bars?(kind===2?36:48):(kind===2?52:64),a=R*.5,k=R*.2;
+  let s='<svg viewBox="0 0 200 200"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+m.light+'"/><stop offset=".5" stop-color="'+m.mid+'"/><stop offset="1" stop-color="'+m.dark+'"/></linearGradient></defs>';
+  let prev=cy+R-6;
+  for(let i=0;i<bars;i++){const y=cy+R+(kind===2?24:8)+i*24;
+    s+='<path d="M72 '+prev+'V'+(y+2)+'M128 '+prev+'V'+(y+2)+'" stroke="'+m.dark+'" stroke-width="3" stroke-dasharray="3 2"/>'+
+      '<rect x="50" y="'+y+'" width="100" height="18" rx="3" fill="url(#'+id+')" stroke="'+m.edge+'" stroke-width="2.5"/>'+
+      '<text x="100" y="'+(y+13.5)+'" text-anchor="middle" font-family="Nunito,system-ui,sans-serif" font-weight="900" font-size="11" letter-spacing="2" fill="'+m.edge+'">'+BN[i]+'</text>';prev=y+18}
+  if(kind===2)s+=mkWreath(cx,cy,R+16,m.mid,m.edge);
+  const cross=(sc)=>{const RR=R*sc,A=a*sc,K=k*sc;return 'M'+(cx-K)+' '+(cy-K)+'L'+(cx-A)+' '+(cy-RR)+'Q'+cx+' '+(cy-RR+RR*.12)+' '+(cx+A)+' '+(cy-RR)+'L'+(cx+K)+' '+(cy-K)+
+    'L'+(cx+RR)+' '+(cy-A)+'Q'+(cx+RR-RR*.12)+' '+cy+' '+(cx+RR)+' '+(cy+A)+'L'+(cx+K)+' '+(cy+K)+
+    'L'+(cx+A)+' '+(cy+RR)+'Q'+cx+' '+(cy+RR-RR*.12)+' '+(cx-A)+' '+(cy+RR)+'L'+(cx-K)+' '+(cy+K)+
+    'L'+(cx-RR)+' '+(cy+A)+'Q'+(cx-RR+RR*.12)+' '+cy+' '+(cx-RR)+' '+(cy-A)+'Z'};
+  s+='<path d="'+cross(1)+'" fill="url(#'+id+')" stroke="'+m.edge+'" stroke-width="4" stroke-linejoin="round"/>'+
+     '<path d="'+cross(.74)+'" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="2" stroke-linejoin="round"/>';
+  if(kind>=1)s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(R*.34).toFixed(1)+'" fill="'+m.dark+'" stroke="'+m.edge+'" stroke-width="2.5"/>'+
+     '<circle cx="'+cx+'" cy="'+cy+'" r="'+(R*.23).toFixed(1)+'" fill="url(#'+id+')"/><circle cx="'+cx+'" cy="'+cy+'" r="'+(R*.1).toFixed(1)+'" fill="'+m.edge+'"/>';
+  else s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(R*.12).toFixed(1)+'" fill="'+m.dark+'" stroke="'+m.edge+'" stroke-width="2"/>';
+  if(tier==='diamond')s+='<path d="M'+(cx+R*.55)+' '+(cy-R*.75)+'l3 9 9 3-9 3-3 9-3-9-9-3 9-3z" fill="#fff"/>';
+  return s+'</svg>';
+}
+/* the insignia next to a name: officers in Flow, enlisted in Whack-a-Pipe, warrant officers in Mojo Roll, trade ranks in Hot & Cold, marksmanship in Mojo Blast */
 function rankHTML(game,best){
+  if(game==='blast'){const r=marksRank(best);return r?'<span class="ri" title="'+marksName(r)+'">'+marksBadge(r)+'</span>':''}
   if(game==='hotcold'){const r=Math.floor(best/25);return r?'<span class="ri" title="'+tradeName(r)+'">'+tradeBadge(r)+'</span>':''}
   if(game==='roll'){const r=Math.min(5,Math.floor(best/24));return r?'<span class="ri" title="'+warrantName(r)+'">'+armyWarrant(r)+'</span>':''}
   if(best<100)return '';const n=Math.floor(best/100);
@@ -453,10 +504,10 @@ async function load(game,unit){
     const r=await fetch(API+'/top?game='+game);const d=await r.json();
     const top=d.top||[];
     if(!top.length){ol.innerHTML='<li class="msg">No scores yet. Be the first.</li>';return}
-    ol.innerHTML=top.map((x,i)=>'<li'+(me&&key(x.name)===key(me)?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+rankHTML(game,x.best)+'<span class="nm">'+esc(x.name)+'</span>'+((game==='flow'||game==='hotcold')&&x.best>=1000?'<span class="k1" title="'+Math.floor(x.best/1000)+'K Club">'+badgeK(Math.floor(x.best/1000))+'</span>':'')+(x.streak>=2?' <span class="fl" title="Best par streak">🔥'+x.streak+'</span>':'')+'</span><span class="s">'+unit+x.best+'</span></li>').join('');
+    ol.innerHTML=top.map((x,i)=>'<li'+(me&&key(x.name)===key(me)?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+rankHTML(game,x.best)+'<span class="nm">'+esc(x.name)+'</span>'+((game==='flow'||game==='hotcold')&&x.best>=1000?'<span class="k1" title="'+Math.floor(x.best/1000)+'K Club">'+badgeK(Math.floor(x.best/1000))+'</span>':'')+(x.streak>=2?' <span class="fl" title="Best par streak">🔥'+x.streak+'</span>':'')+'</span><span class="s">'+unit+(game==='blast'?Number(x.best).toLocaleString():x.best)+'</span></li>').join('');
   }catch(e){ol.innerHTML='<li class="msg">Couldn\'t load the board. Try again in a bit.</li>'}
 }
-load('whack','');load('flow','Lv ');load('roll','🔧 ');load('hotcold','Job ');
+load('whack','');load('flow','Lv ');load('roll','🔧 ');load('hotcold','Job ');load('blast','');
 })();
 </script>
 </body>

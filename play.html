@@ -81,6 +81,10 @@ h1{font-family:var(--title);font-weight:400;font-size:clamp(2.8rem,12vw,4rem);li
 .game.hotcold h2{background:linear-gradient(90deg,#ff4a3d,#ffffff,#2f8cff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .hotcold .go{background:linear-gradient(90deg,#ff4a3d,#2f8cff);color:#fff}
 .hotcold .top3 .s{color:#ff8a7f}
+.game.blast{border-color:rgba(94,200,255,.45)}
+.game.blast h2{background:linear-gradient(90deg,#5ec8ff,#f5c842);-webkit-background-clip:text;background-clip:text;color:transparent}
+.blast .go{background:linear-gradient(90deg,#2f8fe0,#5ec8ff);color:#06121c}
+.blast .top3 .s{color:#7fd3ff}
 .game.roll{border-color:rgba(245,200,66,.45)}
 .game.roll h2{color:var(--gold)}
 .roll .go{background:var(--gold);color:#241128}
@@ -183,6 +187,27 @@ footer{text-align:center;color:rgba(255,255,255,.3);font-size:.8rem;margin-top:3
       <span class="go">Play</span>
     </a>
 
+    <a class="game blast" href="/mojoblast">
+      <svg viewBox="0 0 96 96" aria-hidden="true">
+        <rect x="0" y="0" width="96" height="96" rx="12" fill="#0c1a12"/>
+        <rect x="0" y="0" width="96" height="16" fill="#3e5a2b"/><path d="M4 9 Q16 6 28 9 T52 9 T76 9 T96 9" fill="none" stroke="#8fb35a" stroke-width="1.5" opacity=".7"/>
+        <g stroke="#2a1a08" stroke-width="1">
+          <rect x="6" y="20" width="18" height="8" fill="#e7bf4f"/><rect x="27" y="20" width="18" height="8" fill="#6e4b2c"/><rect x="48" y="20" width="18" height="8" fill="#e7bf4f"/><rect x="69" y="20" width="18" height="8" fill="#7c9a3a"/>
+          <rect x="16" y="30" width="18" height="8" fill="#a3acb6"/><rect x="58" y="30" width="18" height="8" fill="#6e4b2c"/></g>
+        <circle cx="44" cy="50" r="4.5" fill="#5ec8ff"/><circle cx="42.6" cy="48.6" r="1.4" fill="#e8f8ff"/>
+        <rect x="24" y="58" width="40" height="8" rx="2" fill="#c9ced6" stroke="#4a5058" stroke-width="1.5"/>
+        <rect x="21" y="56" width="6" height="12" rx="1.5" fill="#a7b0b6"/><rect x="61" y="56" width="6" height="12" rx="1.5" fill="#a7b0b6"/>
+        <image href="/assets/mojo-hose.png" x="33" y="66" width="18" height="30"/>
+      </svg>
+      <div>
+        <h2>Mojo Blast</h2>
+        <p>Bust the clog and flush the line. Five boss clogs wait at the end.</p>
+        <span class="best" id="blastBest"></span>
+        <ol class="top3" id="top-blast" aria-label="Mojo Blast top 3"></ol>
+      </div>
+      <span class="go">Play</span>
+    </a>
+
     <a class="game locker" href="/locker">
       <span class="lk-thumb" aria-hidden="true"><img src="/assets/mojo-front.png" alt=""></span>
       <div>
@@ -209,6 +234,9 @@ try{
   if(h>1)document.getElementById('hcBest').textContent='Furthest: job '+h;
   var rs=JSON.parse(localStorage.getItem('pm-roll-sum')||'null')||{},rw=+(rs.w||rs.s||0);
   if(rw>0)document.getElementById('rollBest').textContent='Wrenches: '+rw+' / 120';
+  var bk='pm-blast-save',ba=JSON.parse(localStorage.getItem('pm-lb')||'null');if(ba&&ba.name)bk+=':'+String(ba.name).toLowerCase().replace(/ /g,'');
+  var bs=JSON.parse(localStorage.getItem(bk)||'null')||{},bb=+(bs.best||0);
+  if(bb>0)document.getElementById('blastBest').textContent='Best run: '+bb.toLocaleString();
 }catch(e){}
 (function(){
   var API='https://pipemojo-leaderboard.fvidaurri.workers.dev';
@@ -217,11 +245,11 @@ try{
     fetch(API+'/top?game='+game).then(function(r){return r.json()}).then(function(d){
       var top=(d.top||[]).slice(0,3);if(!top.length)return;
       document.getElementById('top-'+game).innerHTML=top.map(function(x,i){
-        return '<li><span class="r">'+(i+1)+'</span><span class="n">'+esc(x.name)+'</span><span class="s">'+unit+x.best+'</span></li>';
+        return '<li><span class="r">'+(i+1)+'</span><span class="n">'+esc(x.name)+'</span><span class="s">'+unit+(game==='blast'?Number(x.best).toLocaleString():x.best)+'</span></li>';
       }).join('');
     }).catch(function(){});
   }
-  load('whack','');load('flow','Lv ');load('hotcold','Job ');load('roll','🔧 ');
+  load('whack','');load('flow','Lv ');load('hotcold','Job ');load('roll','🔧 ');load('blast','');
 })();
 </script>
 </body>

@@ -164,7 +164,7 @@ a{color:inherit;text-decoration:none}
   <button class="pill" id="sound" aria-pressed="true">Sound on</button>
 </div>
 
-<p class="ver">Locker v1.15</p>
+<p class="ver">Locker v1.16</p>
 <section class="gear" id="gear" aria-label="Your gear" aria-hidden="true">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="gearTitle">
     <div class="sheetHead"><h2 id="gearTitle">Your gear</h2><button class="close" id="close">Close</button></div>
@@ -515,6 +515,7 @@ function armyEnlisted(r){
 function renderRank(){
   const stars=Math.max(0,Math.floor((level-1)/100)),wr=Math.floor(WBEST/100),rs=+RSUM.s||0,ro=Math.min(5,Math.floor(rs/24));
   const hp=hcPassed(),hr=Math.floor(hp/25),hn=hr<11?hr+1:hr<14?14:hr<17?17:hr<20?20:0;
+  const bb=+BSUM.best||0,br=mR(bb);
   const next=(stars+1)*100,pct=Math.round(((level-1)%100)/100*100);
   const ladder=(n,fn,nameFn,cur)=>'<div class="ladder">'+Array.from({length:n},(_,i)=>'<div class="'+(cur===i+1||(i+1===n&&cur>n)?'on':cur>i+1?'':'dim')+'">'+fn(i+1)+nameFn(i+1)+'</div>').join('')+'</div>';
   $('p-rank').innerHTML='<div class="rank"><h3 class="sec">Flow · Officer</h3><div class="ins">'+(stars?armyOfficer(stars):'')+'</div><h3>'+officerName(stars)+'</h3>'+
@@ -529,7 +530,10 @@ function renderRank(){
     ladder(5,armyWarrant,warrantName,ro)+'<p class="note">Every 24 wrenches is a promotion. Levels cleared with a hint don\'t count.</p>'+
     '<h3 class="sec" style="margin-top:22px">Hot &amp; Cold · Trade</h3><div class="ins">'+(hr?tB(hr):'')+'</div><h3>'+tN(hr)+'</h3>'+
     '<p class="sub">'+hp+' jobs passed · '+(hn?'next: '+tN(hn)+' at job '+hn*25:'top finish')+'</p>'+
-    ladder(11,tB,tN,hr)+'<p class="note">Every inspection you pass (every 25 jobs) is a promotion. After Plumbing Contractor: Silver at 350, Gold at 425, Diamond at 500.</p></div>';
+    ladder(11,tB,tN,hr)+'<p class="note">Every inspection you pass (every 25 jobs) is a promotion. After Plumbing Contractor: Silver at 350, Gold at 425, Diamond at 500.</p>'+
+    '<h3 class="sec" style="margin-top:22px">Mojo Blast · Marksmanship</h3><div class="ins">'+(br?mB(br):'')+'</div><h3>'+mN(br)+'</h3>'+
+    '<p class="sub">Best run '+bb.toLocaleString()+' · '+(br>=13?'top rank':'next: '+mN(br+1)+' at '+mAt(br).toLocaleString())+'</p>'+
+    ladder(13,mB,mN,br)+'<p class="note">Your best single run sets your badge: Marksman at 10,000, Sharpshooter at 50,000, Expert at 120,000. Clearing all 40 levels scores about 250,000.</p></div>';
 }
 
 /* chevron rank (Whack-a-Pipe): a chevron for every 100 points of your best score */
@@ -590,6 +594,33 @@ const HTRO=[
   {id:'p1',name:'Clean Work',desc:'Finish a job on par',art:'🔧'},{id:'p25',name:'Pipe Wizard',desc:'Finish 25 jobs on par',art:'🪄'},{id:'p100',name:'Master Craftsman',desc:'Finish 100 jobs on par',art:'🛠️'},
   {id:'s5',name:'On a Roll',desc:'Par streak of 5',art:'🔥5'},{id:'s10',name:'Hot Hand',desc:'Par streak of 10',art:'🔥10'},{id:'s25',name:'Untouchable',desc:'Par streak of 25',art:'🔥25'}
 ].concat([100,200,300,400,500,600,700,800,900].map(n=>({id:'c'+n,name:n+' Club',desc:'Clear job '+n,art:clubMini(n)})),[{id:'k1000',name:'1K Club',desc:'Clear job 1000',art:badgeK(1)}]);
+/* Mojo Blast: the game saves your progress on this device (pm-blast-save, one per player) and to your name */
+const BKEY='pm-blast-save'+(WACC?':'+WACC:'');
+let BSUM=(()=>{try{return JSON.parse(localStorage.getItem(BKEY)||'null')||{}}catch(e){return {}}})();
+const mB=r=>window.PMLB&&PMLB.marksBadge?PMLB.marksBadge(r):'',mN=r=>window.PMLB&&PMLB.marksName?PMLB.marksName(r):(r?'Rank '+r:'No rank yet');
+const mR=b=>window.PMLB&&PMLB.marksRank?PMLB.marksRank(b):0,mAt=r=>window.PMLB&&PMLB.MK_AT?PMLB.MK_AT[Math.min(12,r)]:0;
+const BTRO=[
+  {id:'b1',name:'Root Cutter',desc:'Beat the Root Ball',art:img('boss-rootball')},{id:'b2',name:'Degreaser',desc:'Beat the Fatberg',art:img('fatberg')},
+  {id:'b3',name:'Hair Puller',desc:'Beat the Hairball',art:img('boss-hairball')},{id:'b4',name:'Wipe Out',desc:'Beat the Wipe Beast',art:img('boss-wipebeast')},
+  {id:'b5',name:'Scale Breaker',desc:'Beat the Scale King',art:img('boss-scaleking')},{id:'fin',name:'Line\'s Open',desc:'Beat all 40 levels',art:'🏆'},
+  {id:'ftee',name:'Tee\'d Up',desc:'Catch 25 Tees',art:'🔱'},{id:'fcpl',name:'Coupled Up',desc:'Catch 25 Couplings',art:'🔗'},
+  {id:'fjet',name:'Jet Setter',desc:'Catch 25 Hydrojetters',art:'💦'},{id:'fplg',name:'Plunger Pro',desc:'Catch 25 Plungers',art:'🪠'},
+  {id:'faug',name:'Snake Charmer',desc:'Catch 25 Auger bits',art:'🌀'},{id:'fgan',name:'Ganja\'s Buddy',desc:'Catch Ganja 10 times',art:img('ganja-front')},
+  {id:'czy',name:'Fly Swatter',desc:'Swat Zydeco 25 times',art:img('fly-front')},{id:'cbe',name:'Grub Buster',desc:'Knock out Beignet 25 times',art:img('maggot-front')},
+  {id:'cro',name:'Crawfish Boil',desc:'Take down Roux 25 times',art:img('crawfish-front')},
+  {id:'nm1',name:'Clean Shot',desc:'Clear a level without losing a life',art:'🎯'},{id:'nmz',name:'Steady Hand',desc:'Clear a whole zone in one run without losing a life',art:'✋'},
+  {id:'nmb',name:'Untouchable',desc:'Beat a boss without losing a life',art:'🛡️'},
+  {id:'p100',name:'Hundred Grand',desc:'Score 100,000 in one run',art:'💯'},{id:'p250',name:'Quarter Million',desc:'Score 250,000 in one run',art:'💰'},
+  {id:'f100',name:'Line Flusher',desc:'Flush 100 lines',art:'🚽'}
+];
+const BSEC=[{id:'sbut',name:'Butterfingers',desc:'Lost a drop 2 seconds after launching it',art:'🧈'},{id:'sric',name:'Ricochet',desc:'Broke 10 bricks with one drop before it came back',art:'🎱'},
+  {id:'sovr',name:'Overflow',desc:'Had 9 drops in play at once',art:'🌊'},{id:'slast',name:'Last Drop',desc:'Cleared a level on your last life',art:'💧'}];
+function blastHTML(){
+  const have=Array.isArray(BSUM.tro)?BSUM.tro:[],em=a=>a.charAt(0)==='<'?a:'<span style="font-size:1.5rem">'+a+'</span>';
+  return '<h3 class="sec">Mojo Blast</h3><p class="note">'+BTRO.filter(t=>have.includes(t.id)).length+' of '+BTRO.length+' trophies · best run '+(+BSUM.best||0).toLocaleString()+'.</p><div class="grid">'+
+    BTRO.map(t=>tile(have.includes(t.id),em(t.art),t.name,t.desc)).join('')+
+    BSEC.map(t=>have.includes(t.id)?tile(true,em(t.art),t.name,t.desc):tile(false,em('❓'),'???','Keep blasting')).join('')+'</div>';
+}
 function hcHTML(){
   const have=Array.isArray(HSUM.tro)?HSUM.tro:[],em=a=>a.charAt(0)==='<'?a:'<span style="font-size:1.4rem">'+a+'</span>';
   return '<h3 class="sec">Hot &amp; Cold</h3><p class="note">'+HTRO.filter(t=>have.includes(t.id)).length+' of '+HTRO.length+' trophies · '+hcPassed()+' jobs passed.</p><div class="grid">'+
@@ -652,7 +683,7 @@ function renderTrophies(){
   const got=trophies.filter(t=>!/^b/.test(t)).length;
   $('p-trophies').innerHTML='<h3 class="sec">Flow</h3><p class="note">'+got+' of '+TROPHIES.length+' trophies. Boss trophies and crowns are earned in Flow.</p><div class="grid">'+h+'</div>'+
     '<h3 class="sec">Whack-a-Pipe</h3><p class="note">'+WTROS.length+' of '+WTRO.length+' trophies.</p><div class="grid">'+WTRO.map(t=>tile(WTROS.includes(t.id),t.art,t.name,t.desc)).join('')+'</div>'+
-    rollHTML()+hcHTML()+extrasHTML();
+    rollHTML()+hcHTML()+blastHTML()+extrasHTML();
 }
 
 /* pipe skins: shown now, equipping arrives with the next Flow update */
@@ -707,13 +738,14 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()
   document.querySelectorAll('[data-tab]').forEach(x=>{const on=x===b;x.setAttribute('aria-selected',String(on));$('p-'+x.dataset.tab).hidden=!on});Snd.pick();
 }));
 function checkDouble(){if(window.PMX&&STARS>=1&&WBEST>=100)PMX.award('double','🎖️ Secret trophy: Double Duty');if(window.PMX&&STARS>=1&&WBEST>=100&&(+RSUM.s||0)>=24)PMX.award('triple','🎖️ Secret trophy: Triple Threat');
-  if(window.PMX&&STARS>=1&&WBEST>=100&&(+RSUM.s||0)>=24&&hcPassed()>=25)PMX.award('jack','🧰 Secret trophy: Jack of All Trades')}
+  if(window.PMX&&STARS>=1&&WBEST>=100&&(+RSUM.s||0)>=24&&hcPassed()>=25&&(+BSUM.best||0)>=10000)PMX.award('jack','🧰 Secret trophy: Jack of All Trades')}
 if(window.PMX){PMX.onAward=n=>{say(n);Snd.pick();if(opened)renderTrophies()};PMX.sync();setTimeout(()=>{PMX.tick();checkDouble();if(opened)renderTrophies()},1500)}
 function showDoorBadge(){const d=$('doorBadge');if(level>1000||trophies.includes('k1000')){d.innerHTML=badgeK(Math.max(1,Math.floor((level-1)/1000)));d.hidden=false}}
 showDoorBadge();
 /* signed in: pull your ranks from your name, so every device shows the same thing */
 if(window.PMLB&&PMLB.account()){
-  Promise.all([PMLB.cloudLoad('flow'),PMLB.cloudLoad('whack'),PMLB.cloudLoad('roll').catch(()=>null),PMLB.cloudLoad('hotcold').catch(()=>null)]).then(([f,w,r,h])=>{
+  Promise.all([PMLB.cloudLoad('flow'),PMLB.cloudLoad('whack'),PMLB.cloudLoad('roll').catch(()=>null),PMLB.cloudLoad('hotcold').catch(()=>null),PMLB.cloudLoad('blast').catch(()=>null)]).then(([f,w,r,h,bl])=>{
+    if(bl&&bl.v===1){BSUM=Object.assign({},BSUM,{best:Math.max(+BSUM.best||0,+bl.best||0),unl:Math.max(+BSUM.unl||1,+bl.unl||1),tro:[...new Set((BSUM.tro||[]).concat(bl.tro||[]))]})}
     if(h&&h.v===1){HSUM=Object.assign({},HSUM,{level:Math.max(+HSUM.level||1,+h.level||1),best:Math.max(+HSUM.best||1,+h.best||1),tro:[...new Set((HSUM.tro||[]).concat(h.tro||[]))]})}
     if(r&&r.sum){const t=[...new Set((RSUM.tro||[]).concat(r.sum.tro||[]))];if((+r.sum.s||0)>=(+RSUM.s||0))RSUM=Object.assign({},r.sum);RSUM.tro=t;try{localStorage.setItem('pm-roll-sum',JSON.stringify(RSUM))}catch(e){}}
     if(f&&f.v===1){const fl=f.solved?f.level+1:f.level;if(fl>level){level=fl;if(Array.isArray(f.trophies))trophies=f.trophies;STARS=Math.max(0,Math.floor((level-1)/100))}}

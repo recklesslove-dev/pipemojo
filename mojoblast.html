@@ -15,6 +15,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <title>Mojo Blast | Pipe Mojo</title>
 <!--
+  MOJO BLAST — v1.0 (Nov 3 2026) — LIVE
+  v1.0: linked from /play. lb.js (names, leaderboard game key 'blast', cloud save) and extras.js
+        (daily streak, holidays, cross-game secrets). Score posted = the run's score after every
+        level clear and at game over; a run can start at any unlocked level (scored from 0), so a
+        full run from level 1 always scores the most. Restart level rolls the score back to the level
+        start (no farming). Save = 'pm-blast-save[:name]' {v,unl,best,tro,c,savedAt}, merged by max;
+        the test build's 'mojoBlast1' migrates once. Rank = marksmanship from best run (lb.js
+        marksRank/marksBadge/marksName). 21 trophies + 4 secrets (same ids as BTRO/BSEC in the
+        Locker). LINE'S OPEN finale on beating level 40. Title + finale use mojo-hose.png.
+
   MOJO BLAST — v0.5 (Nov 3 2026)
   v0.5: five bosses, one per zone (BOSSES table: image, body centre, hit ellipse, mouth, line, chunk
         and sludge colours): Root Ball (Bayou, /assets/boss-rootball.png), Fatberg (Quarter), Hairball
@@ -142,6 +152,21 @@ body.rot #rot{display:flex}
 @keyframes turn{0%,25%{transform:rotate(-90deg)}65%,100%{transform:rotate(0)}}
 .steps{text-align:left;margin:10px 0 4px;padding-left:22px;color:var(--ink);line-height:1.5}
 @media (prefers-reduced-motion:reduce){.pn-mojo.hop,.pn-mojo.wince,#rot .ph{animation:none}}
+#toast{position:fixed;left:50%;top:calc(10px + var(--st));transform:translateX(-50%);z-index:20;background:#241638;border:1px solid var(--gold);color:var(--ink);
+  font:800 14px Nunito,sans-serif;padding:9px 14px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.5);max-width:90vw;text-align:center}
+.rankins svg{width:118px;height:118px}.rankins:empty{display:none}
+.rn{font:900 20px Nunito,sans-serif;margin:2px 0;color:var(--ink)}
+.tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:8px 0}
+.tile{background:#24163b;border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center;min-height:96px}
+.tile .ta{display:flex;align-items:center;justify-content:center;height:42px;font-size:26px}.tile .ta img{max-height:42px;max-width:52px}
+.tile b{display:block;font:900 12px Nunito,sans-serif;color:var(--ink);margin-top:3px}.tile small{display:block;font-size:10.5px;color:var(--dim);line-height:1.25}
+.tile.locked{opacity:.33}
+.finale .cup{width:132px;height:143px;margin:4px auto 0;display:block;animation:cupdrop .9s cubic-bezier(.2,.9,.3,1.25) both}
+.finale .hopper{height:92px;animation:hop2 .42s ease-in-out infinite alternate}
+@keyframes cupdrop{0%{transform:translateY(-140px) scale(.5);opacity:0}70%{transform:translateY(6px) scale(1.06);opacity:1}100%{transform:none}}
+@keyframes hop2{from{transform:translateY(0)}to{transform:translateY(-12px)}}
+@media (prefers-reduced-motion:reduce){.finale .cup,.finale .hopper{animation:none}}
+.lb{text-align:left;margin-top:10px}
 </style>
 </head>
 <body>
@@ -170,6 +195,10 @@ body.rot #rot{display:flex}
 </div>
 <div id="rot"><div class="ph"></div><h2 style="margin-top:24px">Turn it upright</h2><p>Mojo Blast plays standing up on iPhone.</p></div>
 <div id="ov" hidden></div>
+<div id="toast" hidden></div>
+<div id="lbHold" hidden><div id="lbBox"></div></div>
+<script src="/lb.js"></script>
+<script src="/extras.js"></script>
 <script>
 (()=>{
 'use strict';
@@ -180,10 +209,33 @@ const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 
 /* ---------- storage ---------- */
-const SK='mojoBlast1';
-let SAVE={unl:1,best:0};
-try{const s=JSON.parse(localStorage.getItem(SK)||'null');if(s)SAVE=Object.assign(SAVE,s)}catch(e){}
-const persist=()=>{try{localStorage.setItem(SK,JSON.stringify(SAVE))}catch(e){}};
+/* saves: progress on this device (one slot per player, 'pm-blast-save' alone is the guest) and on your name when signed in */
+const SK='pm-blast-save';
+const nameKey=x=>String(x||'').toLowerCase().replace(/ /g,'');
+const acct=()=>window.PMLB?PMLB.account():null;
+const slotFor=a=>a?SK+':'+nameKey(a.name):SK;
+const blankS=()=>({v:1,unl:1,best:0,tro:[],c:{},savedAt:0});
+let SAVE=blankS(),owner='',cloudReady=false;
+const snap=()=>({v:1,unl:SAVE.unl,best:SAVE.best,tro:SAVE.tro.slice(),c:Object.assign({},SAVE.c),savedAt:Date.now()});
+const validSave=s=>!!(s&&s.v===1&&s.unl>=1);
+function loadSlot(k){try{const s=JSON.parse(localStorage.getItem(k)||'null');if(validSave(s))return s}catch(e){}return null}
+function mergeSaves(a,b){ // progress only goes up, so two saves of the same player combine safely
+  if(!a)return b||null;if(!b)return a;const c={};for(const k of new Set(Object.keys(a.c||{}).concat(Object.keys(b.c||{}))))c[k]=Math.max(+(a.c||{})[k]||0,+(b.c||{})[k]||0);
+  return {v:1,unl:Math.max(+a.unl||1,+b.unl||1),best:Math.max(+a.best||0,+b.best||0),tro:[...new Set((a.tro||[]).concat(b.tro||[]))],c,savedAt:Math.max(+a.savedAt||0,+b.savedAt||0)};
+}
+function applySave(s){s=s||blankS();SAVE={v:1,unl:Math.max(1,Math.min(40,+s.unl||1)),best:Math.max(0,+s.best||0),tro:Array.isArray(s.tro)?s.tro.slice():[],c:Object.assign({},s.c||{}),savedAt:+s.savedAt||0}}
+function saveGame(cloud){
+  const a=acct();if(owner===null||nameKey(a&&a.name)!==owner)return; // never save one player's progress into another's slot
+  const o=snap();try{localStorage.setItem(slotFor(a),JSON.stringify(o))}catch(e){}
+  if(cloud&&a&&cloudReady&&window.PMLB)PMLB.cloudSave('blast',o);
+}
+const persist=()=>saveGame(true);
+(function(){try{ // one-time move from the test build's save
+  const old=JSON.parse(localStorage.getItem('mojoBlast1')||'null');
+  if(old&&!localStorage.getItem(SK)&&!localStorage.getItem(slotFor(acct())))localStorage.setItem(slotFor(acct()),JSON.stringify(Object.assign(blankS(),{unl:+old.unl||1,best:+old.best||0,savedAt:Date.now()})));
+  const a=acct();if(a&&!localStorage.getItem(slotFor(a))&&localStorage.getItem(SK)){localStorage.setItem(slotFor(a),localStorage.getItem(SK));localStorage.removeItem(SK)}
+}catch(e){}})();
+owner=nameKey((acct()||{}).name);applySave(loadSlot(slotFor(acct())));
 let muted=false;try{muted=localStorage.getItem('pipeBlastMuted')==='1'}catch(e){}
 
 /* ---------- images ---------- */
@@ -342,6 +394,9 @@ const sfx={
  spit:()=>{noise(.14,.14,600,'lowpass');tone(220,.12,'sine',.14,110)},
  bossDie:()=>{noise(.9,.25,500,'lowpass');seq([392,523,659,784,1047],.11,.2,.1);seq([98,131,165,196,262],.11,.2,.16,tri)},
  ui:()=>sq(880,.035,.05),
+ finale:()=>{noise(.5,.12,800,'lowpass');for(let i=0;i<8;i++)noise(.05,.1,2500,'bandpass',i*.07);
+   const br=(f,d,dl)=>{tone(f,d,'sawtooth',.06,null,dl);tri(f/2,d,.12,null,dl)};
+   [392,523,659,784].forEach((f,i)=>br(f,.16,.6+i*.14));[523,659,784,1047].forEach(f=>br(f,1.1,1.25));sq(1568,.9,.04,null,1.3)},
  whoosh:()=>{if(muted)return;const a=au();if(!a)return;const t=a.currentTime;
    const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=NB;s.loop=true;f.type='bandpass';f.Q.value=.7;
    f.frequency.setValueAtTime(260,t);f.frequency.exponentialRampToValueAtTime(2400,t+.5);f.frequency.exponentialRampToValueAtTime(380,t+1.4);
@@ -382,7 +437,33 @@ const bricksBottom=()=>rows?Y0+rows*SY:150;
 
 function say(s,d){sayO={s,t:d||2.2}}
 function newBall(){return{x:pad.x,y:pad.y-6,vx:0,vy:0,r:BOOST>1?6:5,sp:G.base,held:true,caught:false,ox:rand(-7,7),holdT:0,cool:0,tr:[]}}
-function addScore(n){G.score+=n;while(G.score>=G.nextLife){G.nextLife+=25000;gainLife()}hud()}
+function addScore(n){G.score+=n;while(G.score>=G.nextLife){G.nextLife+=25000;gainLife()}
+  if(G.score>=100000)award('p100');if(G.score>=250000)award('p250');hud()}
+/* ---------- trophies (same list as BTRO/BSEC in the Locker) ---------- */
+const AI=k=>'<img src="/assets/'+k+'.png" alt="">';
+const TRO=[
+  {id:'b1',name:'Root Cutter',desc:'Beat the Root Ball',art:AI('boss-rootball')},{id:'b2',name:'Degreaser',desc:'Beat the Fatberg',art:AI('fatberg')},
+  {id:'b3',name:'Hair Puller',desc:'Beat the Hairball',art:AI('boss-hairball')},{id:'b4',name:'Wipe Out',desc:'Beat the Wipe Beast',art:AI('boss-wipebeast')},
+  {id:'b5',name:'Scale Breaker',desc:'Beat the Scale King',art:AI('boss-scaleking')},{id:'fin',name:'Line\'s Open',desc:'Beat all 40 levels',art:'🏆'},
+  {id:'ftee',name:'Tee\'d Up',desc:'Catch 25 Tees',art:'🔱'},{id:'fcpl',name:'Coupled Up',desc:'Catch 25 Couplings',art:'🔗'},
+  {id:'fjet',name:'Jet Setter',desc:'Catch 25 Hydrojetters',art:'💦'},{id:'fplg',name:'Plunger Pro',desc:'Catch 25 Plungers',art:'🪠'},
+  {id:'faug',name:'Snake Charmer',desc:'Catch 25 Auger bits',art:'🌀'},{id:'fgan',name:'Ganja\'s Buddy',desc:'Catch Ganja 10 times',art:AI('ganja-front')},
+  {id:'czy',name:'Fly Swatter',desc:'Swat Zydeco 25 times',art:AI('fly-front')},{id:'cbe',name:'Grub Buster',desc:'Knock out Beignet 25 times',art:AI('maggot-front')},
+  {id:'cro',name:'Crawfish Boil',desc:'Take down Roux 25 times',art:AI('crawfish-front')},
+  {id:'nm1',name:'Clean Shot',desc:'Clear a level without losing a life',art:'🎯'},{id:'nmz',name:'Steady Hand',desc:'Clear a whole zone in one run without losing a life',art:'✋'},
+  {id:'nmb',name:'Untouchable',desc:'Beat a boss without losing a life',art:'🛡️'},
+  {id:'p100',name:'Hundred Grand',desc:'Score 100,000 in one run',art:'💯'},{id:'p250',name:'Quarter Million',desc:'Score 250,000 in one run',art:'💰'},
+  {id:'f100',name:'Line Flusher',desc:'Flush 100 lines',art:'🚽'}
+];
+const TSEC=[{id:'sbut',name:'Butterfingers',desc:'Lost a drop 2 seconds after launching it',art:'🧈'},{id:'sric',name:'Ricochet',desc:'Broke 10 bricks with one drop before it came back',art:'🎱'},
+  {id:'sovr',name:'Overflow',desc:'Had 9 drops in play at once',art:'🌊'},{id:'slast',name:'Last Drop',desc:'Cleared a level on your last life',art:'💧'}];
+const TALL=TRO.concat(TSEC);
+let toastT=0;
+function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true},2600)}
+function award(id){if(SAVE.tro.includes(id))return;const t=TALL.find(x=>x.id===id);if(!t)return;SAVE.tro.push(id);persist();
+  toast('🏆 '+t.name+(TSEC.includes(t)?' (secret)':''));sfx.life()}
+const CNT={tee:['ftee',25],coupling:['fcpl',25],jet:['fjet',25],plunger:['fplg',25],auger:['faug',25],ganja:['fgan',10],fly:['czy',25],maggot:['cbe',25],crawfish:['cro',25],flush:['f100',100]};
+function bump(k){SAVE.c[k]=(+SAVE.c[k]||0)+1;const t=CNT[k];if(t&&SAVE.c[k]>=t[1])award(t[0])}
 function gainLife(){if(G.lives<6)G.lives++;gpop={t:1.4,s:'!'};sfx.life();float(pad.x,pad.y-24,'+1 life','#f5c842');hud()}
 function float(x,y,s,c){texts.push({x,y,s,c:c||'#fff',t:1.1})}
 function burst(x,y,c,n,sp){for(let i=0;i<n&&parts.length<260;i++){const a=rand(0,Math.PI*2),v=rand(30,sp||140);parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,t:rand(.4,.8),m:.8,c,s:rand(1.5,3.2)})}}
@@ -395,13 +476,13 @@ function beginLevel(i){
   else{rows=L.rows.length;for(let r=0;r<rows;r++){bricks[r]=[];for(let c=0;c<COLS;c++){const t=L.rows[r][c];
     if(t&&t!=='.'){bricks[r][c]={t,hp:HP[t],max:HP[t],f:0};if(t!=='c')remain++}else bricks[r][c]=null}}}
   caps=[];blasts=[];parts=[];texts=[];enemies=[];globs=[];puddles=[];pad.slime=0;augerT=0;seen={};drained=false;flushT=0;splashed=false;
-  pad.x=W/2;pad.mode='normal';pad.tw=pad.w=64;pad.jet=0;pad.grow=-1;sfx.start();
+  pad.x=W/2;pad.mode='normal';pad.tw=pad.w=64;pad.jet=0;pad.grow=-1;sfx.start();G.lost=false;G.levelStart=G.score;G.livesAtStart=G.lives;
   balls=[newBall()];spawnT=rand(8,12);wonT=0;
   mode='play';buildLiq();buildFx();buildBg();hud();
   setTimeout(()=>{if(mode==='play')say(L.boss?BOSSES[zoneOf(G.lvl)].say:pick(SAY.start))},350);
 }
 function launch(b){
-  b.held=false;b.caught=false;const off=clamp(b.ox/(pad.w/2),-1,1),a=off*.9;
+  b.held=false;b.caught=false;b.lt=t0;b.combo=0;const off=clamp(b.ox/(pad.w/2),-1,1),a=off*.9;
   b.vx=b.sp*Math.sin(a);b.vy=-b.sp*Math.cos(a);
 }
 function releaseHeld(){balls.forEach(b=>{if(b.held)launch(b)})}
@@ -418,7 +499,7 @@ function damage(r,c,n){
   if(k.t==='c'){k.f=1;sfx.clink();return}
   k.hp-=n;k.f=1;
   if(k.hp<=0){bricks[r][c]=null;remain--;addScore(PTS[k.t]);burst(x,y,BCOL[k.t][0],9);sfx.brk(k.t);maybeDrop(x,y);
-    if(remain<=0)levelDone()}
+    if(remain<=0)levelDone();return true}
   else{addScore(10);sfx.hit(k.t);burst(x,y,BCOL[k.t][1],3,70)}
 }
 function hitBricks(b,axis){
@@ -429,7 +510,7 @@ function hitBricks(b,axis){
       const bx=X0+c*SX,by=Y0+r*SY,px=clamp(b.x,bx,bx+BW),py=clamp(b.y,by,by+BH);
       if((b.x-px)*(b.x-px)+(b.y-py)*(b.y-py)>b.r*b.r)continue;
       const pass=augerT>0&&k.t!=='c';
-      damage(r,c,pass?99:1);
+      if(damage(r,c,pass?99:1)){b.combo=(b.combo||0)+1;if(b.combo>=10)award('sric')}
       if(mode!=='play')return;
       if(!pass){
         if(axis==='x'){if(b.x<bx+BW/2){b.vx=-Math.abs(b.vx);b.x=bx-b.r-.01}else{b.vx=Math.abs(b.vx);b.x=bx+BW+b.r+.01}}
@@ -439,6 +520,7 @@ function hitBricks(b,axis){
     }}
 }
 function paddleHit(b){
+  b.combo=0;
   if(pad.mode==='catch'){b.held=true;b.caught=true;b.ox=clamp(b.x-pad.x,-pad.w/2+4,pad.w/2-4);b.holdT=0;b.y=pad.y-b.r-.5;sfx.stick();return}
   const off=clamp((b.x-pad.x)/(pad.w/2),-1,1),a=off*1.05;
   b.sp=Math.min(b.sp*1.012,G.maxSp);b.vx=b.sp*Math.sin(a);b.vy=-b.sp*Math.cos(a);b.y=pad.y-b.r-.01;
@@ -470,7 +552,7 @@ function enemyHit(b){
 }
 function hurtEnemy(e){
   e.hp--;e.f=.25;sfx.buzz();
-  if(e.hp<=0){e.dead=true;addScore(e.k==='crawfish'?300:150);burst(e.x,e.y,e.k==='fly'?'#6fd18a':e.k==='maggot'?'#f3ead2':'#e2452f',10);float(e.x,e.y-14,e.k==='crawfish'?'300':'150','#f5c842')}
+  if(e.hp<=0){e.dead=true;bump(e.k);addScore(e.k==='crawfish'?300:150);burst(e.x,e.y,e.k==='fly'?'#6fd18a':e.k==='maggot'?'#f3ead2':'#e2452f',10);float(e.x,e.y-14,e.k==='crawfish'?'300':'150','#f5c842')}
 }
 function maybeDrop(x,y){if(caps.length||Math.random()>.16)return;dropCap(x,y)}
 function dropCap(x,y){
@@ -488,17 +570,24 @@ function applyCap(t){
   else if(t==='jet'){pad.jet=JET_T}
   else if(t==='auger'){augerT=AUG_T}
   if(t==='ganja')gainLife();
+  bump(t);if(balls.length>=9)award('sovr');
   say(SAY[t],1.8);
 }
 function loseLife(){
-  G.lives--;sfx.lose();shake(.35);pad.wince=.9;pm('wince');gpop={t:1.4,s:'#@%!'};say(pick(SAY.lose));
+  G.lives--;G.lost=true;G.cleanStreak=0;sfx.lose();shake(.35);pad.wince=.9;pm('wince');gpop={t:1.4,s:'#@%!'};say(pick(SAY.lose));
   caps=[];blasts=[];globs=[];augerT=0;pad.jet=0;pad.mode='normal';pad.tw=64;pad.grow=-1;hud();
-  if(G.lives<=0){mode='over';balls=[];SAVE.best=Math.max(SAVE.best,G.score);persist();setTimeout(showOver,1000);return}
+  if(G.lives<=0){mode='over';balls=[];SAVE.best=Math.max(SAVE.best,G.score);persist();postScore();setTimeout(showOver,1000);return}
   balls=[newBall()];
 }
 function levelDone(){
   if(mode!=='play')return;mode='flush';flushT=0;splashed=false;drained=true;drips=[];caps=[];globs=[];blasts=[];addScore(1000);sfx.whoosh();
-  SAVE.unl=Math.max(SAVE.unl,Math.min(LV.length,G.lvl+2));SAVE.best=Math.max(SAVE.best,G.score);persist();
+  SAVE.unl=Math.max(SAVE.unl,Math.min(LV.length,G.lvl+2));SAVE.best=Math.max(SAVE.best,G.score);
+  const L=LV[G.lvl],z=zoneOf(G.lvl);bump('flush');
+  if(!G.lost){award('nm1');G.cleanStreak=(G.cleanStreak||0)+1}
+  if(G.lives===1)award('slast');
+  if(L.boss){award('b'+(z+1));if(!G.lost)award('nmb');if(G.cleanStreak>=8)award('nmz')}
+  if(G.lvl===LV.length-1)award('fin');
+  persist();postScore();
 
 }
 function shake(t){if(!RM)shakeT=Math.max(shakeT,t)}
@@ -567,7 +656,7 @@ function stepBall(b,dt){
     if(b.vy>0&&b.y+b.r>=pad.y&&b.y-b.r<=pad.y+pad.h&&b.x>=pad.x-pad.w/2-b.r&&b.x<=pad.x+pad.w/2+b.r){paddleHit(b);if(b.held)return true}
     if(boss&&!boss.dying)bossHit(b);
     if(enemies.length)enemyHit(b);
-    if(b.y-b.r>H+4)return false;
+    if(b.y-b.r>H+4){if(b.lt!=null&&t0-b.lt<2&&balls.length===1)award('sbut');return false}
   }
   return true;
 }
@@ -961,6 +1050,7 @@ function frame(ts){const dt=Math.min(.033,last?(ts-last)/1000:0);last=ts;
   if(mode==='play')update(dt);else if(mode==='flush')updFlush(dt);
   if(mode!=='play'&&mode!=='title'&&mode!=='won'){} // frozen
   if(mode==='won'){pad.hop=Math.max(0,pad.hop-dt);t0+=dt}
+  if(fireworks>0){fireworks-=dt;if(Math.random()<dt*3.2){const x=rand(40,W-40),y=rand(60,H*.45),c=pick(['#f5c842','#5ec8ff','#c77dff','#ff6a2a','#9fd36a']);for(let i=0;i<26&&parts.length<300;i++){const a=i/26*6.283,v=rand(90,170);parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:1,m:1,c,s:2.4})}sq(rand(900,1400),.05,.03)}}
   updFx(dt);if(mode!=='title')updLiq(dt);updLoops();panelFit(dt);draw();requestAnimationFrame(frame)}
 
 /* ---------- sizing ---------- */
@@ -1010,7 +1100,7 @@ document.addEventListener('gesturestart',e=>e.preventDefault());
 const noTouch=e=>{if(e.cancelable)e.preventDefault()};
 stage.addEventListener('touchstart',noTouch,{passive:false});stage.addEventListener('touchmove',noTouch,{passive:false});
 document.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('selectstart',e=>e.preventDefault());
+document.addEventListener('selectstart',e=>{if(!(e.target.closest&&e.target.closest('input,textarea')))e.preventDefault()});
 
 /* ---------- HUD ---------- */
 function hud(){
@@ -1043,21 +1133,24 @@ function showTip(){
     '<p class="small">It opens with no Safari bar. The home screen app keeps its own save, separate from Safari.</p>'+
     '<button class="btn" data-a="back">Got it</button>');
 }
-function show(html){ov.innerHTML='<div class="card">'+html+'</div>';ov.hidden=false;ov.scrollTop=0}
-function hide(){ov.hidden=true;ov.innerHTML=''}
+function parkBoard(){const b=$('lbBox');if(b.parentNode!==$('lbHold'))$('lbHold').appendChild(b)}
+function show(html){parkBoard();ov.innerHTML='<div class="card">'+html+'</div>';ov.hidden=false;ov.scrollTop=0}
+function hide(){parkBoard();ov.hidden=true;ov.innerHTML=''}
 const soundBtn=()=>'<button class="btn alt" data-a="sound">Sound: '+(muted?'Off':'On')+'</button>';
 function showTitle(){
   mode='title';G.score=0;hud();const n=Math.min(SAVE.unl,LV.length);
-  show('<h1>Mojo Blast</h1><img class="hero" src="/assets/mojo-front.png" alt="Mojo">'+
+  const a=acct(),r=marksR(SAVE.best);
+  show('<h1>Mojo Blast</h1><img class="hero" src="/assets/mojo-hose.png" alt="Mojo">'+
     '<p>Bust the clog. Keep the drop in play.</p>'+
-    (SAVE.best?'<p class="small">Best score '+SAVE.best.toLocaleString()+'</p>':'')+
+    (SAVE.best?'<p class="small">'+(a?esc(a.name)+' · ':'')+'Best run '+SAVE.best.toLocaleString()+(r?' · '+marksN(r):'')+'</p>':'')+
     '<button class="btn" data-a="play">'+(n>1?'Play level '+n:'Play')+'</button>'+
     '<div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="how">How to play</button></div>'+
-    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.5</p>');
+    '<div class="row"><button class="btn alt" data-a="rank">Rank &amp; Board</button><button class="btn alt" data-a="tro">Trophies</button></div>'+
+    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">v1.0</p>');
   let seenTip=false;try{seenTip=localStorage.getItem('mojoBlastFullTip')==='1'}catch(e){}
   if(isIOS&&!isApp&&!seenTip&&!canFull)showTip();
 }
-function startRun(i){G={lvl:i,score:0,lives:3,nextLife:25000,base:290,maxSp:420};if(i%8===0)showIntro(i);else{hide();beginLevel(i)}}
+function startRun(i){G={lvl:i,score:0,lives:3,nextLife:25000,base:290,maxSp:420,cleanStreak:0,rank0:marksR(SAVE.best)};if(i%8===0)showIntro(i);else{hide();beginLevel(i)}}
 function crewImgs(z){return '<div class="crew"><span class="ganjabub"><img src="/assets/ganja-front.png" alt="Ganja"><i>!</i></span>'+
   ZONES[z].en.map(k=>'<img src="/assets/'+k+'-front.png" alt="">').join('')+'</div>'}
 function showIntro(i){
@@ -1067,27 +1160,65 @@ function showIntro(i){
 }
 function showClear(){
   const L=LV[G.lvl],z=zoneOf(G.lvl);
-  if(G.lvl===LV.length-1){mode='done';
-    show('<h2 style="color:var(--gold)">Mojo Blast complete</h2><p>All 40 levels. Five fatbergs flushed.</p>'+crewImgs(4)+
-      '<p class="big">'+G.score.toLocaleString()+'</p><p class="small">Best '+SAVE.best.toLocaleString()+'</p>'+
-      '<button class="btn" data-a="levels">Levels</button><button class="btn alt" data-a="title">Title screen</button>');return}
+  if(G.lvl===LV.length-1){showFinale();return}
   mode='clear';
   if(L.boss){show('<p class="small">Zone clear</p><h2 style="color:'+ZONES[z].acc+'">'+ZONES[z].name+' is flowing</h2>'+crewImgs(z)+
     '<p class="big">'+G.score.toLocaleString()+'</p><button class="btn" data-a="next">Next zone</button><button class="btn alt" data-a="title">Title screen</button>');return}
   show('<h2 style="color:var(--gold)">Clog cleared</h2><p>'+L.name+'</p><span class="ganjabub"><img src="/assets/ganja-front.png" alt="" style="height:64px"><i>!</i></span>'+
     '<p class="big">'+G.score.toLocaleString()+'</p><button class="btn" data-a="next">Next level</button><button class="btn alt" data-a="title">Title screen</button>');
 }
+function promoHTML(){const r=marksR(SAVE.best);if(!r||r<=(G.rank0||0))return '';
+  return '<div class="rankins">'+marksB(r)+'</div><p class="rn" style="color:var(--gold)">Promoted: '+marksN(r)+'</p>'}
+function boardNote(){return acct()?'<p class="small">Posted to the leaderboard.</p>':'<p class="small">Tap Rank &amp; Board to put your name on the leaderboard.</p>'}
 function showOver(){
-  show('<h2 style="color:#ff7a6a">Clogged up</h2><p>'+LV[G.lvl].name+'</p><span class="ganjabub"><img src="/assets/ganja-front.png" alt="" style="height:60px"><i>#@%!</i></span>'+
-    '<p class="big">'+G.score.toLocaleString()+'</p><p class="small">Best '+SAVE.best.toLocaleString()+'</p>'+
-    '<button class="btn" data-a="retry">Try again</button><div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="title">Title</button></div>');
+  mode='over';
+  show('<h2 style="color:#ff7a6a">Clogged up</h2><p>'+LV[G.lvl].name+'</p>'+(promoHTML()||'<span class="ganjabub"><img src="/assets/ganja-front.png" alt="" style="height:60px"><i>#@%!</i></span>')+
+    '<p class="big">'+G.score.toLocaleString()+'</p><p class="small">Best run '+SAVE.best.toLocaleString()+'</p>'+boardNote()+
+    '<button class="btn" data-a="retry">Try again</button><button class="btn alt" data-a="rank">Rank &amp; Board</button><div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="title">Title</button></div>');
 }
 function pause(){if(mode!=='play')return;mode='pause';ptr=null;
   show('<h2>Paused</h2><button class="btn" data-a="resume">Resume</button><button class="btn alt" data-a="restart">Restart level</button>'+
-    '<div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="how">How to play</button></div>'+soundBtn()+
+    '<div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="how">How to play</button></div>'+
+    '<div class="row"><button class="btn alt" data-a="rank">Rank &amp; Board</button><button class="btn alt" data-a="tro">Trophies</button></div>'+soundBtn()+
     fullBtn()+'<div class="row"><button class="btn alt" data-a="title">Title</button><button class="btn alt" data-a="games">All games</button></div>');
 }
-let backTo='title';
+let backTo='title',backFn=null;
+const marksR=b=>window.PMLB&&PMLB.marksRank?PMLB.marksRank(b):0,marksN=r=>window.PMLB&&PMLB.marksName?PMLB.marksName(r):'',marksB=r=>window.PMLB&&PMLB.marksBadge?PMLB.marksBadge(r):'';
+const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function setBack(){const m=mode;backFn=m==='pause'?()=>{mode='play';pause()}:m==='over'?showOver:m==='done'?()=>showFinale('quiet'):showTitle}
+function showRank(){
+  setBack();const bb=SAVE.best,r=marksR(bb),at=window.PMLB&&PMLB.MK_AT?PMLB.MK_AT:[];
+  show('<h2>Rank &amp; Board</h2><div class="rankins">'+(r?marksB(r):'')+'</div><p class="rn">'+(marksN(r)||'No rank yet')+'</p>'+
+    '<p class="small">Best run '+bb.toLocaleString()+(r<13&&at[r]?' · next: '+marksN(r+1)+' at '+at[r].toLocaleString():r?' · top rank':'')+'</p>'+
+    '<p class="small">Your best single run sets your marksmanship badge: Marksman at 10,000, Sharpshooter at 50,000, Expert at 120,000.</p>'+
+    (LB?'<div id="lbSlot"></div>':'<p>The leaderboard couldn\'t load. Check your connection.</p>')+'<button class="btn alt" data-a="back2">Back</button>');
+  if(LB){$('lbSlot').appendChild($('lbBox'));LB.refresh()}
+}
+function showTrophies(){
+  setBack();const have=SAVE.tro,tile=(t,got)=>'<div class="tile'+(got?'':' locked')+'"><div class="ta">'+(got||!TSEC.includes(t)?t.art:'❓')+'</div><b>'+(got||!TSEC.includes(t)?t.name:'???')+'</b><small>'+(got||!TSEC.includes(t)?t.desc:'Keep blasting')+'</small></div>';
+  show('<h2>Trophies</h2><p class="small">'+TRO.filter(t=>have.includes(t.id)).length+' of '+TRO.length+' · secrets '+TSEC.filter(t=>have.includes(t.id)).length+' of '+TSEC.length+'</p>'+
+    '<div class="tgrid">'+TALL.map(t=>tile(t,have.includes(t.id))).join('')+'</div><p class="small">Your trophies show in Mojo\'s Locker too.</p><button class="btn alt" data-a="back2">Back</button>');
+}
+const CUP='<svg class="cup" viewBox="0 0 120 130"><defs><linearGradient id="fgd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4b0"/><stop offset=".5" stop-color="#efc23e"/><stop offset="1" stop-color="#8f6210"/></linearGradient></defs>'+
+  '<path d="M60 2 C66 10 69 14 69 18 A9 9 0 0 1 51 18 C51 14 54 10 60 2Z" fill="#5ec8ff" stroke="#1f78c9" stroke-width="1.5"/>'+
+  '<path d="M31 24 H19 Q11 24 11 33 V40 Q11 50 22 52 L33 55 M89 24 H101 Q109 24 109 33 V40 Q109 50 98 52 L87 55" fill="none" stroke="#3d2804" stroke-width="10" stroke-linecap="round"/>'+
+  '<path d="M31 24 H19 Q11 24 11 33 V40 Q11 50 22 52 L33 55 M89 24 H101 Q109 24 109 33 V40 Q109 50 98 52 L87 55" fill="none" stroke="url(#fgd)" stroke-width="6" stroke-linecap="round"/>'+
+  '<path d="M30 22 H90 V46 Q90 76 60 80 Q30 76 30 46Z" fill="url(#fgd)" stroke="#3d2804" stroke-width="3"/>'+
+  '<text x="60" y="56" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="24" fill="#5a3b06">40</text>'+
+  '<rect x="54" y="79" width="12" height="16" fill="url(#fgd)" stroke="#3d2804" stroke-width="2"/><rect x="49" y="85" width="22" height="6" rx="2" fill="url(#fgd)" stroke="#3d2804" stroke-width="2"/>'+
+  '<rect x="34" y="95" width="52" height="9" rx="2" fill="url(#fgd)" stroke="#3d2804" stroke-width="2.5"/>'+
+  '<rect x="24" y="104" width="72" height="22" rx="3" fill="#241128" stroke="#efc23e" stroke-width="2.5"/>'+
+  '<text x="60" y="119" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="900" font-size="10" letter-spacing="1.5" fill="#f5c842">MOJO BLAST</text></svg>';
+function showFinale(again){
+  mode='done';
+  show('<div class="finale">'+CUP+'<h2 style="color:var(--gold)">LINE\'S OPEN</h2><p>All 40 levels. Five boss clogs flushed.</p>'+
+    '<img class="hopper" src="/assets/mojo-hose.png" alt="">'+crewImgs(4)+promoHTML()+
+    '<p class="big">'+G.score.toLocaleString()+'</p><p class="small">Best run '+SAVE.best.toLocaleString()+'</p>'+boardNote()+
+    '<button class="btn" data-a="rank">Rank &amp; Board</button><div class="row"><button class="btn alt" data-a="replay">Watch again</button><button class="btn alt" data-a="tro">Trophies</button></div>'+
+    '<div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="title">Title</button></div></div>');
+  if(again!=='quiet'){sfx.finale();fireworks=4.5}
+}
+let fireworks=0;
 function showLevels(){
   backTo=mode==='pause'?'pause':'title';if(mode!=='pause')mode='levels';
   let h='<h2>Levels</h2>';
@@ -1120,10 +1251,14 @@ ov.addEventListener('click',e=>{
   else if(a==='how')showHow();
   else if(a==='lv')startRun(+b.dataset.i);
   else if(a==='back'){if(backTo==='pause'){mode='play';pause()}else showTitle()}
+  else if(a==='back2'){if(backFn)backFn();else showTitle()}
+  else if(a==='rank')showRank();
+  else if(a==='tro')showTrophies();
+  else if(a==='replay'){showFinale()}
   else if(a==='begin'){hide();beginLevel(G.lvl)}
   else if(a==='next'){const n=G.lvl+1;if(n%8===0)showIntro(n);else{hide();beginLevel(n)}}
-  else if(a==='retry'){const i=G.lvl;G.score=0;G.lives=3;G.nextLife=25000;hide();beginLevel(i)}
-  else if(a==='restart'){hide();G.lives=Math.max(G.lives,1);beginLevel(G.lvl)}
+  else if(a==='retry'){const i=G.lvl;G.score=0;G.lives=3;G.nextLife=25000;G.cleanStreak=0;G.rank0=marksR(SAVE.best);hide();beginLevel(i)}
+  else if(a==='restart'){hide();G.score=G.levelStart||0;G.lives=Math.max(1,G.livesAtStart||G.lives);G.cleanStreak=0;beginLevel(G.lvl)} // no farming points by replaying a level
   else if(a==='resume'){hide();park();mode='play';last=0}
   else if(a==='title'){showTitle()}
   else if(a==='sound'){muted=!muted;try{localStorage.setItem('pipeBlastMuted',muted?'1':'0')}catch(err){}b.textContent='Sound: '+(muted?'Off':'On');if(!muted)au()}
@@ -1138,6 +1273,27 @@ function park(){ // coming back from a pause: the drop waits on the pipe, nothin
 }
 IMG['mojo-front'].onload=()=>hud();
 
+/* ---------- leaderboard (best run), accounts, cloud save, extras ---------- */
+const LB=window.PMLB?PMLB.mount($('lbBox'),{game:'blast',title:'Top 10, best run',unit:''}):null;
+function postScore(){if(LB&&G.score>0)LB.post(G.score)}
+if(window.PMX){PMX.onAward=n=>{toast(n);sfx.life()};PMX.sync();setTimeout(()=>PMX.tick(),1500)}
+if(window.PMLB)PMLB.onChange((type,a)=>{
+  cloudReady=false;
+  if(type==='signout'||!a){owner='';applySave(loadSlot(SK));if(mode==='title')showTitle();return}
+  const key=nameKey(a.name);if(key===owner)return;
+  const wasGuest=owner==='',guest=snap(),mine=loadSlot(slotFor(a));owner=null;
+  PMLB.cloudLoad('blast').then(cloud=>{
+    let acc=mergeSaves(mine,validSave(cloud)?cloud:null);
+    if(!acc&&wasGuest&&(guest.unl>1||guest.best>0||guest.tro.length))acc=guest; // a brand-new name keeps the progress you were playing
+    owner=key;if(cloud!==undefined)cloudReady=true;applySave(acc);saveGame(true);hud();
+  });
+});
+if(acct()){const me=owner;
+  PMLB.cloudLoad('blast').then(cloud=>{
+    if(cloud===undefined||owner!==me)return; // couldn't reach the cloud: device-only this visit
+    cloudReady=true;applySave(mergeSaves(snap(),validSave(cloud)?cloud:null));saveGame(true);if(mode==='title')showTitle();
+  });
+}
 resize();buildFx();buildBg();showTitle();requestAnimationFrame(frame);
 })();
 </script>

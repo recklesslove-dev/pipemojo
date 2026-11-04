@@ -1,4 +1,4 @@
-/* Pipe Mojo leaderboard — shared by whack.html, flow.html, mojoroll.html and hotcold.html */
+/* Pipe Mojo leaderboard — shared by whack.html, flow.html, mojoroll.html, hotcold.html and mojoblast.html */
 (function(){
 const API='https://pipemojo-leaderboard.fvidaurri.workers.dev';
 const KEY='pm-lb';
@@ -343,7 +343,49 @@ function tradeBadge(r){
   return '<svg viewBox="0 0 200 200">'+defs+g+'</svg>';
 }
 /* the insignia next to a name: officers in Flow, enlisted in Whack-a-Pipe, warrant officers in Mojo Roll, trade ranks in Hot & Cold */
+/* Marksmanship (Mojo Blast): your best run score earns Marksman, Sharpshooter or Expert, plus qualification bars */
+const MK_AT=[10000,20000,35000,50000,70000,90000,120000,150000,180000,210000,230000,250000,270000];
+const MK_N=['Marksman','Marksman · Rifle','Marksman · Rifle, Pistol','Sharpshooter','Sharpshooter · Rifle','Sharpshooter · Rifle, Pistol',
+  'Expert','Expert · Rifle','Expert · Rifle, Pistol','Expert · Rifle, Pistol, Grenade','Silver Expert','Gold Expert','Diamond Expert'];
+const marksRank=b=>MK_AT.filter(t=>(+b||0)>=t).length;
+function marksName(r){return r<1?'No rank yet':MK_N[Math.min(13,r)-1]}
+const MK_M={pewter:{light:'#f1f3f5',mid:'#a9afb7',dark:'#5b6169',edge:'#23262b'},silver:{light:'#ffffff',mid:'#d9dee6',dark:'#7c8594',edge:'#23272e'},
+  gold:{light:'#fff4b0',mid:'#efc23e',dark:'#8f6210',edge:'#3d2804'},diamond:{light:'#ffffff',mid:'#a6ecff',dark:'#2f9bd0',edge:'#0b3550'}};
+let mkN=0;
+function mkWreath(cx,cy,R,F,E){let g='';
+  for(const side of [1,-1]){const P=a=>[cx+side*R*Math.cos(a*Math.PI/180),cy+R*Math.sin(a*Math.PI/180)];
+    let d='';for(let a=-50;a<=86;a+=4){const p=P(a);d+=(d?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)}
+    g+='<path d="'+d+'" fill="none" stroke="'+E+'" stroke-width="4.5" stroke-linecap="round"/><path d="'+d+'" fill="none" stroke="'+F+'" stroke-width="2.2" stroke-linecap="round"/>';
+    for(let a=-44;a<=80;a+=12){const p=P(a),tang=side>0?(a+90):(180-a-90);
+      for(const o of [-1,1])g+='<ellipse cx="0" cy="0" rx="8" ry="3.6" transform="translate('+p[0].toFixed(1)+' '+p[1].toFixed(1)+') rotate('+(tang+o*38).toFixed(0)+') translate(8 0)" fill="'+F+'" stroke="'+E+'" stroke-width="1.4"/>'}}
+  return g;
+}
+function marksBadge(r){
+  if(r<1)return '';r=Math.min(13,r);
+  const tier=r>=13?'diamond':r>=12?'gold':r>=11?'silver':'pewter',m=MK_M[tier],id='mk'+(mkN++);
+  const kind=r<=3?0:r<=6?1:2,bars=r<=3?r-1:r<=6?r-4:r<=10?r-7:3,BN=['RIFLE','PISTOL','GRENADE'];
+  const cx=100,cy=bars?(kind===2?58:62):98,R=bars?(kind===2?36:48):(kind===2?52:64),a=R*.5,k=R*.2;
+  let s='<svg viewBox="0 0 200 200"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+m.light+'"/><stop offset=".5" stop-color="'+m.mid+'"/><stop offset="1" stop-color="'+m.dark+'"/></linearGradient></defs>';
+  let prev=cy+R-6;
+  for(let i=0;i<bars;i++){const y=cy+R+(kind===2?24:8)+i*24;
+    s+='<path d="M72 '+prev+'V'+(y+2)+'M128 '+prev+'V'+(y+2)+'" stroke="'+m.dark+'" stroke-width="3" stroke-dasharray="3 2"/>'+
+      '<rect x="50" y="'+y+'" width="100" height="18" rx="3" fill="url(#'+id+')" stroke="'+m.edge+'" stroke-width="2.5"/>'+
+      '<text x="100" y="'+(y+13.5)+'" text-anchor="middle" font-family="Nunito,system-ui,sans-serif" font-weight="900" font-size="11" letter-spacing="2" fill="'+m.edge+'">'+BN[i]+'</text>';prev=y+18}
+  if(kind===2)s+=mkWreath(cx,cy,R+16,m.mid,m.edge);
+  const cross=(sc)=>{const RR=R*sc,A=a*sc,K=k*sc;return 'M'+(cx-K)+' '+(cy-K)+'L'+(cx-A)+' '+(cy-RR)+'Q'+cx+' '+(cy-RR+RR*.12)+' '+(cx+A)+' '+(cy-RR)+'L'+(cx+K)+' '+(cy-K)+
+    'L'+(cx+RR)+' '+(cy-A)+'Q'+(cx+RR-RR*.12)+' '+cy+' '+(cx+RR)+' '+(cy+A)+'L'+(cx+K)+' '+(cy+K)+
+    'L'+(cx+A)+' '+(cy+RR)+'Q'+cx+' '+(cy+RR-RR*.12)+' '+(cx-A)+' '+(cy+RR)+'L'+(cx-K)+' '+(cy+K)+
+    'L'+(cx-RR)+' '+(cy+A)+'Q'+(cx-RR+RR*.12)+' '+cy+' '+(cx-RR)+' '+(cy-A)+'Z'};
+  s+='<path d="'+cross(1)+'" fill="url(#'+id+')" stroke="'+m.edge+'" stroke-width="4" stroke-linejoin="round"/>'+
+     '<path d="'+cross(.74)+'" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="2" stroke-linejoin="round"/>';
+  if(kind>=1)s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(R*.34).toFixed(1)+'" fill="'+m.dark+'" stroke="'+m.edge+'" stroke-width="2.5"/>'+
+     '<circle cx="'+cx+'" cy="'+cy+'" r="'+(R*.23).toFixed(1)+'" fill="url(#'+id+')"/><circle cx="'+cx+'" cy="'+cy+'" r="'+(R*.1).toFixed(1)+'" fill="'+m.edge+'"/>';
+  else s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(R*.12).toFixed(1)+'" fill="'+m.dark+'" stroke="'+m.edge+'" stroke-width="2"/>';
+  if(tier==='diamond')s+='<path d="M'+(cx+R*.55)+' '+(cy-R*.75)+'l3 9 9 3-9 3-3 9-3-9-9-3 9-3z" fill="#fff"/>';
+  return s+'</svg>';
+}
 function rankHTML(game,best){
+  if(game==='blast'){const r=marksRank(best);return r?'<span class="ri" title="'+marksName(r)+'">'+marksBadge(r)+'</span>':''}
   if(game==='hotcold'){const r=Math.floor(best/25);return r?'<span class="ri" title="'+tradeName(r)+'">'+tradeBadge(r)+'</span>':''}
   if(game==='roll'){const r=Math.min(5,Math.floor(best/24));return r?'<span class="ri" title="'+warrantName(r)+'">'+armyWarrant(r)+'</span>':''}
   if(best<100)return '';const n=Math.floor(best/100);
@@ -388,7 +430,7 @@ Board.prototype.render=function(){
   else{
     h+='<ol>'+this.top.map((r,i)=>{
       const mine=me&&r.name.toLowerCase().replace(/ /g,'')===me;
-      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+rankHTML(this.game,r.best)+'<span class="nm">'+esc(r.name)+'</span>'+((this.game==='flow'||this.game==='hotcold')&&r.best>=1000?'<span class="k1" title="'+Math.floor(r.best/1000)+'K Club">'+badgeK(Math.floor(r.best/1000))+'</span>':'')+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+r.best+'</span></li>';
+      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+rankHTML(this.game,r.best)+'<span class="nm">'+esc(r.name)+'</span>'+((this.game==='flow'||this.game==='hotcold')&&r.best>=1000?'<span class="k1" title="'+Math.floor(r.best/1000)+'K Club">'+badgeK(Math.floor(r.best/1000))+'</span>':'')+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+(this.game==='blast'?Number(r.best).toLocaleString():r.best)+'</span></li>';
     }).join('')+'</ol>';
   }
   h+='</div>';
@@ -491,5 +533,5 @@ const flush=()=>{for(const g in queued){clearTimeout(timers[g]);sendSave(g,true)
 window.addEventListener('pagehide',flush);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush()});
 
-window.PMLB={armyWarrant,warrantName,tradeBadge,tradeName,top:game=>call('/top?game='+game).then(d=>d.top||[]),mount:(el,o)=>{addCss();return new Board(el,o)},account:load,cloudSave,cloudLoad,switchPlayer,onChange:fn=>listeners.push(fn)};
+window.PMLB={armyWarrant,warrantName,tradeBadge,tradeName,marksBadge,marksName,marksRank,MK_AT,top:game=>call('/top?game='+game).then(d=>d.top||[]),mount:(el,o)=>{addCss();return new Board(el,o)},account:load,cloudSave,cloudLoad,switchPlayer,onChange:fn=>listeners.push(fn)};
 })();

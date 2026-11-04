@@ -1,4 +1,4 @@
-/* Pipe Mojo extras: daily streak, seasonal and secret trophies. Shared by Flow, Whack-a-Pipe, Mojo Roll, Hot & Cold and the Locker.
+/* Pipe Mojo extras: daily streak, seasonal and secret trophies. Shared by Flow, Whack-a-Pipe, Mojo Roll, Hot & Cold, Mojo Blast and the Locker.
    Saved on this device and, when signed in, to your name (inside the Whack-a-Pipe cloud save). */
 (function(){
 const acctKey=()=>{const a=window.PMLB&&PMLB.account();return a?String(a.name).toLowerCase().replace(/ /g,''):''};
@@ -39,7 +39,7 @@ const SECRETS=[
   {id:'night',name:'Night Shift',art:'🌙',desc:'Cleared a Flow level between midnight and 4am'},
   {id:'double',name:'Double Duty',art:'🎖️',desc:'Held an Army rank in both games'},
   {id:'triple',name:'Triple Threat',art:'🎖️🎖️',desc:'Held an Army rank in all three games'},
-  {id:'jack',name:'Jack of All Trades',art:'🧰',desc:'Held a rank in Flow, Whack-a-Pipe, Mojo Roll and Hot & Cold'},
+  {id:'jack',name:'Jack of All Trades',art:'🧰',desc:'Held a rank in Flow, Whack-a-Pipe, Mojo Roll, Hot & Cold and Mojo Blast'},
   {id:'king',name:'King of the Krewe',art:'👑',desc:'Held #1 on every leaderboard at the same time'},
   {id:'golden',name:'Golden Touch',art:'✨',desc:'Caught every golden pipe in a bonus round'},
   {id:'marathon',name:'Marathon',art:'⏱️',desc:'Lasted 5 minutes in one Whack-a-Pipe round'}
@@ -56,7 +56,7 @@ function tick(){ // call once when a game starts: daily streak and holiday badge
   checkKing(false);
 }
 /* King of the Krewe: your name at #1 on every game's board at once. Checked after each posted score, and now and then when a game starts */
-const KING_GAMES=['flow','whack','roll','hotcold'];let kingBusy=false;
+const KING_GAMES=['flow','whack','roll','hotcold','blast'];let kingBusy=false;
 function checkKing(force){
   const me=acctKey();if(!me||kingBusy||!(window.PMLB&&PMLB.top)||load().x.includes('king'))return;
   try{const last=+localStorage.getItem('pm-king-at')||0;if(!force&&Date.now()-last<6e5)return;localStorage.setItem('pm-king-at',String(Date.now()))}catch(e){}
@@ -86,7 +86,7 @@ window.PMX={award,tick,merge,push,sync,checkKing,has:id=>load().x.includes(id),l
   SEASONS,SECRETS,DAILY,set onAward(fn){onAward=fn}};
 })();
 
-/* game pages: no double-tap zoom and no long-press text selection or magnifier (Flow, Whack-a-Pipe, Mojo Roll, Hot & Cold, Locker) */
+/* game pages: no double-tap zoom and no long-press text selection or magnifier (Flow, Whack-a-Pipe, Mojo Roll, Hot & Cold, Mojo Blast, Locker) */
 (function(){
   try{
     const s=document.createElement('style');
