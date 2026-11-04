@@ -15,6 +15,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <title>Mojo Blast | Pipe Mojo</title>
 <!--
+  MOJO BLAST — v1.1 (Nov 4 2026) — LIVE
+  v1.1: after losing a life the new drop only launches on a fresh tap (a finger already down when
+        the life was lost won't fire it); aim dots show the launch path (same formula as launch(),
+        wall bounces, ring at the first brick/boss hit) whenever a drop is waiting on the pipe,
+        including Plunger catches.
+
   MOJO BLAST — v1.0 (Nov 3 2026) — LIVE
   v1.0: linked from /play. lb.js (names, leaderboard game key 'blast', cloud save) and extras.js
         (daily streak, holidays, cross-game secrets). Score posted = the run's score after every
@@ -482,10 +488,10 @@ function beginLevel(i){
   setTimeout(()=>{if(mode==='play')say(L.boss?BOSSES[zoneOf(G.lvl)].say:pick(SAY.start))},350);
 }
 function launch(b){
-  b.held=false;b.caught=false;b.lt=t0;b.combo=0;const off=clamp(b.ox/(pad.w/2),-1,1),a=off*.9;
+  b.held=false;b.caught=false;b.needTap=false;b.lt=t0;b.combo=0;const off=clamp(b.ox/(pad.w/2),-1,1),a=off*.9;
   b.vx=b.sp*Math.sin(a);b.vy=-b.sp*Math.cos(a);
 }
-function releaseHeld(){balls.forEach(b=>{if(b.held)launch(b)})}
+function releaseHeld(downAt){balls.forEach(b=>{if(b.held&&!(b.needTap&&downAt!=null&&downAt<b.heldAt+120))launch(b)})}
 function fixAng(b){
   const sp=b.sp,min=sp*.33;let vy=b.vy;
   if(Math.abs(vy)<min)vy=(vy<0?-1:1)*min;
@@ -577,7 +583,7 @@ function loseLife(){
   G.lives--;G.lost=true;G.cleanStreak=0;sfx.lose();shake(.35);pad.wince=.9;pm('wince');gpop={t:1.4,s:'#@%!'};say(pick(SAY.lose));
   caps=[];blasts=[];globs=[];augerT=0;pad.jet=0;pad.mode='normal';pad.tw=64;pad.grow=-1;hud();
   if(G.lives<=0){mode='over';balls=[];SAVE.best=Math.max(SAVE.best,G.score);persist();postScore();setTimeout(showOver,1000);return}
-  balls=[newBall()];
+  const nb=newBall();nb.needTap=true;nb.heldAt=performance.now();balls=[nb]; // only a fresh tap launches it, not the finger you were already holding down
 }
 function levelDone(){
   if(mode!=='play')return;mode='flush';flushT=0;splashed=false;drained=true;drips=[];caps=[];globs=[];blasts=[];addScore(1000);sfx.whoosh();
@@ -921,6 +927,21 @@ function drawMojo(){
   else{ctx.fillStyle='#b48a5a';ctx.beginPath();ctx.arc(0,22,14,0,6.3);ctx.fill();ctx.fillStyle='#222';ctx.fillRect(-10,4,20,8)}
   ctx.restore();
 }
+function drawAim(b){ // where the drop will go: same launch formula as launch(), bouncing off the pipe walls, stopping at the first thing it hits
+  const off=clamp(b.ox/(pad.w/2),-1,1),a=off*.9;let x=b.x,y=b.y,vx=Math.sin(a),vy=-Math.cos(a),dist=0;const r=b.r;
+  ctx.fillStyle='#bfe9ff';
+  for(let i=1;i<=150;i++){
+    x+=vx*4;y+=vy*4;dist+=4;
+    if(x<WT+r){x=WT+r;vx=Math.abs(vx)}else if(x>W-WT-r){x=W-WT-r;vx=-Math.abs(vx)}
+    if(y<WT+r){y=WT+r;vy=Math.abs(vy)}
+    let hit=false;
+    if(rows){const c=Math.floor((x-X0)/SX),rr=Math.floor((y-Y0)/SY);if(rr>=0&&rr<rows&&c>=0&&c<COLS&&bricks[rr][c]&&x-X0-c*SX<=BW+r&&y-Y0-rr*SY<=BH+r)hit=true}
+    if(!hit&&boss&&!boss.dying){const dx=(x-boss.x)/(boss.rx+r),dy=(y-boss.y)/(boss.ry+r);if(dx*dx+dy*dy<1)hit=true}
+    if(hit){ctx.globalAlpha=.9;ctx.strokeStyle='#bfe9ff';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,4.5,0,6.3);ctx.stroke();break}
+    if(i%4===0){ctx.globalAlpha=Math.max(.15,.85-dist/700);ctx.beginPath();ctx.arc(x,y,dist<60?1.6:2,0,6.3);ctx.fill()}
+  }
+  ctx.globalAlpha=1;
+}
 function drawGlob(g,S){ // stretchy, wobbly teardrop of sludge pointing the way it falls
   const sp=Math.hypot(g.vx,g.vy)||1,ux=g.vx/sp,uy=g.vy/sp,st=Math.min(1.7,1+g.age*1.1),wob=Math.sin(g.age*18)*.12,r=g.r*(1+wob*.5);
   ctx.save();ctx.translate(g.x,g.y);ctx.rotate(Math.atan2(-ux,uy));
@@ -1026,6 +1047,7 @@ function draw(){
   for(const t of texts){ctx.globalAlpha=Math.min(1,t.t*2);ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillText(t.s,t.x+1,t.y+1);ctx.fillStyle=t.c;ctx.fillText(t.s,t.x,t.y)}ctx.globalAlpha=1;
   drawSay();drawGanja();
   if(mode==='play'){const hb=balls.find(b=>b.held);
+    for(const b of balls)if(b.held)drawAim(b);
     if(hb){ctx.globalAlpha=.55+.35*Math.sin(t0*5);ctx.font='800 15px Nunito';ctx.textAlign='center';ctx.fillStyle='#f4ecff';
       ctx.fillText(hb.caught?'Lift to shoot':'Tap to launch',W/2,pad.y-70);ctx.globalAlpha=1}
     if(augerT>0||pad.jet>0){ctx.font='700 11px Nunito';ctx.textAlign='left';ctx.fillStyle='#f5c842';
@@ -1083,10 +1105,10 @@ addEventListener('orientationchange',()=>setTimeout(resize,250));
 
 /* ---------- input ---------- */
 let ptr=null;
-stage.addEventListener('pointerdown',e=>{if(mode==='flush'){endFlush();return}if(mode!=='play')return;e.preventDefault();ptr={id:e.pointerId,x:e.clientX}},{passive:false});
+stage.addEventListener('pointerdown',e=>{if(mode==='flush'){endFlush();return}if(mode!=='play')return;e.preventDefault();ptr={id:e.pointerId,x:e.clientX,t:performance.now()}},{passive:false});
 stage.addEventListener('pointermove',e=>{if(!ptr||e.pointerId!==ptr.id||mode!=='play')return;pad.x+=(e.clientX-ptr.x)/SC*1.2;ptr.x=e.clientX;
   pad.x=clamp(pad.x,pad.w/2+WT,W-pad.w/2-WT)});
-const up=e=>{if(!ptr||e.pointerId!==ptr.id)return;ptr=null;if(mode==='play')releaseHeld()};
+const up=e=>{if(!ptr||e.pointerId!==ptr.id)return;const t=ptr.t;ptr=null;if(mode==='play')releaseHeld(t)};
 stage.addEventListener('pointerup',up);
 // a system swipe (Safari bar, home bar) steals the touch: pause right away
 stage.addEventListener('pointercancel',e=>{if(!ptr||e.pointerId!==ptr.id)return;ptr=null;if(mode==='play')pause()});
@@ -1146,7 +1168,7 @@ function showTitle(){
     '<button class="btn" data-a="play">'+(n>1?'Play level '+n:'Play')+'</button>'+
     '<div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="how">How to play</button></div>'+
     '<div class="row"><button class="btn alt" data-a="rank">Rank &amp; Board</button><button class="btn alt" data-a="tro">Trophies</button></div>'+
-    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">v1.0</p>');
+    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">v1.1</p>');
   let seenTip=false;try{seenTip=localStorage.getItem('mojoBlastFullTip')==='1'}catch(e){}
   if(isIOS&&!isApp&&!seenTip&&!canFull)showTip();
 }
