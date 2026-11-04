@@ -15,6 +15,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <title>Mojo Blast | Pipe Mojo</title>
 <!--
+  MOJO BLAST — v0.5 (Nov 3 2026)
+  v0.5: five bosses, one per zone (BOSSES table: image, body centre, hit ellipse, mouth, line, chunk
+        and sludge colours): Root Ball (Bayou, /assets/boss-rootball.png), Fatberg (Quarter), Hairball
+        (Cemetery, boss-hairball.png), Wipe Beast (Mardi Gras, boss-wipebeast.png), Scale King
+        (Hellfire, boss-scaleking.png). Spit is now stretchy wobbly sludge teardrops with drip trails
+        that splat into fading puddles on the floor, or splatter Mojo on the pipe. Mojo now stands
+        under the pipe holding a brass hose nozzle (/assets/mojo-hose.png, nozzle tip at 81.21% x,
+        26.89% y) with a code-drawn hose to a brass fitting under the pipe; he faces the way you slide.
+
   MOJO BLAST — v0.4.2 (Nov 3 2026)
   v0.4.2: Y0 is dynamic: 50 + 0.8*(H-520) on tall screens (iPhone ~169, iPad unchanged), so the clog
           sits lower and the standing liquid above it is deeper (more ripples/particles, boss sits
@@ -179,7 +188,7 @@ let muted=false;try{muted=localStorage.getItem('pipeBlastMuted')==='1'}catch(e){
 
 /* ---------- images ---------- */
 const IMG={};
-['mojo-front','ganja-front','fly-front','maggot-front','crawfish-front','fatberg'].forEach(k=>{const i=new Image();i.src='/assets/'+k+'.png';IMG[k]=i});
+['mojo-front','mojo-hose','ganja-front','fly-front','maggot-front','crawfish-front','fatberg','boss-rootball','boss-hairball','boss-wipebeast','boss-scaleking'].forEach(k=>{const i=new Image();i.src='/assets/'+k+'.png';IMG[k]=i});
 const ok=i=>i&&i.complete&&i.naturalWidth>0;
 
 /* ---------- field ---------- */
@@ -191,15 +200,15 @@ let H=640,SC=1,DPR=1,bg=null,BOOST=1; // BOOST: sprites a bit bigger on phone-si
 const MAT={galv:['#a7b0b6','#e3e8eb','#646d73','galvanized'],copper:['#c87533','#f4b47c','#7a3f17','copper'],
   pvc:['#e6e9ec','#ffffff','#a3abb2','PVC'],brass:['#c9a227','#f5de7c','#76590c','brass'],iron:['#44484e','#787d85','#1c1e21','cast iron']};
 const ZONES=[
- {name:'Bayou',pipe:'galv',acc:'#9fd36a',bg:['#12281d','#050c08'],fx:'fireflies',en:['fly'],boss:'#ece3cc',
+ {name:'Bayou',pipe:'galv',acc:'#9fd36a',bg:['#12281d','#050c08'],fx:'fireflies',en:['fly'],boss:'#5a3d22',
   blurb:'Swamp water and a whole lot of grease. Bust every clog brick and keep the drop in play.'},
  {name:'French Quarter',pipe:'copper',acc:'#f0a04b',bg:['#2a160d','#0c0505'],fx:'sparks',en:['fly','maggot'],boss:'#ece3cc',
   blurb:'Old copper, older clogs. Beignet\'s crawling around in there regrowing grease, so knock him out of the line.'},
- {name:'Cemetery',pipe:'pvc',acc:'#b9c4d6',bg:['#161d29','#06080c'],fx:'fog',en:['fly','maggot'],boss:'#ece3cc',
+ {name:'Cemetery',pipe:'pvc',acc:'#b9c4d6',bg:['#161d29','#06080c'],fx:'fog',en:['fly','maggot'],boss:'#5a5d62',
   blurb:'Fog on the ground and roots in the drain. Some of this scale has been down here a hundred years.'},
- {name:'Mardi Gras',pipe:'brass',acc:'#c77dff',bg:['#22102f','#08030e'],fx:'confetti',en:['fly','maggot','crawfish'],boss:'#ece3cc',
+ {name:'Mardi Gras',pipe:'brass',acc:'#c77dff',bg:['#22102f','#08030e'],fx:'confetti',en:['fly','maggot','crawfish'],boss:'#e9e4d6',
   blurb:'Beads, glitter and Roux. Hit those claws and your drop comes back hotter.'},
- {name:'Hellfire',pipe:'iron',acc:'#ff6a2a',bg:['#2c0b06','#0a0202'],fx:'embers',en:['fly','maggot','crawfish'],boss:'#ece3cc',
+ {name:'Hellfire',pipe:'iron',acc:'#ff6a2a',bg:['#2c0b06','#0a0202'],fx:'embers',en:['fly','maggot','crawfish'],boss:'#ff7a1a',
   blurb:'The deepest, hottest line on the bayou. Cast iron, heavy scale, and the biggest fatberg of them all.'}
 ];
 const mir=s=>s+s.slice(0,5).split('').reverse().join('');
@@ -214,7 +223,7 @@ const LV=[
  L('Checkerboard',['g.g.g.','.h.h.h','g.g.g.','.h.h.h','rrrrrr']),
  L('Scale Buildup',['ssssss','gggggg','hhhhhh','gggggg','mmmmmm']),
  L('Elbow Room',['cccc..','gggc..','hhgc..','gghc..','hhgc..','rrrrrr']),
- B('Bayou Fatberg'),
+ B('The Root Ball'),
  // French Quarter
  L('Balcony',['wwwwww','c.c.c.','gggggg','hhhhhh','rrrrrr']),
  L('Arches',['rrrrrr','r..r..','r..r..','gg.gg.','hh.hh.']),
@@ -223,7 +232,7 @@ const LV=[
  L('Dense Pack',['ghghgh','hghghg','ghghgh','hghghg','ssssss']),
  L('Back Alley',['cccc.c','gggg.g','hhhh.h','wwww.w','rrrr.r']),
  L('Second Line',['rrrrrr','ssssss','gggggg','ssssss','hhhhhh','rrrrrr']),
- B('Quarter Fatberg'),
+ B('The Fatberg'),
  // Cemetery
  L('Tombstones',['..rr..','..ss..','..gg..','..hh..','......','gggggg']),
  L('The Cross',['.....s','....ss','.....s','gggggg','hhhhhh','.....s','.....s']),
@@ -232,7 +241,7 @@ const LV=[
  L('Fog Layers',['mmmmmm','......','ssssss','......','rrrrrr','......','gggggg']),
  L('The Crypt',['cccccc','c.....','c.gggg','c.grrr','c.grss','c.hhhh']),
  L('Grave Grid',['sgsgsg','gsgsgs','sgsgsg','rrrrrr','hhhhhh']),
- B('Cemetery Fatberg'),
+ B('The Hairball'),
  // Mardi Gras
  L('Bead Strands',['w.w.w.','g.g.g.','h.h.h.','r.r.r.','s.s.s.']),
  L('The Mask',['......','wwwwww','w..www','w..www','wwwwww','.wwwww','..wwww']),
@@ -241,7 +250,7 @@ const LV=[
  L('Krewe Rows',['ssssss','rrrrrr','ssssss','rrrrrr','gggggg']),
  L('Doubloons',['..s...','.srs..','srgrs.','.srs..','..s...']),
  L('Parade Route',['cc.cc.','ss.ss.','rr.rr.','gg.gg.','hh.hh.','ww.ww.']),
- B('Mardi Gras Fatberg'),
+ B('The Wipe Beast'),
  // Hellfire
  L('Flames',['....r.','...rsr','..rsss','.rssgs','rssggs','ssgghg']),
  L('Furnace',['cccc.c','ssssss','rrrrrr','ssssss','rrrrrr','gggggg']),
@@ -250,9 +259,18 @@ const LV=[
  L('Brimstone',['rrrrrr','cscscs','rrrrrr','scscsc','gggggg','hhhhhh']),
  L('Deep Scale',['ssssss','ssssss','rrrrrr','rrrrrr','gggggg','gggggg','hhhhhh']),
  L('Last Stand',['c.c.c.','ssssss','r.r.r.','ssssss','c.c.c.','rrrrrr','gggggg']),
- B('Hellfire Fatberg')
+ B('The Scale King')
 ];
 const BOSS_HP=[14,20,26,32,40];
+// one boss per zone; geometry in fractions of drawn width: cy = body centre from image top, rx/ry = hit ellipse, mo = mouth
+const BOSSES=[
+ {img:'boss-rootball',cy:.626,rx:.44,ry:.384,mo:.79,say:'Roots in the line. Big ones.',chunks:['#5a3d22','#3a2a18','#6c8f3a'],sl:{c:'#4e3620',hi:'#8a6a40'}},
+ {img:'fatberg',cy:.547,rx:.449,ry:.356,mo:.71,say:'That\'s a fatberg. A big one.',chunks:['#ece3cc','#ece3cc','#e8a35a'],sl:{c:'#e6dcc2',hi:'#e8a35a'}},
+ {img:'boss-hairball',cy:.561,rx:.413,ry:.361,mo:.73,say:'Who\'s been shedding down here?',chunks:['#3c3e42','#5a5d62','#2a2b2e'],sl:{c:'#4f5358',hi:'#a3a9b0'}},
+ {img:'boss-wipebeast',cy:.588,rx:.449,ry:.379,mo:.76,say:'Flushable, they said.',chunks:['#ece6d6','#9b4dca','#2fae5c','#f5c842'],sl:{c:'#e2dccb',hi:'#ffffff',gl:1}},
+ {img:'boss-scaleking',cy:.775,rx:.45,ry:.343,mo:.93,say:'A hundred years of scale. Long live the king.',chunks:['#7a3a1a','#4a2410','#ff8a2a'],sl:{c:'#ff6a12',hi:'#ffd27a',hot:1}}
+];
+const BZ=()=>BOSSES[zoneOf(G.lvl)];
 // standing liquid behind the clog, per zone
 const LIQ=[{c:'#3e5a2b',d:'#22341a',hi:'#8fb35a',k:'bubble'},{c:'#6a7076',d:'#43484d',hi:'#b5bcc3',k:'suds'},
   {c:'#5b4327',d:'#33240f',hi:'#8c6b3e',k:'chunk'},{c:'#9c8a52',d:'#5e5230',hi:'#e2d394',k:'glitter'},{c:'#5c2614',d:'#2a0c05',hi:'#ff8a3a',k:'boil'}];
@@ -357,7 +375,7 @@ document.addEventListener('pointerdown',()=>{if(!muted)au()},{passive:true});
 let mode='title',G={lvl:0,score:0,lives:3,nextLife:25000,maxSp:420};
 let bricks=[],rows=0,remain=0,balls=[],caps=[],blasts=[],parts=[],texts=[],enemies=[],globs=[],boss=null,fx=[];
 let pad={x:180,y:566,w:64,tw:64,h:12,mode:'normal',jet:0,jetCool:0,grow:-1,hop:0,wince:0,moved:0};
-let augerT=0,spawnT=10,sayO=null,gpop=null,shakeT=0,seen={},t0=0,wonT=0;
+let puddles=[],augerT=0,spawnT=10,sayO=null,gpop=null,shakeT=0,seen={},t0=0,wonT=0;
 const zoneOf=i=>Math.floor(i/8);
 const Z=()=>ZONES[zoneOf(G.lvl)];
 const bricksBottom=()=>rows?Y0+rows*SY:150;
@@ -376,11 +394,11 @@ function beginLevel(i){
   if(L.boss){boss={x:W/2,y:110,rx:70,ry:42,bw:120,hp:BOSS_HP[z],max:BOSS_HP[z],t:0,spitT:2.4,flash:0,hits:0,half:0,dying:0}}
   else{rows=L.rows.length;for(let r=0;r<rows;r++){bricks[r]=[];for(let c=0;c<COLS;c++){const t=L.rows[r][c];
     if(t&&t!=='.'){bricks[r][c]={t,hp:HP[t],max:HP[t],f:0};if(t!=='c')remain++}else bricks[r][c]=null}}}
-  caps=[];blasts=[];parts=[];texts=[];enemies=[];globs=[];augerT=0;seen={};drained=false;flushT=0;splashed=false;
+  caps=[];blasts=[];parts=[];texts=[];enemies=[];globs=[];puddles=[];pad.slime=0;augerT=0;seen={};drained=false;flushT=0;splashed=false;
   pad.x=W/2;pad.mode='normal';pad.tw=pad.w=64;pad.jet=0;pad.grow=-1;sfx.start();
   balls=[newBall()];spawnT=rand(8,12);wonT=0;
   mode='play';buildLiq();buildFx();buildBg();hud();
-  setTimeout(()=>{if(mode==='play')say(L.boss?SAY.boss:pick(SAY.start))},350);
+  setTimeout(()=>{if(mode==='play')say(L.boss?BOSSES[zoneOf(G.lvl)].say:pick(SAY.start))},350);
 }
 function launch(b){
   b.held=false;b.caught=false;const off=clamp(b.ox/(pad.w/2),-1,1),a=off*.9;
@@ -518,16 +536,16 @@ function updEnemies(dt){
 /* ---------- boss ---------- */
 function updBoss(dt){
   const z=zoneOf(G.lvl);boss.t+=dt;boss.flash=Math.max(0,boss.flash-dt);
-  const k=.65+.35*Math.max(0,boss.hp)/boss.max,bw=(124+z*10)*k;boss.bw=bw;boss.rx=bw*.46;boss.ry=bw*.4;
-  boss.x=W/2+Math.sin(boss.t*.6*(1+z*.12))*(W/2-WT-bw*.5-4);boss.y=bw*.46+WT+8+(Y0-50)+Math.sin(boss.t*1.3)*5;
+  const k=.65+.35*Math.max(0,boss.hp)/boss.max,bw=(124+z*10)*k,bd=BOSSES[z];boss.bw=bw;boss.rx=bw*bd.rx;boss.ry=bw*bd.ry;
+  boss.x=W/2+Math.sin(boss.t*.6*(1+z*.12))*(W/2-WT-bw*.5-4);boss.y=bw*bd.cy+WT+8+(Y0-50)+Math.sin(boss.t*1.3)*5;
   if(boss.dying){boss.dying-=dt;
-    if(Math.random()<.7){const c=pick(['#ece3cc','#ece3cc','#e8a35a']);parts.push({x:boss.x+rand(-boss.rx,boss.rx),y:boss.y+rand(-boss.ry,boss.ry),vx:rand(-120,120),vy:rand(-160,20),t:1.3,m:1.3,c,s:rand(4,9)})}
+    if(Math.random()<.7){const c=pick(bd.chunks);parts.push({x:boss.x+rand(-boss.rx,boss.rx),y:boss.y+rand(-boss.ry,boss.ry),vx:rand(-120,120),vy:rand(-160,20),t:1.3,m:1.3,c,s:rand(4,9)})}
     if(boss.dying<=0){boss=null;levelDone()}return}
   boss.spitT-=dt;
   if(boss.spitT<=0){
     const shots=boss.hp<=boss.max*.4?2:1;
     for(let i=0;i<shots;i++){const vy=150+z*22,tt=(pad.y-boss.y)/vy,vx=(pad.x-boss.x)/tt*.8+rand(-25,25)+(shots>1?(i?40:-40):0);
-      globs.push({x:boss.x,y:boss.y+boss.bw*.23,vx,vy,r:6})}
+      globs.push({x:boss.x,y:boss.y+boss.bw*(bd.mo-bd.cy),vx,vy,r:6,age:0})}
     sfx.spit();boss.spitT=Math.max(.8,rand(1.5,2.5)-z*.15);
   }
 }
@@ -558,6 +576,7 @@ function update(dt){
   if(keys.ArrowLeft)pad.x-=430*dt;if(keys.ArrowRight)pad.x+=430*dt;
   pad.w+=(pad.tw-pad.w)*Math.min(1,dt*10);pad.x=clamp(pad.x,pad.w/2+WT,W-pad.w/2-WT);
   pad.hop=Math.max(0,pad.hop-dt);pad.wince=Math.max(0,pad.wince-dt);
+  {const dx=pad.x-(pad.lx??pad.x);if(Math.abs(dx)>.35)pad.face=dx>0?1:-1;pad.lx=pad.x}
   if(boss){updBoss(dt);if(boss&&boss.dying)return}
   if(mode!=='play')return;
   augerT=Math.max(0,augerT-dt);
@@ -578,15 +597,20 @@ function update(dt){
     if(c.y+7>=pad.y&&c.y-7<=pad.y+pad.h&&Math.abs(c.x-pad.x)<pad.w/2+14){c.dead=true;applyCap(c.t)}
     else if(c.y>H+10)c.dead=true}
   caps=caps.filter(c=>!c.dead);
-  for(const g of globs){g.x+=g.vx*dt;g.y+=g.vy*dt;
-    if(g.y+g.r>=pad.y&&g.y-g.r<=pad.y+pad.h&&Math.abs(g.x-pad.x)<pad.w/2+g.r){burst(g.x,g.y,ZONES[zoneOf(G.lvl)].boss,10);loseLife();return}
-    if(g.y>H+10)g.dead=true}
+  const SL=BZ().sl;
+  for(const g of globs){g.x+=g.vx*dt;g.y+=g.vy*dt;g.age+=dt;
+    if(Math.random()<dt*9&&parts.length<250)parts.push({x:g.x+rand(-2,2),y:g.y-g.r*2,vx:rand(-10,10),vy:rand(-30,0),t:.45,m:.45,c:SL.c,s:rand(1.5,2.6)});
+    if(g.y+g.r>=pad.y&&g.y-g.r<=pad.y+pad.h&&Math.abs(g.x-pad.x)<pad.w/2+g.r){
+      for(let i=0;i<22;i++)parts.push({x:g.x,y:pad.y,vx:rand(-150,150),vy:rand(-200,-40),t:.8,m:.8,c:pick([SL.c,SL.c,SL.hi]),s:rand(2,4.5)});
+      pad.slime=1.6;loseLife();return}
+    if(g.y>H-10){g.dead=true;puddles.push({x:g.x,y:H-7,t:2.4,w:rand(13,19)});burst(g.x,H-8,SL.c,6,90)}}
   globs=globs.filter(g=>!g.dead);
   updEnemies(dt);
   const z=zoneOf(G.lvl),max=z===0?1:2;
   if(!boss&&(z>0||G.lvl%8>=2)){spawnT-=dt;if(spawnT<=0){spawnT=rand(9,15);if(enemies.length<max)spawnEnemy()}}
 }
 function updFx(dt){
+  pad.slime=Math.max(0,(pad.slime||0)-dt);for(const q of puddles)q.t-=dt;puddles=puddles.filter(q=>q.t>0);
   for(const p of parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=380*dt;p.t-=dt}parts=parts.filter(p=>p.t>0);
   for(const t of texts){t.y-=28*dt;t.t-=dt}texts=texts.filter(t=>t.t>0);
   if(sayO){sayO.t-=dt;if(sayO.t<=0)sayO=null}
@@ -793,6 +817,13 @@ function drawPad(){
   if(augerT>0){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(x+8,y,w-16,4);ctx.fillStyle=augerT<3&&Math.floor(t0*8)%2?'#ffe0a0':'#ffb02e';ctx.fillRect(x+9,y+1,(w-18)*augerT/AUG_T,2)}
 }
 function drawMojo(){
+  const hi=IMG['mojo-hose'];
+  if(ok(hi)){const m=mojoGeo();let a=0;if(pad.wince>0)a=Math.sin(pad.wince*30)*.12;
+    ctx.save();ctx.translate(m.nx,m.ny);ctx.scale(m.f,1);ctx.rotate(a);ctx.drawImage(hi,-.8121*m.w,-.2689*m.h,m.w,m.h);ctx.restore();
+    if(pad.slime>0&&(boss||G.lvl%8===7)){const S=BZ().sl;ctx.globalAlpha=Math.min(1,pad.slime);ctx.fillStyle=S.c;
+      for(const [ox,oy,r] of [[-12,6,5],[-22,18,4],[-6,26,4.5],[-26,34,3.5],[-14,44,4],[2,12,3]]){ctx.beginPath();ctx.arc(m.nx+ox*m.f,m.top+oy*BOOST+(1.6-pad.slime)*6,r*BOOST,0,6.3);ctx.fill()}
+      ctx.globalAlpha=1}
+    return}
   const im=IMG['mojo-front'],h=48*BOOST;let y=pad.y+3,x=pad.x,a=0;
   if(pad.hop>0)y-=Math.abs(Math.sin(pad.hop*9))*8;
   if(pad.wince>0){a=Math.sin(pad.wince*30)*.12;x+=Math.sin(pad.wince*40)*2}
@@ -800,6 +831,30 @@ function drawMojo(){
   if(ok(im)){const w=h*im.naturalWidth/im.naturalHeight;ctx.drawImage(im,-w/2,0,w,h)}
   else{ctx.fillStyle='#b48a5a';ctx.beginPath();ctx.arc(0,22,14,0,6.3);ctx.fill();ctx.fillStyle='#222';ctx.fillRect(-10,4,20,8)}
   ctx.restore();
+}
+function drawGlob(g,S){ // stretchy, wobbly teardrop of sludge pointing the way it falls
+  const sp=Math.hypot(g.vx,g.vy)||1,ux=g.vx/sp,uy=g.vy/sp,st=Math.min(1.7,1+g.age*1.1),wob=Math.sin(g.age*18)*.12,r=g.r*(1+wob*.5);
+  ctx.save();ctx.translate(g.x,g.y);ctx.rotate(Math.atan2(-ux,uy));
+  if(S.hot){ctx.globalAlpha=.22+.1*Math.sin(g.age*20);ctx.fillStyle='#ffb04a';ctx.beginPath();ctx.arc(0,-r,r*2.3,0,6.3);ctx.fill();ctx.globalAlpha=1}
+  ctx.fillStyle=S.c;ctx.beginPath();ctx.moveTo(-r,0);ctx.quadraticCurveTo(-r*(.7-wob),-r*2.2*st,0,-r*3*st);ctx.quadraticCurveTo(r*(.7+wob),-r*2.2*st,r,0);ctx.arc(0,0,r,0,Math.PI);ctx.closePath();ctx.fill();
+  ctx.globalAlpha=.75;ctx.fillStyle=S.hi;ctx.beginPath();ctx.arc(-r*.35,r*.15,r*.32,0,6.3);ctx.fill();
+  if(S.gl){for(const [c,ox,oy] of [['#f5c842',.3,-.6],['#9b4dca',-.3,-1.4],['#2fae5c',.1,.3]]){ctx.fillStyle=c;ctx.fillRect(r*ox,r*oy,1.6,1.6)}}
+  ctx.restore();ctx.globalAlpha=1;
+}
+function drawHose(){ // hose from Mojo's nozzle up to a brass fitting under the pipe
+  const im=IMG['mojo-hose'];if(!ok(im))return;const m=mojoGeo(),f=m.f,ex=pad.x-f*7,ey=pad.y+pad.h;
+  ctx.lineCap='round';
+  for(const [lw,c] of [[5,'#111'],[3.2,'#353535']]){ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(m.nx,m.ny);
+    ctx.bezierCurveTo(m.nx+f*10,m.ny-8,ex-f*14,ey+12,ex,ey+1);ctx.stroke()}
+  ctx.strokeStyle='rgba(255,255,255,.22)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(m.nx-1,m.ny);ctx.bezierCurveTo(m.nx+f*10-1,m.ny-8,ex-f*14-1,ey+12,ex-1,ey+1);ctx.stroke();
+  ctx.lineCap='butt';const g=ctx.createLinearGradient(ex-4,0,ex+4,0);g.addColorStop(0,'#8a6a10');g.addColorStop(.5,'#f2d675');g.addColorStop(1,'#8a6a10');
+  ctx.fillStyle=g;ctx.fillRect(ex-4,ey-1,8,5);ctx.strokeStyle='rgba(0,0,0,.5)';ctx.strokeRect(ex-3.5,ey-.5,7,4);
+}
+function mojoGeo(){
+  const im=IMG['mojo-hose'],h=62*BOOST,w=h*im.naturalWidth/im.naturalHeight,f=pad.face||1;
+  let top=pad.y+pad.h+4;if(pad.hop>0)top-=Math.abs(Math.sin(pad.hop*9))*8;
+  let nx=pad.x+f*4;if(pad.wince>0)nx+=Math.sin(pad.wince*40)*2;
+  return{h,w,f,top,nx,ny:top+.2689*h};
 }
 function drawBall(b){
   const au=augerT>0&&!(augerT<3&&Math.floor(t0*8)%2);
@@ -811,12 +866,12 @@ function drawBall(b){
   if(au){ctx.strokeStyle='rgba(80,40,0,.8)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(b.x,b.y,b.r-1.5,t0*12,t0*12+3.5);ctx.stroke()}
 }
 function drawBoss(){
-  const z=zoneOf(G.lvl),col=ZONES[z].boss,{y,rx,ry,t}=boss;let x=boss.x;const im=IMG.fatberg;
+  const z=zoneOf(G.lvl),col=ZONES[z].boss,{y,rx,ry,t}=boss;let x=boss.x;const bd=BOSSES[z],im=IMG[bd.img];
   if(ok(im)){const w=boss.bw,h=w*im.naturalHeight/im.naturalWidth;let sx=1+Math.sin(t*2.2)*.035,sy=1-Math.sin(t*2.2)*.035;
     if(boss.flash>0){const j=Math.sin(boss.flash*70)*.07;sx+=j;sy-=j}
     if(boss.dying){const q=Math.max(0,boss.dying/1.5);sx*=.55+.45*q;sy*=.55+.45*q;x+=rand(-3,3);ctx.globalAlpha=Math.min(1,q*1.6)}
     ctx.save();ctx.translate(x,y);ctx.scale(sx,sy);if(boss.flash>0&&Math.floor(boss.flash*40)%2)ctx.globalAlpha=.55;
-    ctx.drawImage(im,-w/2,-w*.46,w,h);ctx.restore();ctx.globalAlpha=1;
+    ctx.drawImage(im,-w/2,-w*bd.cy,w,h);ctx.restore();ctx.globalAlpha=1;
   }else{
   ctx.fillStyle=col;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,6.3);ctx.fill();
   for(let i=0;i<8;i++){const a=i/8*6.283+t*.4,w=1+Math.sin(t*3+i)*.08;ctx.beginPath();ctx.arc(x+Math.cos(a)*rx*.78,y+Math.sin(a)*ry*.72,ry*.42*w,0,6.3);ctx.fill()}
@@ -847,7 +902,7 @@ function drawEnemy(e){
 }
 function drawSay(){
   if(!sayO)return;ctx.font='700 12px Nunito';const tw=ctx.measureText(sayO.s).width,w=tw+16,h=24;
-  let x=pad.x+26,flip=false;if(x+w>W-4){x=pad.x-26-w;flip=true}x=clamp(x,4,W-w-4);const y=pad.y+14;
+  const fc=pad.face||1;let x=fc>0?pad.x+20:pad.x-20-w,flip=fc<0;if(x+w>W-4){x=pad.x-26-w;flip=true}else if(x<4){x=pad.x+26;flip=false}x=clamp(x,4,W-w-4);const y=pad.y+14;
   ctx.globalAlpha=Math.min(1,sayO.t*4);rr(ctx,x,y,w,h,10);ctx.fillStyle='#fffaf0';ctx.fill();
   ctx.beginPath();if(flip){ctx.moveTo(x+w-2,y+8);ctx.lineTo(x+w+7,y+12);ctx.lineTo(x+w-2,y+15)}else{ctx.moveTo(x+2,y+8);ctx.lineTo(x-7,y+12);ctx.lineTo(x+2,y+15)}ctx.fill();
   ctx.fillStyle='#24113a';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(sayO.s,x+8,y+h/2+.5);ctx.globalAlpha=1;
@@ -869,11 +924,12 @@ function draw(){
   for(let r=0;r<rows;r++)for(let c=0;c<COLS;c++){const k=bricks[r][c];if(k)drawBrick(ctx,k,X0+c*SX,Y0+r*SY)}
   for(const e of enemies)drawEnemy(e);
   if(boss)drawBoss();
-  for(const g of globs){ctx.fillStyle=ZONES[zoneOf(G.lvl)].boss;ctx.beginPath();ctx.arc(g.x,g.y,g.r,0,6.3);ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,.4)';ctx.beginPath();ctx.arc(g.x-2,g.y-2,2,0,6.3);ctx.fill()}
+  if(boss||globs.length||puddles.length){const SL=BZ().sl;
+    for(const q of puddles){ctx.globalAlpha=Math.min(.85,q.t/2.4);ctx.fillStyle=SL.c;ctx.beginPath();ctx.ellipse(q.x,q.y,q.w*(1.3-q.t/2.4*.3),3.5,0,0,6.3);ctx.fill()}
+    ctx.globalAlpha=1;for(const g of globs)drawGlob(g,SL)}
   for(const c of caps){ctx.save();ctx.translate(c.x,c.y);ctx.scale(BOOST,BOOST);drawCap(ctx,c.t,0,0);ctx.restore()}
   ctx.fillStyle='#9be3ff';for(const b of blasts)ctx.fillRect(b.x-1.5,b.y-6,3,10);
-  drawMojo();drawPad();
+  drawMojo();drawPad();drawHose();
   if(!drained)for(const b of balls)drawBall(b);
   drawFlush();
   for(const p of parts){ctx.globalAlpha=Math.max(0,p.t/p.m);ctx.fillStyle=p.c;ctx.fillRect(p.x-p.s/2,p.y-p.s/2,p.s,p.s)}ctx.globalAlpha=1;
@@ -997,7 +1053,7 @@ function showTitle(){
     (SAVE.best?'<p class="small">Best score '+SAVE.best.toLocaleString()+'</p>':'')+
     '<button class="btn" data-a="play">'+(n>1?'Play level '+n:'Play')+'</button>'+
     '<div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="how">How to play</button></div>'+
-    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.4.2</p>');
+    soundBtn()+fullBtn()+'<button class="btn alt" data-a="games">All games</button><p class="small">Test build v0.5</p>');
   let seenTip=false;try{seenTip=localStorage.getItem('mojoBlastFullTip')==='1'}catch(e){}
   if(isIOS&&!isApp&&!seenTip&&!canFull)showTip();
 }
@@ -1052,7 +1108,7 @@ function showHow(){
    '<h3>Fittings</h3><p>Some bricks drop a fitting. Catch it with the pipe.</p>'+['tee','coupling','jet','plunger','auger','ganja'].map(cap).join('')+
    '<h3>The crew</h3>'+crew('fly','Zydeco','buzzes around and knocks your drop off line')+crew('maggot','Beignet','crawls in and regrows grease bricks')+
    crew('crawfish','Roux','snaps your drop back faster, takes two hits')+
-   '<h3>Fatbergs</h3><p>Every zone ends with a fatberg, and each one is bigger than the last. Hit it with the drop or the jetter until it breaks up, and dodge the grease it spits. A glob on the pipe costs a life.</p>'+
+   '<h3>Bosses</h3><p>Every zone ends with a boss clog: the Root Ball, the Fatberg, the Hairball, the Wipe Beast and the Scale King, each bigger than the last. Hit it with the drop or the jetter until it breaks up, and dodge the sludge it spits. Sludge on the pipe costs a life.</p>'+
    '</div><button class="btn alt" data-a="back">Back</button>');
   ov.querySelectorAll('canvas[data-b]').forEach(c=>{const x=c.getContext('2d');const t=c.dataset.b;drawBrick(x,{t,hp:HP[t],max:HP[t],f:0},0,0)});
   ov.querySelectorAll('canvas[data-c]').forEach(c=>{const x=c.getContext('2d');drawCap(x,c.dataset.c,16,8)});
