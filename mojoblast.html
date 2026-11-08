@@ -15,6 +15,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <title>Mojo Blast | Pipe Mojo</title>
 <!--
+  MOJO BLAST — v1.2 (Nov 7 2026)
+  v1.2: Best single zone board (leaderboard key 'blastz', one combined board). Zone score = points
+        earned inside the current zone (run score minus the score when you entered it), so a run
+        that starts mid-zone counts from there. Posts with the run score after every level clear and
+        at game over. Try again resets it with the run; Restart level rolls it back with the run.
+        Save gains zb[5] (best per zone, merged by max). Zone line on Game Over, Zone clear, finale.
+        Rank & Board shows both boards (zone board is list-only, rides the main board's sign-in).
+
   MOJO BLAST — v1.1 (Nov 4 2026) — LIVE
   v1.1: after losing a life the new drop only launches on a fresh tap (a finger already down when
         the life was lost won't fire it); aim dots show the launch path (same formula as launch(),
@@ -202,7 +210,7 @@ body.rot #rot{display:flex}
 <div id="rot"><div class="ph"></div><h2 style="margin-top:24px">Turn it upright</h2><p>Mojo Blast plays standing up on iPhone.</p></div>
 <div id="ov" hidden></div>
 <div id="toast" hidden></div>
-<div id="lbHold" hidden><div id="lbBox"></div></div>
+<div id="lbHold" hidden><div id="lbBox"></div><div id="lbBoxZ"></div></div>
 <script src="/lb.js"></script>
 <script src="/extras.js"></script>
 <script>
@@ -220,16 +228,17 @@ const SK='pm-blast-save';
 const nameKey=x=>String(x||'').toLowerCase().replace(/ /g,'');
 const acct=()=>window.PMLB?PMLB.account():null;
 const slotFor=a=>a?SK+':'+nameKey(a.name):SK;
-const blankS=()=>({v:1,unl:1,best:0,tro:[],c:{},savedAt:0});
+const blankS=()=>({v:1,unl:1,best:0,zb:[0,0,0,0,0],tro:[],c:{},savedAt:0});
+const zbOf=s=>[0,1,2,3,4].map(i=>Math.max(0,+((s&&s.zb)||[])[i]||0));
 let SAVE=blankS(),owner='',cloudReady=false;
-const snap=()=>({v:1,unl:SAVE.unl,best:SAVE.best,tro:SAVE.tro.slice(),c:Object.assign({},SAVE.c),savedAt:Date.now()});
+const snap=()=>({v:1,unl:SAVE.unl,best:SAVE.best,zb:SAVE.zb.slice(),tro:SAVE.tro.slice(),c:Object.assign({},SAVE.c),savedAt:Date.now()});
 const validSave=s=>!!(s&&s.v===1&&s.unl>=1);
 function loadSlot(k){try{const s=JSON.parse(localStorage.getItem(k)||'null');if(validSave(s))return s}catch(e){}return null}
 function mergeSaves(a,b){ // progress only goes up, so two saves of the same player combine safely
   if(!a)return b||null;if(!b)return a;const c={};for(const k of new Set(Object.keys(a.c||{}).concat(Object.keys(b.c||{}))))c[k]=Math.max(+(a.c||{})[k]||0,+(b.c||{})[k]||0);
-  return {v:1,unl:Math.max(+a.unl||1,+b.unl||1),best:Math.max(+a.best||0,+b.best||0),tro:[...new Set((a.tro||[]).concat(b.tro||[]))],c,savedAt:Math.max(+a.savedAt||0,+b.savedAt||0)};
+  return {v:1,unl:Math.max(+a.unl||1,+b.unl||1),best:Math.max(+a.best||0,+b.best||0),zb:zbOf(a).map((x,i)=>Math.max(x,zbOf(b)[i])),tro:[...new Set((a.tro||[]).concat(b.tro||[]))],c,savedAt:Math.max(+a.savedAt||0,+b.savedAt||0)};
 }
-function applySave(s){s=s||blankS();SAVE={v:1,unl:Math.max(1,Math.min(40,+s.unl||1)),best:Math.max(0,+s.best||0),tro:Array.isArray(s.tro)?s.tro.slice():[],c:Object.assign({},s.c||{}),savedAt:+s.savedAt||0}}
+function applySave(s){s=s||blankS();SAVE={v:1,unl:Math.max(1,Math.min(40,+s.unl||1)),best:Math.max(0,+s.best||0),zb:zbOf(s),tro:Array.isArray(s.tro)?s.tro.slice():[],c:Object.assign({},s.c||{}),savedAt:+s.savedAt||0}}
 function saveGame(cloud){
   const a=acct();if(owner===null||nameKey(a&&a.name)!==owner)return; // never save one player's progress into another's slot
   const o=snap();try{localStorage.setItem(slotFor(a),JSON.stringify(o))}catch(e){}
@@ -438,6 +447,8 @@ let bricks=[],rows=0,remain=0,balls=[],caps=[],blasts=[],parts=[],texts=[],enemi
 let pad={x:180,y:566,w:64,tw:64,h:12,mode:'normal',jet:0,jetCool:0,grow:-1,hop:0,wince:0,moved:0};
 let puddles=[],augerT=0,spawnT=10,sayO=null,gpop=null,shakeT=0,seen={},t0=0,wonT=0;
 const zoneOf=i=>Math.floor(i/8);
+const zScore=()=>Math.max(0,G.score-(G.zStart||0));
+function noteZone(){if(G.zone>=0&&G.zone<5)SAVE.zb[G.zone]=Math.max(SAVE.zb[G.zone]||0,zScore())}
 const Z=()=>ZONES[zoneOf(G.lvl)];
 const bricksBottom=()=>rows?Y0+rows*SY:150;
 
@@ -475,6 +486,7 @@ function float(x,y,s,c){texts.push({x,y,s,c:c||'#fff',t:1.1})}
 function burst(x,y,c,n,sp){for(let i=0;i<n&&parts.length<260;i++){const a=rand(0,Math.PI*2),v=rand(30,sp||140);parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,t:rand(.4,.8),m:.8,c,s:rand(1.5,3.2)})}}
 
 function beginLevel(i){
+  if(zoneOf(i)!==G.zone){G.zone=zoneOf(i);G.zStart=G.score} // entering a new zone: zone score counts from here
   G.lvl=i;const z=zoneOf(i),L=LV[i];
   G.base=290+z*20+(i%8)*5;G.maxSp=G.base*1.42;
   bricks=[];rows=0;remain=0;boss=null;
@@ -582,12 +594,12 @@ function applyCap(t){
 function loseLife(){
   G.lives--;G.lost=true;G.cleanStreak=0;sfx.lose();shake(.35);pad.wince=.9;pm('wince');gpop={t:1.4,s:'#@%!'};say(pick(SAY.lose));
   caps=[];blasts=[];globs=[];augerT=0;pad.jet=0;pad.mode='normal';pad.tw=64;pad.grow=-1;hud();
-  if(G.lives<=0){mode='over';balls=[];SAVE.best=Math.max(SAVE.best,G.score);persist();postScore();setTimeout(showOver,1000);return}
+  if(G.lives<=0){mode='over';balls=[];SAVE.best=Math.max(SAVE.best,G.score);noteZone();persist();postScore();setTimeout(showOver,1000);return}
   const nb=newBall();nb.needTap=true;nb.heldAt=performance.now();balls=[nb]; // only a fresh tap launches it, not the finger you were already holding down
 }
 function levelDone(){
   if(mode!=='play')return;mode='flush';flushT=0;splashed=false;drained=true;drips=[];caps=[];globs=[];blasts=[];addScore(1000);sfx.whoosh();
-  SAVE.unl=Math.max(SAVE.unl,Math.min(LV.length,G.lvl+2));SAVE.best=Math.max(SAVE.best,G.score);
+  SAVE.unl=Math.max(SAVE.unl,Math.min(LV.length,G.lvl+2));SAVE.best=Math.max(SAVE.best,G.score);noteZone();
   const L=LV[G.lvl],z=zoneOf(G.lvl);bump('flush');
   if(!G.lost){award('nm1');G.cleanStreak=(G.cleanStreak||0)+1}
   if(G.lives===1)award('slast');
@@ -1155,7 +1167,7 @@ function showTip(){
     '<p class="small">It opens with no Safari bar. The home screen app keeps its own save, separate from Safari.</p>'+
     '<button class="btn" data-a="back">Got it</button>');
 }
-function parkBoard(){const b=$('lbBox');if(b.parentNode!==$('lbHold'))$('lbHold').appendChild(b)}
+function parkBoard(){['lbBox','lbBoxZ'].forEach(k=>{const b=$(k);if(b&&b.parentNode!==$('lbHold'))$('lbHold').appendChild(b)})}
 function show(html){parkBoard();ov.innerHTML='<div class="card">'+html+'</div>';ov.hidden=false;ov.scrollTop=0}
 function hide(){parkBoard();ov.hidden=true;ov.innerHTML=''}
 const soundBtn=()=>'<button class="btn alt" data-a="sound">Sound: '+(muted?'Off':'On')+'</button>';
@@ -1172,7 +1184,7 @@ function showTitle(){
   let seenTip=false;try{seenTip=localStorage.getItem('mojoBlastFullTip')==='1'}catch(e){}
   if(isIOS&&!isApp&&!seenTip&&!canFull)showTip();
 }
-function startRun(i){G={lvl:i,score:0,lives:3,nextLife:25000,base:290,maxSp:420,cleanStreak:0,rank0:marksR(SAVE.best)};if(i%8===0)showIntro(i);else{hide();beginLevel(i)}}
+function startRun(i){G={lvl:i,zone:zoneOf(i),zStart:0,score:0,lives:3,nextLife:25000,base:290,maxSp:420,cleanStreak:0,rank0:marksR(SAVE.best)};if(i%8===0)showIntro(i);else{hide();beginLevel(i)}}
 function crewImgs(z){return '<div class="crew"><span class="ganjabub"><img src="/assets/ganja-front.png" alt="Ganja"><i>!</i></span>'+
   ZONES[z].en.map(k=>'<img src="/assets/'+k+'-front.png" alt="">').join('')+'</div>'}
 function showIntro(i){
@@ -1185,17 +1197,19 @@ function showClear(){
   if(G.lvl===LV.length-1){showFinale();return}
   mode='clear';
   if(L.boss){show('<p class="small">Zone clear</p><h2 style="color:'+ZONES[z].acc+'">'+ZONES[z].name+' is flowing</h2>'+crewImgs(z)+
-    '<p class="big">'+G.score.toLocaleString()+'</p><button class="btn" data-a="next">Next zone</button><button class="btn alt" data-a="title">Title screen</button>');return}
+    '<p class="big">'+G.score.toLocaleString()+'</p>'+zoneLine()+'<button class="btn" data-a="next">Next zone</button><button class="btn alt" data-a="title">Title screen</button>');return}
   show('<h2 style="color:var(--gold)">Clog cleared</h2><p>'+L.name+'</p><span class="ganjabub"><img src="/assets/ganja-front.png" alt="" style="height:64px"><i>!</i></span>'+
     '<p class="big">'+G.score.toLocaleString()+'</p><button class="btn" data-a="next">Next level</button><button class="btn alt" data-a="title">Title screen</button>');
 }
 function promoHTML(){const r=marksR(SAVE.best);if(!r||r<=(G.rank0||0))return '';
   return '<div class="rankins">'+marksB(r)+'</div><p class="rn" style="color:var(--gold)">Promoted: '+marksN(r)+'</p>'}
+function zoneLine(){const z=G.zone;if(!(z>=0&&z<5))return '';const n=zScore(),b=Math.max(SAVE.zb[z]||0,n);
+  return '<p class="small"><span style="color:'+ZONES[z].acc+'">'+ZONES[z].name+'</span> zone '+n.toLocaleString()+(n>=b&&n>0?' · new zone best':' · zone best '+b.toLocaleString())+'</p>'}
 function boardNote(){return acct()?'<p class="small">Posted to the leaderboard.</p>':'<p class="small">Tap Rank &amp; Board to put your name on the leaderboard.</p>'}
 function showOver(){
   mode='over';
   show('<h2 style="color:#ff7a6a">Clogged up</h2><p>'+LV[G.lvl].name+'</p>'+(promoHTML()||'<span class="ganjabub"><img src="/assets/ganja-front.png" alt="" style="height:60px"><i>#@%!</i></span>')+
-    '<p class="big">'+G.score.toLocaleString()+'</p><p class="small">Best run '+SAVE.best.toLocaleString()+'</p>'+boardNote()+
+    '<p class="big">'+G.score.toLocaleString()+'</p><p class="small">Best run '+SAVE.best.toLocaleString()+'</p>'+zoneLine()+boardNote()+
     '<button class="btn" data-a="retry">Try again</button><button class="btn alt" data-a="rank">Rank &amp; Board</button><div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="title">Title</button></div>');
 }
 function pause(){if(mode!=='play')return;mode='pause';ptr=null;
@@ -1213,9 +1227,14 @@ function showRank(){
   show('<h2>Rank &amp; Board</h2><div class="rankins">'+(r?marksB(r):'')+'</div><p class="rn">'+(marksN(r)||'No rank yet')+'</p>'+
     '<p class="small">Best run '+bb.toLocaleString()+(r<13&&at[r]?' · next: '+marksN(r+1)+' at '+at[r].toLocaleString():r?' · top rank':'')+'</p>'+
     '<p class="small">Your best single run sets your marksmanship badge: Marksman at 10,000, Sharpshooter at 50,000, Expert at 120,000.</p>'+
-    (LB?'<div id="lbSlot"></div>':'<p>The leaderboard couldn\'t load. Check your connection.</p>')+'<button class="btn alt" data-a="back2">Back</button>');
+    (LB?'<div id="lbSlot"></div>':'<p>The leaderboard couldn\'t load. Check your connection.</p>')+
+    (LBZ?'<p class="small" style="margin-top:14px">Best single zone: your most points inside one zone, any zone, in one go. You don\'t need a full run for this one.</p>'+zoneBests()+'<div id="lbSlotZ"></div>':'')+
+    '<button class="btn alt" data-a="back2">Back</button>');
   if(LB){$('lbSlot').appendChild($('lbBox'));LB.refresh()}
+  if(LBZ){$('lbSlotZ').appendChild($('lbBoxZ'));LBZ.refresh()}
 }
+function zoneBests(){if(!SAVE.zb.some(x=>x>0))return '';
+  return '<p class="small">Your zone bests: '+ZONES.map((z,i)=>'<span style="color:'+z.acc+'">'+z.name+'</span> '+(SAVE.zb[i]||0).toLocaleString()).join(' · ')+'</p>'}
 function showTrophies(){
   setBack();const have=SAVE.tro,tile=(t,got)=>'<div class="tile'+(got?'':' locked')+'"><div class="ta">'+(got||!TSEC.includes(t)?t.art:'❓')+'</div><b>'+(got||!TSEC.includes(t)?t.name:'???')+'</b><small>'+(got||!TSEC.includes(t)?t.desc:'Keep blasting')+'</small></div>';
   show('<h2>Trophies</h2><p class="small">'+TRO.filter(t=>have.includes(t.id)).length+' of '+TRO.length+' · secrets '+TSEC.filter(t=>have.includes(t.id)).length+' of '+TSEC.length+'</p>'+
@@ -1235,7 +1254,7 @@ function showFinale(again){
   mode='done';
   show('<div class="finale">'+CUP+'<h2 style="color:var(--gold)">LINE\'S OPEN</h2><p>All 40 levels. Five boss clogs flushed.</p>'+
     '<img class="hopper" src="/assets/mojo-hose.png" alt="">'+crewImgs(4)+promoHTML()+
-    '<p class="big">'+G.score.toLocaleString()+'</p><p class="small">Best run '+SAVE.best.toLocaleString()+'</p>'+boardNote()+
+    '<p class="big">'+G.score.toLocaleString()+'</p><p class="small">Best run '+SAVE.best.toLocaleString()+'</p>'+zoneLine()+boardNote()+
     '<button class="btn" data-a="rank">Rank &amp; Board</button><div class="row"><button class="btn alt" data-a="replay">Watch again</button><button class="btn alt" data-a="tro">Trophies</button></div>'+
     '<div class="row"><button class="btn alt" data-a="levels">Levels</button><button class="btn alt" data-a="title">Title</button></div></div>');
   if(again!=='quiet'){sfx.finale();fireworks=4.5}
@@ -1279,7 +1298,7 @@ ov.addEventListener('click',e=>{
   else if(a==='replay'){showFinale()}
   else if(a==='begin'){hide();beginLevel(G.lvl)}
   else if(a==='next'){const n=G.lvl+1;if(n%8===0)showIntro(n);else{hide();beginLevel(n)}}
-  else if(a==='retry'){const i=G.lvl;G.score=0;G.lives=3;G.nextLife=25000;G.cleanStreak=0;G.rank0=marksR(SAVE.best);hide();beginLevel(i)}
+  else if(a==='retry'){const i=G.lvl;G.score=0;G.zone=zoneOf(i);G.zStart=0;G.lives=3;G.nextLife=25000;G.cleanStreak=0;G.rank0=marksR(SAVE.best);hide();beginLevel(i)}
   else if(a==='restart'){hide();G.score=G.levelStart||0;G.lives=Math.max(1,G.livesAtStart||G.lives);G.cleanStreak=0;beginLevel(G.lvl)} // no farming points by replaying a level
   else if(a==='resume'){hide();park();mode='play';last=0}
   else if(a==='title'){showTitle()}
@@ -1297,7 +1316,8 @@ IMG['mojo-front'].onload=()=>hud();
 
 /* ---------- leaderboard (best run), accounts, cloud save, extras ---------- */
 const LB=window.PMLB?PMLB.mount($('lbBox'),{game:'blast',title:'Top 10, best run',unit:''}):null;
-function postScore(){if(LB&&G.score>0)LB.post(G.score)}
+const LBZ=window.PMLB?PMLB.mount($('lbBoxZ'),{game:'blastz',title:'Top 10, best single zone',unit:'',passive:true}):null; // list only; signs in through the board above
+function postScore(){if(LB&&G.score>0)LB.post(G.score);const zs=zScore();if(LBZ&&zs>0)LBZ.post(zs)}
 if(window.PMX){PMX.onAward=n=>{toast(n);sfx.life()};PMX.sync();setTimeout(()=>PMX.tick(),1500)}
 if(window.PMLB)PMLB.onChange((type,a)=>{
   cloudReady=false;
@@ -1306,7 +1326,7 @@ if(window.PMLB)PMLB.onChange((type,a)=>{
   const wasGuest=owner==='',guest=snap(),mine=loadSlot(slotFor(a));owner=null;
   PMLB.cloudLoad('blast').then(cloud=>{
     let acc=mergeSaves(mine,validSave(cloud)?cloud:null);
-    if(!acc&&wasGuest&&(guest.unl>1||guest.best>0||guest.tro.length))acc=guest; // a brand-new name keeps the progress you were playing
+    if(!acc&&wasGuest&&(guest.unl>1||guest.best>0||guest.zb.some(x=>x>0)||guest.tro.length))acc=guest; // a brand-new name keeps the progress you were playing
     owner=key;if(cloud!==undefined)cloudReady=true;applySave(acc);saveGame(true);hud();
   });
 });

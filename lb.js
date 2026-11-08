@@ -385,6 +385,7 @@ function marksBadge(r){
   return s+'</svg>';
 }
 function rankHTML(game,best){
+  if(game==='blastz')return ''; // zone board: no badge, rank comes from the full-run board
   if(game==='blast'){const r=marksRank(best);return r?'<span class="ri" title="'+marksName(r)+'">'+marksBadge(r)+'</span>':''}
   if(game==='hotcold'){const r=Math.floor(best/25);return r?'<span class="ri" title="'+tradeName(r)+'">'+tradeBadge(r)+'</span>':''}
   if(game==='roll'){const r=Math.min(5,Math.floor(best/24));return r?'<span class="ri" title="'+warrantName(r)+'">'+armyWarrant(r)+'</span>':''}
@@ -392,23 +393,26 @@ function rankHTML(game,best){
   return '<span class="ri" title="'+(game==='flow'?officerName(n):enlistedName(n))+'">'+(game==='flow'?armyOfficer(n):armyEnlisted(n))+'</span>';
 }
 function Board(el,o){
-  this.el=el;this.game=o.game;this.onSignIn=o.onSignIn||null;this.title=o.title||'Top 10';this.unit=o.unit||'';
+  this.el=el;this.game=o.game;this.passive=!!o.passive;this.onSignIn=o.onSignIn||null;this.title=o.title||'Top 10';this.unit=o.unit||'';
   this.top=null;this.pending=0;this.run=null;this.pendingRun=null;this.rank=0;this.mode='claim';this.code=null;this.err='';this.busy=false;
   el.addEventListener('click',e=>this.onClick(e));
-  listeners.push(type=>{if(type==='signout'){this.code=null;this.mode='claim'}this.rank=0;this.err='';this.render()});
+  listeners.push(type=>{if(type==='signout'){this.code=null;this.mode='claim'}this.rank=0;this.err='';this.render();
+    if(type==='signin'&&this.passive&&this.pending)this.submit()}); // passive board posts its waiting score once you sign in on the main one
   el.addEventListener('submit',e=>{e.preventDefault();this.onSubmit(e.target)});
   this.render();
 }
 Board.prototype.render=function(){
   const a=load(),me=a?a.name.toLowerCase().replace(/ /g,''):'';
   let h='<div class="lb"><h3>'+esc(this.title)+'</h3>';
-  if(this.code){
+  if(this.passive){}
+  else if(this.code){
     h+='<div class="code"><p>Save this recovery code in Notes. It\'s the only way to get <b>'+esc(a?a.name:'')+'</b> back on a new phone.</p>'+
        '<strong>'+esc(this.code)+'</strong><div class="row"><button type="button" data-act="copy">Copy code</button>'+
        '<button type="button" class="alt" data-act="saved">I saved it</button></div></div>';
   }
   if(this.err)h+='<p class="err">'+esc(this.err)+'</p>';
-  if(a){
+  if(this.passive){if(a&&this.rank)h+='<p class="me-line">You\'re ranked #'+this.rank+'</p>'}
+  else if(a){
     h+='<p class="me-line">Playing as <b>'+esc(a.name)+'</b>'+(this.rank?', ranked #'+this.rank:'')+
        ' <button type="button" class="alt switch" data-act="switch">Switch player</button>'+
        ' <button type="button" class="alt switch" data-act="newcode">New recovery code</button></p>';
@@ -430,7 +434,7 @@ Board.prototype.render=function(){
   else{
     h+='<ol>'+this.top.map((r,i)=>{
       const mine=me&&r.name.toLowerCase().replace(/ /g,'')===me;
-      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+rankHTML(this.game,r.best)+'<span class="nm">'+esc(r.name)+'</span>'+((this.game==='flow'||this.game==='hotcold')&&r.best>=1000?'<span class="k1" title="'+Math.floor(r.best/1000)+'K Club">'+badgeK(Math.floor(r.best/1000))+'</span>':'')+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+(this.game==='blast'?Number(r.best).toLocaleString():r.best)+'</span></li>';
+      return '<li'+(mine?' class="me"':'')+'><span class="r">'+(i+1)+'</span><span class="n">'+rankHTML(this.game,r.best)+'<span class="nm">'+esc(r.name)+'</span>'+((this.game==='flow'||this.game==='hotcold')&&r.best>=1000?'<span class="k1" title="'+Math.floor(r.best/1000)+'K Club">'+badgeK(Math.floor(r.best/1000))+'</span>':'')+(r.streak>=2?' <span class="fl" title="Best par streak">🔥'+r.streak+'</span>':'')+'</span><span class="s">'+esc(this.unit)+(/^blast/.test(this.game)?Number(r.best).toLocaleString():r.best)+'</span></li>';
     }).join('')+'</ol>';
   }
   h+='</div>';
