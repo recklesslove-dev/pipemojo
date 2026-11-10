@@ -15,7 +15,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <title>Mojo Blast | Pipe Mojo</title>
 <!--
-  MOJO BLAST — v1.2 (Nov 7 2026)
+  MOJO BLAST — v1.2 (Nov 9 2026)
+  v1.2 fix: blank play field on iPhone Duo. Cause: Hellfire's boiling-liquid bubbles get a radius
+        from how deep they sit in the liquid band; resizing (unfolding/rotating) shrinks the band, a
+        bubble ends up below it, the radius goes negative, ctx.arc throws and the frame loop died.
+        Radius clamped, bubbles pulled back into the band on resize. Also: One reused backdrop canvas (no new canvas per resize),
+        resizes coalesced to one per frame and skipped when nothing changed, frame loop survives a
+        thrown error and shows it in a red line at the bottom (#errLine) instead of going blank.
   v1.2: Best single zone board (leaderboard key 'blastz', one combined board). Zone score = points
         earned inside the current zone (run score minus the score when you entered it), so a run
         that starts mid-zone counts from there. Posts with the run score after every level clear and
@@ -261,7 +267,7 @@ const ok=i=>i&&i.complete&&i.naturalWidth>0;
 /* ---------- field ---------- */
 const W=372,WT=8,COLS=11,BW=30,BH=14,SX=32,SY=16,X0=11;
 let Y0=50; // top of the clog; drops lower on tall screens so the gap to the pipe stays arcade-like
-let H=640,SC=1,DPR=1,bg=null,BOOST=1; // BOOST: sprites a bit bigger on phone-size screens
+let H=640,SC=1,DPR=1,bg=null,bgCv=null,BOOST=1; // BOOST: sprites a bit bigger on phone-size screens
 
 /* ---------- zones & levels ---------- */
 const MAT={galv:['#a7b0b6','#e3e8eb','#646d73','galvanized'],copper:['#c87533','#f4b47c','#7a3f17','copper'],
@@ -752,7 +758,10 @@ function drawFx(){
 
 /* ---------- static backdrop ---------- */
 function buildBg(){
-  bg=document.createElement('canvas');bg.width=cv.width;bg.height=cv.height;const b=bg.getContext('2d');
+  // one backdrop canvas, reused: iOS Safari is slow to free old canvases, and a foldable fires lots of resizes
+  if(!bgCv)bgCv=document.createElement('canvas');
+  if(bgCv.width!==cv.width)bgCv.width=cv.width;if(bgCv.height!==cv.height)bgCv.height=cv.height;
+  const b=bgCv.getContext('2d');if(!b){bg=null;return}bg=bgCv;b.setTransform(1,0,0,1,0,0);b.clearRect(0,0,bgCv.width,bgCv.height);
   b.setTransform(SC*DPR,0,0,SC*DPR,0,0);const z=Z(),k=z.fx;
   const g=b.createLinearGradient(0,0,0,H);g.addColorStop(0,z.bg[0]);g.addColorStop(1,z.bg[1]);b.fillStyle=g;b.fillRect(0,0,W,H);
   stage.style.background=z.bg[1];
@@ -840,7 +849,8 @@ function drawLiquid(){
     else if(L.k==='suds'){ctx.globalAlpha=.45;ctx.fillStyle='#f2f5f7';ctx.beginPath();ctx.arc(q.x,q.y,1.7,0,6.3);ctx.fill()}
     else if(L.k==='chunk'){ctx.globalAlpha=.7;ctx.fillStyle='#2b1d0c';ctx.fillRect(q.x,q.y,3,2)}
     else if(L.k==='glitter'){ctx.globalAlpha=.3+.5*Math.abs(Math.sin(q.a));ctx.fillStyle=q.c;ctx.fillRect(q.x,q.y,1.6,1.6)}
-    else{const k=1-(q.y-WT)/(Y0-WT);ctx.globalAlpha=.65;ctx.strokeStyle=L.hi;ctx.beginPath();ctx.arc(q.x,q.y,1+k*2.2,0,6.3);ctx.stroke()}
+    else{const k=clamp(1-(q.y-WT)/(Y0-WT),0,1); // clamped: after a resize a bubble can sit below the new Y0, and a negative radius throws
+      ctx.globalAlpha=.65;ctx.strokeStyle=L.hi;ctx.beginPath();ctx.arc(q.x,q.y,1+k*2.2,0,6.3);ctx.stroke()}
   }
   ctx.globalAlpha=1;
   ctx.fillStyle=L.hi;for(const d of drips){ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(d.x,d.y,1.8,0,6.3);ctx.fill();ctx.fillRect(d.x-.6,d.y-4,1.2,3)}
@@ -1080,12 +1090,20 @@ function pm(c){const e=$('pMojo');e.classList.remove('hop','wince');void e.offse
 
 /* ---------- loop ---------- */
 let last=0;
-function frame(ts){const dt=Math.min(.033,last?(ts-last)/1000:0);last=ts;
+function frame(ts){requestAnimationFrame(frame);try{frameBody(ts)}catch(e){showErr(e)}}
+function showErr(e){ // a crash in one frame shouldn't blank the game; show what broke so it can be fixed
+  const m=String(e&&e.message||e)+(e&&e.stack?' @ '+String(e.stack).split('\n').slice(0,2).join(' | '):'');
+  if(showErr.last===m)return;showErr.last=m;let d=$('errLine');
+  if(!d){d=document.createElement('div');d.id='errLine';d.style.cssText='position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:99;background:#3a0b0b;color:#ffd9d2;font:600 12px/1.35 Nunito,sans-serif;padding:6px 8px;border-radius:8px;border:1px solid #ff7a6a;word-break:break-word';document.body.appendChild(d)}
+  d.textContent='Mojo Blast hit a snag (screenshot this for Claude): '+m.slice(0,300);
+}
+addEventListener('error',e=>showErr(e.error||e.message));
+function frameBody(ts){const dt=Math.min(.033,last?(ts-last)/1000:0);last=ts;
   if(mode==='play')update(dt);else if(mode==='flush')updFlush(dt);
   if(mode!=='play'&&mode!=='title'&&mode!=='won'){} // frozen
   if(mode==='won'){pad.hop=Math.max(0,pad.hop-dt);t0+=dt}
   if(fireworks>0){fireworks-=dt;if(Math.random()<dt*3.2){const x=rand(40,W-40),y=rand(60,H*.45),c=pick(['#f5c842','#5ec8ff','#c77dff','#ff6a2a','#9fd36a']);for(let i=0;i<26&&parts.length<300;i++){const a=i/26*6.283,v=rand(90,170);parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:1,m:1,c,s:2.4})}sq(rand(900,1400),.05,.03)}}
-  updFx(dt);if(mode!=='title')updLiq(dt);updLoops();panelFit(dt);draw();requestAnimationFrame(frame)}
+  updFx(dt);if(mode!=='title')updLiq(dt);updLoops();panelFit(dt);draw()}
 
 /* ---------- sizing ---------- */
 const coarse=!!(window.matchMedia&&matchMedia('(pointer: coarse)').matches);
@@ -1098,21 +1116,27 @@ function layout(){
     const fw=Math.max(240,Math.min(ah*.6,w-2*Math.max(150,w*.17)));stage.style.flex='0 0 '+Math.floor(fw)+'px';fitK='';}
   else stage.style.flex='';
 }
+let rzQ=0;const queueResize=()=>{if(!rzQ)rzQ=requestAnimationFrame(()=>{rzQ=0;try{resize()}catch(e){showErr(e)}})};
+let lastFit='';
 function resize(){
   layout();
   const r=stage.getBoundingClientRect();if(r.width<10||r.height<10)return;
   let sc=r.width/W,h=r.height/sc;if(h<500){h=500;sc=r.height/500}if(h>760)h=760;
-  SC=sc;H=Math.round(h);DPR=Math.min(window.devicePixelRatio||1,3);
+  const dpr=Math.min(window.devicePixelRatio||1,3),fit=[sc.toFixed(4),Math.round(h),dpr].join('|');
+  if(fit===lastFit&&bg)return; // same size as last time: nothing to rebuild
+  lastFit=fit;
+  SC=sc;H=Math.round(h);DPR=dpr;
   cv.style.width=W*SC+'px';cv.style.height=H*SC+'px';cv.width=Math.round(W*SC*DPR);cv.height=Math.round(H*SC*DPR);
-  BOOST=W*SC<520?1.18:1;Y0=50+Math.round(Math.max(0,H-520)*.8);pad.h=BOOST>1?14:12;
+  BOOST=W*SC<520?1.18:1;Y0=50+Math.round(Math.max(0,H-520)*.8);for(const q of liqP)q.y=Math.min(q.y,Y0-5); // keep bubbles inside the liquid band when it shrinks
+  pad.h=BOOST>1?14:12;
   pad.y=Math.round(H*.8);balls.forEach(b=>{if(b.held)b.y=pad.y-b.r-.5});buildBg();
 }
-addEventListener('resize',()=>setTimeout(resize,60));
+addEventListener('resize',()=>setTimeout(queueResize,60));
 // iOS home-screen apps can report their final height late: re-measure whenever the stage changes size
 let lastSz='';
-if(window.ResizeObserver)new ResizeObserver(()=>{const r=stage.getBoundingClientRect(),k=Math.round(r.width)+'x'+Math.round(r.height);if(k!==lastSz){lastSz=k;resize()}}).observe(stage);
-if(window.visualViewport)visualViewport.addEventListener('resize',()=>setTimeout(resize,60));
-addEventListener('pageshow',()=>setTimeout(resize,60));
+if(window.ResizeObserver)new ResizeObserver(()=>{const r=stage.getBoundingClientRect(),k=Math.round(r.width)+'x'+Math.round(r.height);if(k!==lastSz){lastSz=k;queueResize()}}).observe(stage);
+if(window.visualViewport)visualViewport.addEventListener('resize',()=>setTimeout(queueResize,60));
+addEventListener('pageshow',()=>setTimeout(queueResize,60));
 addEventListener('orientationchange',()=>setTimeout(resize,250));
 
 /* ---------- input ---------- */
